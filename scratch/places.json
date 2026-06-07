@@ -1,0 +1,127 @@
+{
+    "html_attributions": [],
+    "result": {
+        "address_components": [
+            {
+                "long_name": "122",
+                "short_name": "122",
+                "types": [
+                    "street_number"
+                ]
+            },
+            {
+                "long_name": "Goulds Road",
+                "short_name": "Goulds Rd",
+                "types": [
+                    "route"
+                ]
+            },
+            {
+                "long_name": "Narngulu",
+                "short_name": "Narngulu",
+                "types": [
+                    "locality",
+                    "political"
+                ]
+            },
+            {
+                "long_name": "City of Greater Geraldton",
+                "short_name": "Greater Geraldton",
+                "types": [
+                    "administrative_area_level_2",
+                    "political"
+                ]
+            },
+            {
+                "long_name": "Western Australia",
+                "short_name": "WA",
+                "types": [
+                    "administrative_area_level_1",
+                    "political"
+                ]
+            },
+            {
+                "long_name": "Australia",
+                "short_name": "AU",
+                "types": [
+                    "country",
+                    "political"
+                ]
+            },
+            {
+                "long_name": "6532",
+                "short_name": "6532",
+                "types": [
+                    "postal_code"
+                ]
+            }
+        ],
+        "adr_address": "\u003cspan class=\"street-address\"\u003e122 Goulds Rd\u003c/span\u003e, \u003cspan class=\"locality\"\u003eNarngulu\u003c/span\u003e \u003cspan class=\"region\"\u003eWA\u003c/span\u003e \u003cspan class=\"postal-code\"\u003e6532\u003c/span\u003e, \u003cspan class=\"country-name\"\u003eAustralia\u003c/span\u003e",
+        "business_status": "OPERATIONAL",
+        "formatted_address": "122 Goulds Rd, Narngulu WA 6532, Australia",
+        "formatted_phone_number": "(08) 9923 6000",
+        "geometry": {
+            "location": {
+                "lat": -28.8071275,
+                "lng": 114.671694
+            },
+            "viewport": {
+                "northeast": {
+                    "lat": -28.8057468697085,
+                    "lng": 114.6733464802915
+                },
+                "southwest": {
+                    "lat": -28.8084448302915,
+                    "lng": 114.6706485197085
+                }
+            }
+        },
+        "icon": "https://maps.gstatic.com/mapfiles/place_api/icons/v1/png_71/generic_business-71.png",
+        "icon_background_color": "#7B9EB0",
+        "icon_mask_base_uri": "https://maps.gstatic.com/mapfiles/place_api/icons/v2/generic_pinlet",
+        "international_phone_number": "+61 8 9923 6000",
+        "name": "GMA Garnet",
+        "place_id": "ChIJvVyYk3lD2isRzNPWTtChecQ",
+        "plus_code": {
+            "compound_code": "5MVC+4M Narngulu WA, Australia",
+            "global_code": "5P3P5MVC+4M"
+        },
+        "rating": 5,
+        "reference": "ChIJvVyYk3lD2isRzNPWTtChecQ",
+        "reviews": [
+            {
+                "author_name": "Adrian Ortmueller",
+                "author_url": "https://www.google.com/maps/contrib/106929529749579673172/reviews",
+                "language": "en",
+                "original_language": "en",
+                "profile_photo_url": "https://lh3.googleusercontent.com/a-/ALV-UjVaxtsrdgnWtJlXCdKFStU3YllZI7z0c8j1S3Y1v4-exJ2GtKs=s128-c0x00000000-cc-rp-mo-ba4",
+                "rating": 5,
+                "relative_time_description": "4 years ago",
+                "text": "Good people",
+                "time": 1592380846,
+                "translated": false
+            },
+            {
+                "author_name": "Katie Bennett",
+                "author_url": "https://www.google.com/maps/contrib/109424020279226159880/reviews",
+                "profile_photo_url": "https://lh3.googleusercontent.com/a/ACg8ocJXbAXKu1jndUVtFjndvESDiNNt7lAhkUiady1qcy_9NRlVPg=s128-c0x00000000-cc-rp-mo",
+                "rating": 5,
+                "relative_time_description": "3 years ago",
+                "text": "",
+                "time": 1628747072,
+                "translated": false
+            }
+        ],
+        "types": [
+            "point_of_interest",
+            "establishment"
+        ],
+        "url": "https://maps.google.com/?cid=14157524819663836108",
+        "user_ratings_total": 2,
+        "utc_offset": 480,
+        "vicinity": "122 Goulds Road, Narngulu",
+        "website": "https://www.gmagarnet.com/",
+        "wheelchair_accessible_entrance": true
+    },
+    "status": "OK"
+}
