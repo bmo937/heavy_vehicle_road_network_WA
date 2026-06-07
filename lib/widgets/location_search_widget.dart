@@ -41,7 +41,7 @@ class _LocationSearchWidgetState extends ConsumerState<LocationSearchWidget> {
   @override
   void initState() {
     super.initState();
-    _placesService = ref.read(googlePlacesServiceProvider(gApiKey));
+    _placesService = ref.read(googlePlacesServiceProvider(gApiKey!));
     _searchService = LocationSearchService(ref, _placesService);
     _searchController.addListener(_onSearchChanged);
 

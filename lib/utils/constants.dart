@@ -1,2 +1,4 @@
-String gApiKey = "AIzaSyD3n4CPLCECO8jE1i3OnQQeXenDhHzikgo";
-String mApiKey = "key=jpzUyxWOOxhCzLjvKDQi";
+import 'package:flutter_dotenv/flutter_dotenv.dart';
+
+final gApiKey = dotenv.env['gApiKey'];
+final mApiKey = dotenv.env['mApiKey'];
