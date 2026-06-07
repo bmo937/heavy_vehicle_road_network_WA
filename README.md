@@ -1,16 +1,115 @@
-# roads_map
+# Roads Map (Heavy Vehicles Road Network WA)
 
-A new Flutter project.
+Flutter application for viewing and interacting with Western Australia heavy vehicle road network data using MapLibre.
+
+## Overview
+
+Roads Map provides a map-first experience for heavy vehicle route planning and network exploration. The app combines:
+
+- MapLibre map rendering and style switching.
+- Road network and POI layer filtering.
+- Place search and location lookup.
+- Feature tap details (for roads, incidents, services, and related map entities).
+- Persisted app settings and map selections using Hive.
+
+## Tech Stack
+
+- Flutter (SDK >= 3.4.1 < 4.0.0)
+- Riverpod and Hooks Riverpod for state management
+- Hive CE for local persistence
+- MapLibre GL for map display and interaction
+- Dio for network requests
+- Freezed and Json Serializable for typed models
+
+## Project Structure
+
+Primary directories:
+
+- `lib/widgets/`: UI screens and composable widgets (map, navigation panel, feature display)
+- `lib/providers/`: app and map state, layer coordination, network/POI selections
+- `lib/services/`: external services (traffic, places, online layers)
+- `lib/models/`: data models and generated adapters/serializers
+- `lib/utils/`: constants, map style utilities, icon and layer helpers
+- `assets/`: JSON configs, icons, fonts, and geo assets
+
+## Requirements
+
+Install the following before running locally:
+
+- Flutter SDK (matching project constraints)
+- Dart SDK (bundled with Flutter)
+- Android Studio or Xcode tooling (depending on target platform)
+- A connected device or emulator/simulator
 
 ## Getting Started
 
-This project is a starting point for a Flutter application.
+1. Install dependencies:
 
-A few resources to get you started if this is your first Flutter project:
+```bash
+flutter pub get
+```
 
-- [Lab: Write your first Flutter app](https://docs.flutter.dev/get-started/codelab)
-- [Cookbook: Useful Flutter samples](https://docs.flutter.dev/cookbook)
+2. Generate Riverpod/Freezed/JSON/Hive code artifacts:
 
-For help getting started with Flutter development, view the
-[online documentation](https://docs.flutter.dev/), which offers tutorials,
-samples, guidance on mobile development, and a full API reference.
+```bash
+dart run build_runner build --delete-conflicting-outputs
+```
+
+3. Run the app:
+
+```bash
+flutter run
+```
+
+## Development Commands
+
+Run static analysis:
+
+```bash
+flutter analyze
+```
+
+Run tests:
+
+```bash
+flutter test
+```
+
+Regenerate code while developing:
+
+```bash
+dart run build_runner watch --delete-conflicting-outputs
+```
+
+## Configuration Notes
+
+- App initialization registers Hive adapters and opens required boxes before UI startup.
+- The app is portrait-only (configured in `main.dart`).
+- Google Places and map API keys are currently referenced from `lib/utils/constants.dart`.
+
+## Security Recommendation
+
+Move API keys out of source control before production use. Recommended approaches:
+
+- pass keys via `--dart-define`
+- load keys from secure platform configuration
+- rotate keys and restrict by app signature/bundle identifier
+
+## Build
+
+Android release build:
+
+```bash
+flutter build apk --release
+```
+
+iOS release build:
+
+```bash
+flutter build ios --release
+```
+
+## Notes
+
+- Generated files (`*.g.dart`) are expected and required for parts of the app to function.
+- If map layers or menu assets appear out of sync, rerun code generation and restart the app.
