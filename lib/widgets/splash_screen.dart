@@ -285,6 +285,14 @@ class _SplashScreenState extends ConsumerState<SplashScreen> with TickerProvider
                         ),
                       ),
 
+                      if (mapState.isMapRestorationFailed) ...[
+                        const SizedBox(height: 16),
+                        ElevatedButton(
+                          onPressed: () => ref.read(mapPageNotifierProvider.notifier).retryStyleRestoration(ref),
+                          child: const Text('Retry map loading'),
+                        ),
+                      ],
+
                       const SizedBox(height: 24),
 
                       // Progress bar

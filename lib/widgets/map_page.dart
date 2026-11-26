@@ -18,6 +18,8 @@ class MapPage extends HookConsumerWidget {
       if (previous != null && previous != next) {
         debugPrint('🎨 MAP THEME CHANGED: $previous -> $next');
         debugPrint('🚀 Style change detected, map will rebuild with new style');
+        // Invalidate old-style work before the replacement map is created.
+        mapPageProvider.onStyleChangeBegan();
       }
     });
 

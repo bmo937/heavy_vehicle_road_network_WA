@@ -14,6 +14,7 @@ class MapProviderState extends Equatable {
     this.isIncidentsLayerVisible = false,
     this.isTrafficLayersVisible = false,
     this.isMapFullyLoaded = false,
+    this.isMapRestorationFailed = false,
     this.initStatus = MapInitStatus.initialising,
     this.initError,
   });
@@ -24,12 +25,13 @@ class MapProviderState extends Equatable {
   final bool isTravelLayerVisible;
   final bool isTrafficLayersVisible;
   final bool isMapFullyLoaded;
+  final bool isMapRestorationFailed;
   final MapInitStatus initStatus;
 
   /// Short, non-sensitive description of an initialisation failure.
   final String? initError;
   @override
-  List<Object?> get props => [currentStyleUrl, isSatelliteLayerVisible, isTravelLayerVisible, isMapFullyLoaded, initStatus, initError];
+  List<Object?> get props => [currentStyleUrl, isSatelliteLayerVisible, isTravelLayerVisible, isMapFullyLoaded, isMapRestorationFailed, initStatus, initError];
 
   MapProviderState copyWith({
     String? currentStyleUrl,
@@ -38,6 +40,7 @@ class MapProviderState extends Equatable {
     bool? isIncidentsLayerVisible,
     bool? isTrafficLayersVisible,
     bool? isMapFullyLoaded,
+    bool? isMapRestorationFailed,
     MapInitStatus? initStatus,
     String? initError,
   }) {
@@ -48,6 +51,7 @@ class MapProviderState extends Equatable {
       isIncidentsLayerVisible: isIncidentsLayerVisible ?? this.isIncidentsLayerVisible,
       isTrafficLayersVisible: isTrafficLayersVisible ?? this.isTrafficLayersVisible,
       isMapFullyLoaded: isMapFullyLoaded ?? this.isMapFullyLoaded,
+      isMapRestorationFailed: isMapRestorationFailed ?? this.isMapRestorationFailed,
       initStatus: initStatus ?? this.initStatus,
       initError: initError ?? this.initError,
     );

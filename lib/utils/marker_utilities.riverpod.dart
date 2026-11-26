@@ -222,32 +222,32 @@ class MarkerUtilities {
     }
   }
 
-  /// Add images to MapLibre
-  static Future<void> addImagesToMap(MapLibreMapController mapController) async {
-    // Check if the map controller's style is loaded before adding images
+  /// Adds the marker images to the current style (a style reload drops them).
+  /// Decoded bytes come from the in-memory/Hive cache, so repeated calls only
+  /// re-register images with MapLibre. Returns true only if every image was added.
+  static Future<bool> addImagesToMap(MapLibreMapController mapController) async {
     try {
-      // Safely load image assets
       final imageData = await loadImageAssets();
       if (imageData.isEmpty) {
         debugPrint('Warning: No marker images loaded from assets');
-        return;
+        return false;
       }
 
-      // Add images one by one with error handling
       int successCount = 0;
       for (final entry in imageData.entries) {
         try {
           await mapController.addImage(entry.key, entry.value);
           successCount++;
-          debugPrint('Added image to map: ${entry.key}');
         } catch (e) {
           debugPrint('Error adding image to map: ${entry.key}, error: $e');
         }
       }
 
       debugPrint('Successfully added $successCount/${imageData.length} marker images to map');
+      return successCount == imageData.length;
     } catch (e) {
       debugPrint('Error in addImagesToMap: $e');
+      return false;
     }
   }
 }
