@@ -1,3 +1,4 @@
+import 'package:roads_map/hive_boxes.dart';
 import 'dart:typed_data';
 
 import 'package:flutter/material.dart';
@@ -196,7 +197,7 @@ class PointsOfInterestMenu extends ConsumerWidget {
   Future<void> _togglePointOfInterest(WidgetRef ref, GroupMember member, bool value) async {
     // Open both Hive boxes for maximum compatibility
     final pointsOfInterestBox = await Hive.openBox(pointsOfInterestBoxName);
-    final selectedPoiLayerBox = Hive.isBoxOpen('selectedPoiLayerBox') ? Hive.box('selectedPoiLayerBox') : await Hive.openBox('selectedPoiLayerBox');
+    final selectedPoiLayerBox = Hive.isBoxOpen(HiveBoxes.selectedPoiLayer) ? Hive.box(HiveBoxes.selectedPoiLayer) : await Hive.openBox(HiveBoxes.selectedPoiLayer);
 
     // Update both provider states for consistent layer selection
     await ref.read(pointsOfInterestSelectionNotifierProvider.notifier).toggleLayer(member.name, value);

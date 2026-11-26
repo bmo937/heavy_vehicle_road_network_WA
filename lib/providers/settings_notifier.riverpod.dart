@@ -1,3 +1,4 @@
+import 'package:roads_map/hive_boxes.dart';
 import 'package:flutter/material.dart';
 import 'package:hive_ce/hive.dart';
 import 'package:riverpod_annotation/riverpod_annotation.dart';
@@ -15,7 +16,7 @@ class SettingsNotifier extends _$SettingsNotifier {
 
   Future<void> _initializeHive() async {
     try {
-      _box = await Hive.openBox('settingsBox');
+      _box = await Hive.openBox(HiveBoxes.settings);
       final themeModeIndex = _box.get('themeMode', defaultValue: ThemeMode.system.index);
       state = ThemeMode.values[themeModeIndex];
     } catch (e) {
@@ -69,7 +70,7 @@ class MarkerColorNotifier extends _$MarkerColorNotifier {
 
   Future<void> _initializeHive() async {
     try {
-      _box = await Hive.openBox('settingsBox');
+      _box = await Hive.openBox(HiveBoxes.settings);
       // ignore: deprecated_member_use
       final colorValue = _box.get('markerColor', defaultValue: Colors.red.value);
       state = Color(colorValue);

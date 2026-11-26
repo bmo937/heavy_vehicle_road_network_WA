@@ -1,4 +1,5 @@
 // Main MapPageNotifier coordinating map functionality
+import 'package:roads_map/hive_boxes.dart';
 import 'dart:async';
 import 'dart:math';
 
@@ -36,7 +37,7 @@ class MapPageNotifier extends StateNotifier<MapProviderState> {
     _cameraHandler.dispose();
 
     // Initialize the state
-    final settingsBox = Hive.isBoxOpen('settingsBox') ? Hive.box('settingsBox') : await Hive.openBox('settingsBox');
+    final settingsBox = Hive.isBoxOpen(HiveBoxes.settings) ? Hive.box(HiveBoxes.settings) : await Hive.openBox(HiveBoxes.settings);
 
     final isTravelLayerVisible = settingsBox.get('isTravelLayerVisible', defaultValue: false) as bool;
     final isSatelliteLayerVisible = settingsBox.get('isSatelliteLayerVisible', defaultValue: false) as bool;
