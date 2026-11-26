@@ -1,8 +1,8 @@
 import 'package:flutter/foundation.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:hive_ce_flutter/hive_flutter.dart';
-import 'package:roads_map/models/layer_sublayer.riverpod.dart';
-import 'package:roads_map/models/menu_assets.riverpod.dart';
+import 'package:roads_map/hive_boxes.dart';
+import 'package:roads_map/hive_registrar.g.dart';
 import 'package:roads_map/models/menu_assets_notifier.riverpod.dart';
 import 'package:roads_map/utils/marker_utilities.riverpod.dart';
 
@@ -12,23 +12,21 @@ final initializationProvider = FutureProvider<void>((ref) async {
     debugPrint('---Initializing Hive...');
     debugPrint('Registering Hive adapters...');
   } // Register only the required adapters for MenuAssets
-  Hive.registerAdapter(MenuAssetsAdapter());
-  Hive.registerAdapter(LayerAdapter());
-  Hive.registerAdapter(GroupMemberAdapter());
-  Hive.registerAdapter(SubLayerAdapter());
-  Hive.registerAdapter(LayerSubLayerAdapter());
+  Hive.registerAdapters();
+  // Not part of the generated registrar.
   Hive.registerAdapter(Uint8ListAdapter());
 
   if (kDebugMode) {
     debugPrint('Hive adapters registered successfully');
     debugPrint('Opening Hive boxes...');
   }
-  await Hive.openBox("layersBox");
-  await Hive.openBox("settingsBox");
-  await Hive.openBox("showAllLayersBox");
-  await Hive.openBox("selectedPoiLayerBox");
-  await Hive.openBox("selectedLayerBox");
-  await Hive.openBox<Uint8List>("marker_images");
+  for (final name in HiveBoxes.requiredAtStartup) {
+    if (name == HiveBoxes.markerImages) {
+      await Hive.openBox<Uint8List>(name);
+    } else {
+      await Hive.openBox(name);
+    }
+  }
   if (kDebugMode) {
     debugPrint('Hive boxes opened successfully');
     debugPrint('Hive initialization complete');

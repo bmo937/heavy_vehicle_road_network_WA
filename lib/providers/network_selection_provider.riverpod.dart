@@ -1,3 +1,4 @@
+import 'package:roads_map/hive_boxes.dart';
 import 'package:flutter/foundation.dart';
 import 'package:hive_ce/hive.dart';
 import 'package:riverpod_annotation/riverpod_annotation.dart';
@@ -9,12 +10,12 @@ part 'network_selection_provider.riverpod.g.dart';
 class PoiLayerSelection extends _$PoiLayerSelection {
   /// Toggle a layer's visibility
   Future<void> toggleLayer(String layerName, bool value) async {
-    final box = Hive.box('selectedPoiLayerBox');
+    final box = Hive.box(HiveBoxes.selectedPoiLayer);
     await box.put(layerName, value);
 
     // Also save to legacy box for cross-compatibility
-    if (Hive.isBoxOpen('pointsOfInterestBox')) {
-      final legacyBox = Hive.box('pointsOfInterestBox');
+    if (Hive.isBoxOpen(HiveBoxes.pointsOfInterest)) {
+      final legacyBox = Hive.box(HiveBoxes.pointsOfInterest);
       await legacyBox.put('${layerName}_layer_visibility', value);
     }
 
@@ -29,7 +30,7 @@ class PoiLayerSelection extends _$PoiLayerSelection {
   Map<String, bool> _loadInitialPoiState() {
     try {
       // Try the primary box first
-      final box = Hive.box('selectedPoiLayerBox');
+      final box = Hive.box(HiveBoxes.selectedPoiLayer);
       final map = <String, bool>{};
 
       // Load from primary box
@@ -40,8 +41,8 @@ class PoiLayerSelection extends _$PoiLayerSelection {
       }
 
       // If the primary box is empty, try loading from the legacy box
-      if (map.isEmpty && Hive.isBoxOpen('pointsOfInterestBox')) {
-        final legacyBox = Hive.box('pointsOfInterestBox');
+      if (map.isEmpty && Hive.isBoxOpen(HiveBoxes.pointsOfInterest)) {
+        final legacyBox = Hive.box(HiveBoxes.pointsOfInterest);
         for (final key in legacyBox.keys) {
           if (key is String && key.toString().endsWith('_layer_visibility')) {
             final layerName = key.toString().replaceAll('_layer_visibility', '');
@@ -72,7 +73,7 @@ class NetworkLayerSelection extends _$NetworkLayerSelection {
     debugPrint('\n🔄 NetworkLayerSelection.selectLayer called with: $layerName');
     debugPrint('📦 Previous state: $state');
 
-    final box = Hive.box('selectedLayerBox'); // Ensure this box is opened
+    final box = Hive.box(HiveBoxes.selectedLayer); // Ensure this box is opened
 
     if (layerName == null) {
       await box.delete('selectedLayer');
@@ -89,7 +90,7 @@ class NetworkLayerSelection extends _$NetworkLayerSelection {
   }
 
   String? _loadInitialNetworkState() {
-    final box = Hive.box('selectedLayerBox'); // Ensure this box is opened
+    final box = Hive.box(HiveBoxes.selectedLayer); // Ensure this box is opened
     return box.get('selectedLayer');
   }
 

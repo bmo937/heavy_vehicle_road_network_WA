@@ -1,3 +1,4 @@
+import 'package:roads_map/hive_boxes.dart';
 import 'dart:convert';
 import 'dart:isolate';
 
@@ -11,7 +12,7 @@ import 'package:roads_map/models/menu_assets.riverpod.dart';
 
 part 'menu_assets_notifier.riverpod.g.dart';
 
-const String layersBoxName = 'layersBox';
+const String layersBoxName = HiveBoxes.layers;
 const String layersKey = 'layers_data';
 const String lastUpdateKey = 'last_update';
 const String versionKey = 'current_version';

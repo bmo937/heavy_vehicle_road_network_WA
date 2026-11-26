@@ -1,3 +1,4 @@
+import 'package:roads_map/hive_boxes.dart';
 import 'package:flutter/foundation.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:hive_ce/hive.dart';
@@ -7,8 +8,8 @@ import 'package:roads_map/providers/network_selection_provider.riverpod.dart';
 part 'menu_helpers.g.dart';
 
 // Constants for Hive storage
-const String pointsOfInterestBoxName = 'pointsOfInterestBox';
-const String roadNetworksBoxName = 'roadNetworksBox';
+const String pointsOfInterestBoxName = HiveBoxes.pointsOfInterest;
+const String roadNetworksBoxName = HiveBoxes.roadNetworks;
 const String visibilityKey = 'layer_visibility';
 
 // Providers for managing layer selections
@@ -24,7 +25,7 @@ class PointsOfInterestSelectionNotifier extends _$PointsOfInterestSelectionNotif
 
   Map<String, bool> _loadInitialState() {
     try {
-      final box = Hive.isBoxOpen(pointsOfInterestBoxName) ? Hive.box(pointsOfInterestBoxName) : Hive.box('selectedPoiLayerBox');
+      final box = Hive.isBoxOpen(pointsOfInterestBoxName) ? Hive.box(pointsOfInterestBoxName) : Hive.box(HiveBoxes.selectedPoiLayer);
       final map = <String, bool>{};
 
       // Load from pointsOfInterestBoxName first
@@ -37,8 +38,8 @@ class PointsOfInterestSelectionNotifier extends _$PointsOfInterestSelectionNotif
       }
 
       // If no data was found, try the secondary box
-      if (map.isEmpty && Hive.isBoxOpen('selectedPoiLayerBox')) {
-        final altBox = Hive.box('selectedPoiLayerBox');
+      if (map.isEmpty && Hive.isBoxOpen(HiveBoxes.selectedPoiLayer)) {
+        final altBox = Hive.box(HiveBoxes.selectedPoiLayer);
         for (final key in altBox.keys) {
           if (key is String) {
             map[key] = altBox.get(key) ?? false;
@@ -149,7 +150,7 @@ Future<void> loadSavedPointsOfInterest(WidgetRef ref) async {
   try {
     // Open both Hive boxes
     final box = await Hive.openBox(pointsOfInterestBoxName);
-    final selectedPoiBox = Hive.isBoxOpen('selectedPoiLayerBox') ? Hive.box('selectedPoiLayerBox') : await Hive.openBox('selectedPoiLayerBox');
+    final selectedPoiBox = Hive.isBoxOpen(HiveBoxes.selectedPoiLayer) ? Hive.box(HiveBoxes.selectedPoiLayer) : await Hive.openBox(HiveBoxes.selectedPoiLayer);
 
     final poiSelectionNotifier = ref.read(pointsOfInterestSelectionNotifierProvider.notifier);
     final poiLayerSelectionNotifier = ref.read(poiLayerSelectionProvider.notifier);

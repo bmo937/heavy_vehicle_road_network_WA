@@ -7,6 +7,7 @@
 /// 5. Clear visual feedback on filter state
 library;
 
+import 'package:roads_map/hive_boxes.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:hive_ce/hive.dart';
@@ -25,7 +26,7 @@ class RoadNetworksMenu extends ConsumerWidget {
   final bool showOnlyDownloaded;
 
   // Constants for Hive storage
-  static const String roadNetworksBoxName = 'roadNetworksBox';
+  static const String roadNetworksBoxName = HiveBoxes.roadNetworks;
   static const String visibilityKey = 'layer_visibility';
 
   @override

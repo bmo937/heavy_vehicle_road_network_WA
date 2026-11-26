@@ -1,3 +1,4 @@
+import 'package:roads_map/hive_boxes.dart';
 import 'dart:async';
 import 'dart:convert';
 import 'dart:isolate';
@@ -12,7 +13,7 @@ part 'marker_utilities.riverpod.g.dart';
 
 class MarkerUtilities {
   static const String _imageAssetPath = 'assets/image_assets.json';
-  static const String _hiveBoxName = 'marker_images';
+  static const String _hiveBoxName = HiveBoxes.markerImages;
   static const String _versionKey = 'marker_images_version';
   static Map<String, Uint8List>? _imageCache;
   static double? _cachedVersion;
@@ -66,7 +67,7 @@ class MarkerUtilities {
 
       if (_cachedVersion == null) {
         // Load the cached version from Hive
-        final versionBox = Hive.isBoxOpen('settingsBox') ? Hive.box('settingsBox') : await Hive.openBox('settingsBox');
+        final versionBox = Hive.isBoxOpen(HiveBoxes.settings) ? Hive.box(HiveBoxes.settings) : await Hive.openBox(HiveBoxes.settings);
 
         _cachedVersion = versionBox.get(_versionKey) as double?;
       }
@@ -76,7 +77,7 @@ class MarkerUtilities {
         debugPrint('Version changed from ${_cachedVersion ?? "none"} to $jsonVersion, reloading images');
 
         // Update the cached version in Hive
-        final versionBox = Hive.isBoxOpen('settingsBox') ? Hive.box('settingsBox') : await Hive.openBox('settingsBox');
+        final versionBox = Hive.isBoxOpen(HiveBoxes.settings) ? Hive.box(HiveBoxes.settings) : await Hive.openBox(HiveBoxes.settings);
 
         await versionBox.put(_versionKey, jsonVersion);
         _cachedVersion = jsonVersion;
