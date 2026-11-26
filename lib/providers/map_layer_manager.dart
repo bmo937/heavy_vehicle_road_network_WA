@@ -8,12 +8,17 @@ import 'package:maplibre_gl/maplibre_gl.dart';
 import 'package:roads_map/models/menu_assets.riverpod.dart';
 import 'package:roads_map/models/menu_assets_notifier.riverpod.dart';
 import 'package:roads_map/providers/map_utilities.dart';
+import 'package:roads_map/providers/network_refresh_coordinator.dart';
 import 'package:roads_map/providers/network_selection_provider.riverpod.dart';
 import 'package:roads_map/providers/online_layers.dart';
 import 'package:roads_map/utils/layer_naming_utilities.dart';
 import 'package:roads_map/utils/source_management_utility.dart';
 
 class MapLayerManager {
+  final NetworkRefreshCoordinator _refreshCoordinator;
+
+  MapLayerManager(this._refreshCoordinator);
+
   /// Force an immediate layer update without waiting for camera movement
   /// This is useful when network selections change or theme changes
   Future<void> forceLayerUpdate(
@@ -140,6 +145,7 @@ class MapLayerManager {
               activeLayerNotifier: ref.read(activeOnlineLayerProvider.notifier),
               loadingNotifier: ref.read(onlineLayerLoadingProvider.notifier),
               lastBoundsNotifier: ref.read(lastMapBoundsProvider.notifier),
+              refreshCoordinator: _refreshCoordinator,
             );
 
             break; // Found what we're looking for, exit inner loop

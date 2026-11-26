@@ -5,9 +5,14 @@ import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:maplibre_gl/maplibre_gl.dart';
 import 'package:roads_map/providers/map_utilities.dart';
+import 'package:roads_map/providers/network_refresh_coordinator.dart';
 import 'package:roads_map/providers/online_layers.dart';
 
 class MapCameraHandler {
+  final NetworkRefreshCoordinator _refreshCoordinator;
+
+  MapCameraHandler(this._refreshCoordinator);
+
   Timer? _cameraIdleDebounceTimer;
   bool _isHandlingCameraIdle = false;
   DateTime _lastUpdateTime = DateTime.now();
@@ -100,6 +105,7 @@ class MapCameraHandler {
           loadingNotifier: ref.read(onlineLayerLoadingProvider.notifier),
           lastBoundsNotifier: ref.read(lastMapBoundsProvider.notifier),
           isLoading: isStillLoading,
+          refreshCoordinator: _refreshCoordinator,
         );
       } else {
         // Check if we need to update map data based on selected layers

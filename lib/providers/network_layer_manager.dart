@@ -10,6 +10,7 @@ import 'package:roads_map/utils/source_management_utility.dart';
 import 'layer_styling_utils.dart';
 import 'map_bounds.dart';
 import 'network_data_service.dart';
+import 'network_refresh_coordinator.dart';
 import 'online_layer_providers.dart';
 
 /// Load network layer data within visible bounds
@@ -20,7 +21,11 @@ Future<void> loadNetworkLayerData({
   required ActiveOnlineLayerNotifier activeLayerNotifier,
   required OnlineLayerLoadingNotifier loadingNotifier,
   required LastMapBoundsNotifier lastBoundsNotifier,
+  required NetworkRefreshCoordinator refreshCoordinator,
 }) async {
+  // One ticket per visible-network refresh; supersedes any earlier refresh.
+  final ticket = refreshCoordinator.begin();
+  debugPrint('🔄 Network refresh #${ticket.generation} started: ${member.name}');
   debugPrint('\n🔄 === LOADING NETWORK LAYER: ${member.name} ===');
   debugPrint('📍 Member ID: ${member.id}');
   debugPrint('📍 Has SubLayers: ${member.subLayers?.isNotEmpty ?? false}');
@@ -32,6 +37,11 @@ Future<void> loadNetworkLayerData({
   debugPrint('🗑️ Removing existing network layers...');
   await SourceManagementUtility.cleanupNetworkLayers(mapController);
   debugPrint('✅ Existing layers removed');
+  if (!ticket.isCurrent) {
+    debugPrint('⏭️ Network refresh #${ticket.generation} superseded; discarding');
+    if (ticket.isLatestStarted) loadingNotifier.setLoading(false);
+    return;
+  }
 
   // Convert current bounds to our MapBounds class
   final currentBounds = MapBounds(southwest: visibleBounds.southwest, northeast: visibleBounds.northeast);
@@ -60,7 +70,9 @@ Future<void> loadNetworkLayerData({
           subLayer: subLayer,
           visibleBounds: visibleBounds,
           memberName: member.name,
+          ticket: ticket,
         );
+        if (!ticket.isCurrent) break;
       }
       debugPrint('✅ All sublayers processed');
     } else if (member.url != null && member.url!.isNotEmpty) {
@@ -68,6 +80,7 @@ Future<void> loadNetworkLayerData({
         mapController: mapController,
         member: member,
         visibleBounds: visibleBounds,
+        ticket: ticket,
       );
       debugPrint('✅ Single layer loaded');
     } else {
@@ -81,7 +94,8 @@ Future<void> loadNetworkLayerData({
       debugPrint('Stack trace: $stackTrace');
     }
   } finally {
-    loadingNotifier.setLoading(false);
+    // A superseded refresh must not clear the loading flag of its successor.
+    if (ticket.isLatestStarted) loadingNotifier.setLoading(false);
     debugPrint('✅ Loading state cleared');
     debugPrint('=== END LOADING NETWORK LAYER ===\n');
   }
@@ -92,6 +106,7 @@ Future<void> _loadSingleLayerFromMember({
   required MapLibreMapController mapController,
   required GroupMember member,
   required LatLngBounds visibleBounds,
+  required NetworkRefreshTicket ticket,
 }) async {
   debugPrint('\n🔗 === LOADING SINGLE LAYER FROM MEMBER: ${member.name} ===');
   debugPrint('📍 Member ID: ${member.id}');
@@ -117,7 +132,11 @@ Future<void> _loadSingleLayerFromMember({
       final url = constructUrlWithBounds(member.url!, boundsString);
 
       final dio = buildAppDio();
-      final response = await dio.get(url);
+      final response = await dio.get(url, cancelToken: ticket.cancelToken);
+      if (!ticket.isCurrent) {
+        debugPrint('⏭️ Discarding stale result (refresh #${ticket.generation}): $sourceId');
+        return;
+      }
 
       if (response.statusCode == 200) {
         dynamic jsonData;
@@ -176,6 +195,10 @@ Future<void> _loadSingleLayerFromMember({
     }
     debugPrint('=== END LOADING SINGLE LAYER FROM MEMBER ===\n');
   } catch (e) {
+    if (NetworkRefreshCoordinator.isExpectedCancellation(e)) {
+      debugPrint('⏹️ Request cancelled (refresh #${ticket.generation}): $sourceId');
+      return;
+    }
     debugPrint('💥 Error loading single layer from member: $e');
     debugPrint('=== END LOADING SINGLE LAYER FROM MEMBER (ERROR) ===\n');
   }
@@ -187,6 +210,7 @@ Future<void> _loadSingleLayer({
   required SubLayer subLayer,
   required LatLngBounds visibleBounds,
   required String memberName,
+  required NetworkRefreshTicket ticket,
 }) async {
   final subLayerId = subLayer.id;
   debugPrint('\n    🔗 === LOADING SUBLAYER: ${subLayer.name} ===');
@@ -227,7 +251,11 @@ Future<void> _loadSingleLayer({
     // Fetch data with visible bounds
     debugPrint('    📡 Fetching data from server...');
     final dio = buildAppDio();
-    final response = await dio.get(url);
+    final response = await dio.get(url, cancelToken: ticket.cancelToken);
+    if (!ticket.isCurrent) {
+      debugPrint('    ⏭️ Discarding stale result (refresh #${ticket.generation}): $sourceId');
+      return;
+    }
 
     if (response.statusCode != 200) {
       throw Exception('Failed to fetch data: ${response.statusCode}');
@@ -253,6 +281,10 @@ Future<void> _loadSingleLayer({
     final sourceIds = await mapController.getSourceIds();
     final layerIds = await mapController.getLayerIds();
     debugPrint('    🗂️ Map has ${sourceIds.length} sources and ${layerIds.length} layers');
+    if (!ticket.isCurrent) {
+      debugPrint('    ⏭️ Refresh #${ticket.generation} went stale before map update: $sourceId');
+      return;
+    }
 
     // Use safe source management to prevent race conditions
     await SourceManagementUtility.safeAddGeoJsonSource(
@@ -308,6 +340,10 @@ Future<void> _loadSingleLayer({
     }
     debugPrint('    === END LOADING SUBLAYER: ${subLayer.name} ===\n');
   } catch (e) {
+    if (NetworkRefreshCoordinator.isExpectedCancellation(e)) {
+      debugPrint('    ⏹️ Request cancelled (refresh #${ticket.generation}): $sourceId');
+      return;
+    }
     debugPrint('    💥 Error loading sublayer: $e');
     debugPrint('    === END LOADING SUBLAYER (ERROR): ${subLayer.name} ===\n');
   }
@@ -321,6 +357,7 @@ Future<void> updateNetworkLayerWithNewBounds({
   required OnlineLayerLoadingNotifier loadingNotifier,
   required LastMapBoundsNotifier lastBoundsNotifier,
   required bool isLoading, // Added isLoading parameter
+  required NetworkRefreshCoordinator refreshCoordinator,
 }) async {
   debugPrint('\n=== Checking if network layer bounds update needed ===');
 
@@ -344,6 +381,8 @@ Future<void> updateNetworkLayerWithNewBounds({
     return;
   }
 
+  final ticket = refreshCoordinator.begin();
+  debugPrint('🔄 Network bounds refresh #${ticket.generation} started: ${member.name}');
   loadingNotifier.setLoading(true);
 
   // Update the last bounds now that we're fetching new data
@@ -354,6 +393,7 @@ Future<void> updateNetworkLayerWithNewBounds({
     if (member.subLayers != null && member.subLayers!.isNotEmpty) {
       // Process each sublayer using featureType-based naming
       for (final subLayer in member.subLayers!) {
+        if (!ticket.isCurrent) break;
         // Use new featureType-based naming
         final featureTypeString = subLayer.featureType.toString().split('.').last;
         final sourceId = LayerNamingUtility.getNetworkSourceId(featureTypeString);
@@ -372,7 +412,11 @@ Future<void> updateNetworkLayerWithNewBounds({
 
             // Fetch updated data
             final dio = buildAppDio();
-            final response = await dio.get(url);
+            final response = await dio.get(url, cancelToken: ticket.cancelToken);
+            if (!ticket.isCurrent) {
+              debugPrint('⏭️ Discarding stale result (refresh #${ticket.generation}): $sourceId');
+              break;
+            }
 
             if (response.statusCode == 200) {
               dynamic jsonData;
@@ -395,6 +439,10 @@ Future<void> updateNetworkLayerWithNewBounds({
             debugPrint('⚠️ Source not found for update: $sourceId');
           }
         } catch (e) {
+          if (NetworkRefreshCoordinator.isExpectedCancellation(e)) {
+            debugPrint('⏹️ Request cancelled (refresh #${ticket.generation}): $sourceId');
+            break;
+          }
           debugPrint('❌ Error updating sublayer ${subLayer.name}: $e');
           // Continue with other sublayers instead of failing completely
         }
@@ -418,7 +466,11 @@ Future<void> updateNetworkLayerWithNewBounds({
 
           // Fetch updated data
           final dio = buildAppDio();
-          final response = await dio.get(url);
+          final response = await dio.get(url, cancelToken: ticket.cancelToken);
+          if (!ticket.isCurrent) {
+            debugPrint('⏭️ Discarding stale result (refresh #${ticket.generation}): $sourceId');
+            return;
+          }
 
           if (response.statusCode == 200) {
             dynamic jsonData;
@@ -441,6 +493,10 @@ Future<void> updateNetworkLayerWithNewBounds({
           debugPrint('⚠️ Source not found for update: $sourceId');
         }
       } catch (e) {
+        if (NetworkRefreshCoordinator.isExpectedCancellation(e)) {
+          debugPrint('⏹️ Request cancelled (refresh #${ticket.generation}): $sourceId');
+          return;
+        }
         debugPrint('❌ Error updating single layer ${member.name}: $e');
       }
     }
@@ -452,7 +508,8 @@ Future<void> updateNetworkLayerWithNewBounds({
       debugPrint('Stack trace: $stackTrace');
     }
   } finally {
-    loadingNotifier.setLoading(false);
+    // A superseded refresh must not clear the loading flag of its successor.
+    if (ticket.isLatestStarted) loadingNotifier.setLoading(false);
     debugPrint('=== Network layer bounds update complete ===\n');
   }
 }
