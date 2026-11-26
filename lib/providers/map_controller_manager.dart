@@ -12,6 +12,7 @@ class MapControllerManager {
   MapLibreMapController? _mapController;
   bool styleIsLoaded = false;
   double currentZoomLevel = 0;
+  Function(dynamic, Point<double>, LatLng, String)? _featureTapListener;
   final GlobalKey<ScaffoldState> scaffoldKey = GlobalKey<ScaffoldState>();
 
   // Getters
@@ -22,6 +23,7 @@ class MapControllerManager {
   /// Initialize the map controller when map is created
   Future<void> onMapCreated(MapLibreMapController controller, WidgetRef ref, Function(dynamic, Point<double>, LatLng, String) onFeatureInteraction) async {
     debugPrint('\nMapControllerManager: onMapCreated called');
+    _detachFeatureTapListener();
     _mapController = controller;
 
     // Set the controller in the provider
@@ -31,7 +33,8 @@ class MapControllerManager {
     styleIsLoaded = false;
 
     // Add feature tap handler
-    _mapController!.onFeatureTapped.add(onFeatureInteraction);
+    _featureTapListener = onFeatureInteraction;
+    controller.onFeatureTapped.add(onFeatureInteraction);
     debugPrint('Added feature tap handler');
 
     // Move to initial position
@@ -40,6 +43,22 @@ class MapControllerManager {
     );
 
     debugPrint('MapControllerManager: onMapCreated completed\n');
+  }
+
+  void _detachFeatureTapListener() {
+    final listener = _featureTapListener;
+    if (listener != null) {
+      _mapController?.onFeatureTapped.remove(listener);
+      _featureTapListener = null;
+    }
+  }
+
+  /// Unregister the feature-tap listener and drop the controller reference.
+  /// The controller itself is owned and disposed by the map widget.
+  void dispose() {
+    _detachFeatureTapListener();
+    _mapController = null;
+    styleIsLoaded = false;
   }
 
   /// Handle when map style is loaded

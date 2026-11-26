@@ -16,13 +16,41 @@ import 'package:roads_map/providers/map_utilities.dart';
 import 'package:roads_map/providers/network_refresh_coordinator.dart';
 import 'package:roads_map/utils/map_style_service.riverpod.dart';
 
-// Provider for the MapPageNotifier using traditional approach
+/// Snapshot of what the notifier needs before it can report ready.
+class MapInitialSettings {
+  const MapInitialSettings({required this.styleUrl, required this.isTravelLayerVisible, required this.isSatelliteLayerVisible});
+  final String styleUrl;
+  final bool isTravelLayerVisible;
+  final bool isSatelliteLayerVisible;
+}
+
+typedef MapInitialSettingsLoader = Future<MapInitialSettings> Function();
+
+/// Loads persisted layer settings and the current map style.
+///
+/// settingsBox is opened by the app bootstrap, but the notifier may be created
+/// before that finishes (e.g. watched from the app wrapper), so the box is only
+/// opened here as a fallback.
+Future<MapInitialSettings> _loadPersistedSettings(Ref ref) async {
+  final settingsBox = Hive.isBoxOpen(HiveBoxes.settings) ? Hive.box(HiveBoxes.settings) : await Hive.openBox(HiveBoxes.settings);
+  return MapInitialSettings(
+    styleUrl: ref.read(mapThemeProvider),
+    isTravelLayerVisible: settingsBox.get('isTravelLayerVisible', defaultValue: false) as bool,
+    isSatelliteLayerVisible: settingsBox.get('isSatelliteLayerVisible', defaultValue: false) as bool,
+  );
+}
+
+// The constructor does no work; initialize() is started explicitly here and its
+// outcome is published through MapProviderState.initStatus.
 final mapPageNotifierProvider = StateNotifierProvider<MapPageNotifier, MapProviderState>((ref) {
-  return MapPageNotifier(ref);
+  final notifier = MapPageNotifier(() => _loadPersistedSettings(ref));
+  unawaited(notifier.initialize());
+  return notifier;
 });
 
 class MapPageNotifier extends StateNotifier<MapProviderState> {
-  final Ref _ref;
+  final MapInitialSettingsLoader _loadSettings;
+  Future<void>? _initialization;
 
   // Component managers
   final MapControllerManager _controllerManager = MapControllerManager();
@@ -30,30 +58,33 @@ class MapPageNotifier extends StateNotifier<MapProviderState> {
   late final MapCameraHandler _cameraHandler = MapCameraHandler(_refreshCoordinator);
   final MapFeatureHandler _featureHandler = MapFeatureHandler();
   late final MapLayerManager _layerManager = MapLayerManager(_refreshCoordinator);
-  MapPageNotifier(this._ref) : super(const MapProviderState(currentStyleUrl: '', isSatelliteLayerVisible: false, isTravelLayerVisible: false, isMapFullyLoaded: false)) {
-    _initialize();
-  }
+
+  MapPageNotifier(this._loadSettings)
+      : super(const MapProviderState(currentStyleUrl: '', isSatelliteLayerVisible: false, isTravelLayerVisible: false, isMapFullyLoaded: false));
+
+  /// Loads settings and the initial style. Idempotent; never throws.
+  /// Success -> [MapInitStatus.ready]; failure -> [MapInitStatus.failure]
+  /// (style stays empty, so the splash screen does not complete).
+  Future<void> initialize() => _initialization ??= _initialize();
+
   Future<void> _initialize() async {
     debugPrint('MapPageProvider initializing...');
-
-    _cameraHandler.dispose();
-
-    // Initialize the state
-    final settingsBox = Hive.isBoxOpen(HiveBoxes.settings) ? Hive.box(HiveBoxes.settings) : await Hive.openBox(HiveBoxes.settings);
-
-    final isTravelLayerVisible = settingsBox.get('isTravelLayerVisible', defaultValue: false) as bool;
-    final isSatelliteLayerVisible = settingsBox.get('isSatelliteLayerVisible', defaultValue: false) as bool;
-
-    final currentStyleUrl = _ref.read(mapThemeProvider);
-
-    state = MapProviderState(
-      currentStyleUrl: currentStyleUrl,
-      isSatelliteLayerVisible: isSatelliteLayerVisible,
-      isTravelLayerVisible: isTravelLayerVisible,
-      isMapFullyLoaded: false,
-    );
-
-    debugPrint('MapPageProvider initialization complete');
+    try {
+      final settings = await _loadSettings();
+      if (!mounted) return;
+      state = MapProviderState(
+        currentStyleUrl: settings.styleUrl,
+        isSatelliteLayerVisible: settings.isSatelliteLayerVisible,
+        isTravelLayerVisible: settings.isTravelLayerVisible,
+        isMapFullyLoaded: false,
+        initStatus: MapInitStatus.ready,
+      );
+      debugPrint('MapPageProvider initialization complete');
+    } catch (e) {
+      debugPrint('MapPageProvider initialization failed: ${e.runtimeType}');
+      if (!mounted) return;
+      state = state.copyWith(initStatus: MapInitStatus.failure, initError: 'Map initialisation failed (${e.runtimeType})');
+    }
   }
 
   // Getters that delegate to the controller manager
@@ -70,6 +101,7 @@ class MapPageNotifier extends StateNotifier<MapProviderState> {
   }
 
   Future<void> onStyleLoaded(BuildContext context, WidgetRef ref) async {
+    if (!mounted) return;
     debugPrint('🎨 Map style loaded');
 
     // Anything fetched against the previous style must not touch the new one.
@@ -83,7 +115,11 @@ class MapPageNotifier extends StateNotifier<MapProviderState> {
         debugPrint('✅ POI layers preloaded - marking map as fully loaded');
         markMapAsFullyLoaded();
       },
-      () => forceLayerUpdate(mapController!, ref),
+      () async {
+        final controller = mapController;
+        if (!mounted || controller == null) return;
+        await forceLayerUpdate(controller, ref);
+      },
       () => _cameraHandler.markStyleLoaded(),
     );
   }
@@ -121,7 +157,12 @@ class MapPageNotifier extends StateNotifier<MapProviderState> {
     String originalLayerId,
     WidgetRef ref,
   ) async {
-    await _featureHandler.handleFeatureTap(context, id, point, coordinates, originalLayerId, ref, mapController!);
+    final controller = mapController;
+    if (controller == null) {
+      debugPrint('handleFeatureTap ignored: map controller not created');
+      return;
+    }
+    await _featureHandler.handleFeatureTap(context, id, point, coordinates, originalLayerId, ref, controller);
   }
 
   Future<void> forceLayerUpdate(MapLibreMapController mapController, WidgetRef ref) async {
@@ -143,6 +184,7 @@ class MapPageNotifier extends StateNotifier<MapProviderState> {
 
   /// Mark the map as fully loaded (called after POI layers are preloaded)
   void markMapAsFullyLoaded() {
+    if (!mounted) return;
     debugPrint('🎉 Map fully loaded - updating state');
     state = state.copyWith(isMapFullyLoaded: true);
   }
@@ -154,6 +196,7 @@ class MapPageNotifier extends StateNotifier<MapProviderState> {
   void dispose() {
     _cameraHandler.dispose();
     _refreshCoordinator.dispose();
+    _controllerManager.dispose();
     super.dispose();
   }
 }
