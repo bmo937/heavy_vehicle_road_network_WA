@@ -1,8 +1,8 @@
-import 'package:dio/dio.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:maplibre_gl/maplibre_gl.dart';
 import 'package:riverpod_annotation/riverpod_annotation.dart';
+import 'package:roads_map/services/dio_provider.dart';
 import 'package:roads_map/utils/layer_naming_utilities.dart';
 import 'package:roads_map/utils/source_management_utility.dart';
 
@@ -22,7 +22,7 @@ bool _isIncidentsLayerVisible = false;
 // Provider for fetching data
 @riverpod
 Future<Map<String, dynamic>> fetchIncidentsData(Ref ref) async {
-  final dio = Dio();
+  final dio = ref.watch(dioProvider);
   final response = await dio.get(incidentsUrl);
 
   if (response.statusCode == 200) {
