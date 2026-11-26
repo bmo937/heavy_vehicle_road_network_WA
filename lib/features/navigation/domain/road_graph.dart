@@ -6,6 +6,7 @@ import 'road_node.dart';
 /// Invariants enforced at construction (violations throw [ArgumentError]):
 /// - node IDs are unique;
 /// - edge IDs are unique;
+/// - edge lengths are non-negative;
 /// - every edge's `fromNodeId` and `toNodeId` refer to a node in the graph.
 ///
 /// Lookups of unknown IDs return null (or an empty list for outgoing edges);
@@ -28,6 +29,9 @@ class RoadGraph {
     for (final edge in edges) {
       if (edgesById.containsKey(edge.id)) {
         throw ArgumentError('Duplicate edge id: ${edge.id}');
+      }
+      if (edge.lengthMetres < 0) {
+        throw ArgumentError('Edge ${edge.id} has a negative length');
       }
       if (!nodesById.containsKey(edge.fromNodeId)) {
         throw ArgumentError(

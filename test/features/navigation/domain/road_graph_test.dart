@@ -1,3 +1,5 @@
+import 'dart:io';
+
 import 'package:flutter_test/flutter_test.dart';
 import 'package:roads_map/features/navigation/domain/road_edge.dart';
 import 'package:roads_map/features/navigation/domain/road_graph.dart';
@@ -106,6 +108,15 @@ void main() {
         ),
         throwsArgumentError,
       );
+    });
+
+    test('rejects negative edge lengths without assertions', () async {
+      final result = await Process.run('dart', [
+        'run',
+        '--no-enable-asserts',
+        'test/features/navigation/domain/road_graph_release_check.dart',
+      ]);
+      expect(result.exitCode, 0, reason: '${result.stdout}\n${result.stderr}');
     });
 
     test('outgoing list is unmodifiable', () {
