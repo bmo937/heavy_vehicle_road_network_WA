@@ -217,9 +217,7 @@ class RoadNetworksMenu extends ConsumerWidget {
     final boxController = ref.watch(boxControllerProvider);
     return Card(
       elevation: 0,
-      child: RadioListTile<String>(
-        title: Text(member.name),
-        value: member.name,
+      child: RadioGroup<String>(
         groupValue: selectedNetwork,
         onChanged: (value) {
           if (value != null) {
@@ -227,6 +225,10 @@ class RoadNetworksMenu extends ConsumerWidget {
             boxController.closeBox();
           }
         },
+        child: RadioListTile<String>(
+          title: Text(member.name),
+          value: member.name,
+        ),
       ),
     );
   }
