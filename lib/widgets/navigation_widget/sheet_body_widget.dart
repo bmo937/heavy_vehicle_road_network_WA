@@ -7,7 +7,7 @@ import 'package:roads_map/widgets/feature_display/feature_tapped_display.dart';
 import 'package:roads_map/widgets/feature_menu/points_of_interest_menu.dart';
 import 'package:roads_map/widgets/feature_menu/road_networks_menu.dart';
 import 'package:roads_map/widgets/location_search_widget.dart';
-import 'package:roads_map/widgets/navigation_widget/content_mesurement_widget.dart';
+import 'package:roads_map/widgets/navigation_widget/content_measurement_widget.dart';
 import 'package:roads_map/widgets/navigation_widget/navigation_widget.dart';
 import 'package:roads_map/widgets/navigation_widget/sliding_box_widget.dart';
 import 'package:roads_map/widgets/settings_page.dart';
