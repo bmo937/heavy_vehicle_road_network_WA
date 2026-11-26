@@ -17,7 +17,7 @@ void main() {
       expect(a, b);
       expect(a.hashCode, b.hashCode);
       expect(a, isNot(const RoadNode(id: 'a', latitude: 0, longitude: 0)));
-      expect({a, b}.length, 1);
+      expect({a, ...[b]}.length, 1);
     });
   });
 
