@@ -117,7 +117,9 @@ class MapPageNotifier extends StateNotifier<MapProviderState> {
     _refreshCoordinator.invalidate('style change began');
     _restoration.invalidate();
     _controllerManager.markStyleUnavailable();
-    if (state.isMapFullyLoaded) state = state.copyWith(isMapFullyLoaded: false);
+    if (state.isMapFullyLoaded || state.isMapRestorationFailed) {
+      state = state.copyWith(isMapFullyLoaded: false, isMapRestorationFailed: false);
+    }
   }
 
   /// Style lifecycle, steps 2-4: the base style loaded; restore everything the
@@ -159,13 +161,15 @@ class MapPageNotifier extends StateNotifier<MapProviderState> {
   Future<StyleRestorationOutcome> restoreApplicationMapState(List<StyleRestorationStep> steps) async {
     if (!mounted) return StyleRestorationOutcome.superseded;
     final run = _restoration.begin();
-    if (state.isMapFullyLoaded) state = state.copyWith(isMapFullyLoaded: false);
+    state = state.copyWith(isMapFullyLoaded: false, isMapRestorationFailed: false);
 
     final outcome = await _restoration.restore(run, steps);
     if (!mounted || !run.isCurrent) return StyleRestorationOutcome.superseded;
     if (outcome == StyleRestorationOutcome.completed) {
       debugPrint('✅ Application map state restored - marking map as fully loaded');
-      markMapAsFullyLoaded();
+      state = state.copyWith(isMapFullyLoaded: true, isMapRestorationFailed: false);
+    } else if (outcome == StyleRestorationOutcome.failed) {
+      state = state.copyWith(isMapFullyLoaded: false, isMapRestorationFailed: true);
     } else {
       debugPrint('⚠️ Application map state restoration did not complete: $outcome');
     }
@@ -217,6 +221,9 @@ class MapPageNotifier extends StateNotifier<MapProviderState> {
   /// longer the current one.
   Future<void> forceLayerUpdate(MapLibreMapController mapController, WidgetRef ref) async {
     await _applySelections(mapController, ref, null);
+    if (identical(mapController, this.mapController)) {
+      await _layerManager.restoreSelectedOverlays(ref, mapController);
+    }
   }
 
   Future<bool> _applySelections(MapLibreMapController controller, WidgetRef ref, bool Function()? isCurrent) async {
@@ -229,6 +236,13 @@ class MapPageNotifier extends StateNotifier<MapProviderState> {
       (context, bounds) => _layerManager.updateVisibleLayers(context, bounds, ref, controller, isCurrent: current),
     );
     return updated && current();
+  }
+
+  /// Retries required style restoration after a transient failure.
+  Future<void> retryStyleRestoration(WidgetRef ref) async {
+    final controller = mapController;
+    if (!styleLoaded || controller == null) return;
+    await restoreApplicationMapState(_applicationRestorationSteps(controller, ref));
   }
 
   dynamic structuresIconSize(String sourceId) {
@@ -246,7 +260,7 @@ class MapPageNotifier extends StateNotifier<MapProviderState> {
   void markMapAsFullyLoaded() {
     if (!mounted) return;
     debugPrint('🎉 Map fully loaded - updating state');
-    state = state.copyWith(isMapFullyLoaded: true);
+    state = state.copyWith(isMapFullyLoaded: true, isMapRestorationFailed: false);
   }
 
   /// See [markMapAsFullyLoaded].

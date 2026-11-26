@@ -93,9 +93,11 @@ void main() {
   test('required failure or throw is not ready; optional failure is', () async {
     expect(await n.restoreApplicationMapState([_step(() async => false)]), StyleRestorationOutcome.failed);
     expect(n.isMapFullyLoaded, isFalse);
+    expect(n.state.isMapRestorationFailed, isTrue);
 
     expect(await n.restoreApplicationMapState([_step(() async => throw StateError('x'))]), StyleRestorationOutcome.failed);
     expect(n.isMapFullyLoaded, isFalse);
+    expect(n.state.isMapRestorationFailed, isTrue);
 
     final outcome = await n.restoreApplicationMapState([
       _step(() async => true),
@@ -103,6 +105,7 @@ void main() {
     ]);
     expect(outcome, StyleRestorationOutcome.completed);
     expect(n.isMapFullyLoaded, isTrue);
+    expect(n.state.isMapRestorationFailed, isFalse);
   });
 
   test('disposal during restoration prevents late state update', () async {

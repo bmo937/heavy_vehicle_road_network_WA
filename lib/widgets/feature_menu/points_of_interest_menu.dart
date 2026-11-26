@@ -8,8 +8,6 @@ import 'package:roads_map/models/menu_assets.riverpod.dart';
 import 'package:roads_map/models/menu_helpers.dart';
 import 'package:roads_map/providers/map_page_notifier.riverpod.dart';
 import 'package:roads_map/providers/network_selection_provider.riverpod.dart';
-import 'package:roads_map/services/traffic_services.riverpod.dart';
-import 'package:roads_map/services/travel_impact_layer.riverpod.dart';
 import 'package:roads_map/utils/layer_naming_utilities.dart';
 import 'package:roads_map/utils/marker_utilities.riverpod.dart';
 
@@ -228,53 +226,10 @@ class PointsOfInterestMenu extends ConsumerWidget {
       final controller = mapPageNotifier.mapController!; // Handle special case for RAV and OSOM Impact layers which need
       // polyline rendering with markers at the start of each line
       if (member.name == "Rav Impacts" || member.name == "OSOM Impacts") {
-        try {
-          // Check if the other impact layer is active
-          final isRelatedLayerActive = await _isRelatedImpactLayerActive(ref, member.name);
-          final isRavActive = member.name == "Rav Impacts" ? value : isRelatedLayerActive;
-          final isOsomActive = member.name == "OSOM Impacts" ? value : isRelatedLayerActive;
-
-          // If both are inactive, remove the layers
-          if (!isRavActive && !isOsomActive) {
-            debugPrint('Removing all impact layers from map');
-            await removeTravelImpactLayers(controller);
-            return;
-          }
-
-          debugPrint('Updating impact layers - RAV: $isRavActive, OSOM: $isOsomActive');
-
-          // Fetch the data using the travel impact service
-          final geoJsonData = await ref.read(fetchGeoJsonDataProvider.future);
-
-          // Process data with appropriate filters
-          final processedData = processGeoJsonData({'data': geoJsonData, 'toggleRAV': isRavActive, 'toggleOSOM': isOsomActive});
-
-          // Display the layer with both lines and point markers
-          await displayTravelImpactLayer(controller, processedData);
-
-          // Make the layer visible
-          await setTravelImpactLayerVisibility(controller, true);
-        } catch (e) {
-          debugPrint('Error handling Impact layers: $e');
-        }
         return;
       }
       // Handle Road Incidents layer
       else if (member.name == "Road Incidents") {
-        try {
-          if (value) {
-            debugPrint('Loading and showing Road Incidents layer');
-            // Load incidents layer if not already loaded
-            await loadIncidentsLayer(controller, ref);
-            // Make it visible
-            await setIncidentsLayerVisibility(controller, true);
-          } else {
-            debugPrint('Hiding Road Incidents layer');
-            await setIncidentsLayerVisibility(controller, false);
-          }
-        } catch (e) {
-          debugPrint('Error handling Road Incidents layer: $e');
-        }
         return;
       } // Handle standard point layers (stopping places, etc.)
       else {
@@ -300,16 +255,4 @@ class PointsOfInterestMenu extends ConsumerWidget {
     }
   }
 
-  // Helper method to check if related impact layers are active
-  Future<bool> _isRelatedImpactLayerActive(WidgetRef ref, String excludedLayerName) async {
-    final Map<String, bool> poiLayers = ref.read(pointsOfInterestSelectionNotifierProvider);
-
-    if (excludedLayerName == "Rav Impacts") {
-      return poiLayers["OSOM Impacts"] ?? false;
-    } else if (excludedLayerName == "OSOM Impacts") {
-      return poiLayers["Rav Impacts"] ?? false;
-    }
-
-    return false;
-  }
 }

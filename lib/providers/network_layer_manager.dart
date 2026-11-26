@@ -14,7 +14,7 @@ import 'network_refresh_coordinator.dart';
 import 'online_layer_providers.dart';
 
 /// Load network layer data within visible bounds
-Future<void> loadNetworkLayerData({
+Future<bool> loadNetworkLayerData({
   required MapLibreMapController mapController,
   required GroupMember member,
   required LatLngBounds visibleBounds,
@@ -23,25 +23,11 @@ Future<void> loadNetworkLayerData({
   required LastMapBoundsNotifier lastBoundsNotifier,
   required NetworkRefreshCoordinator refreshCoordinator,
 }) async {
-  // One ticket per visible-network refresh; supersedes any earlier refresh.
-  final ticket = refreshCoordinator.begin();
-  debugPrint('🔄 Network refresh #${ticket.generation} started: ${member.name}');
   debugPrint('\n🔄 === LOADING NETWORK LAYER: ${member.name} ===');
   debugPrint('📍 Member ID: ${member.id}');
   debugPrint('📍 Has SubLayers: ${member.subLayers?.isNotEmpty ?? false}');
   debugPrint('📍 Has URL: ${member.url?.isNotEmpty ?? false}');
   debugPrint('📍 Bounds: ${visibleBounds.southwest} to ${visibleBounds.northeast}');
-
-  // Always remove existing network layers before adding new ones
-  // This ensures we don't have multiple networks visible at once
-  debugPrint('🗑️ Removing existing network layers...');
-  await SourceManagementUtility.cleanupNetworkLayers(mapController);
-  debugPrint('✅ Existing layers removed');
-  if (!ticket.isCurrent) {
-    debugPrint('⏭️ Network refresh #${ticket.generation} superseded; discarding');
-    if (ticket.isLatestStarted) loadingNotifier.setLoading(false);
-    return;
-  }
 
   // Convert current bounds to our MapBounds class
   final currentBounds = MapBounds(southwest: visibleBounds.southwest, northeast: visibleBounds.northeast);
@@ -51,32 +37,47 @@ Future<void> loadNetworkLayerData({
 
   if (!shouldFetchNew) {
     debugPrint('⚠️ BOUNDS CHECK: Skipping fetch - bounds are similar enough');
-    return;
+    return true;
   }
 
-  loadingNotifier.setLoading(true);
-  activeLayerNotifier.setActiveLayer(member);
-  debugPrint('📝 Set active layer and loading state');
-
+  // One ticket per visible-network refresh; supersedes any earlier refresh.
+  final ticket = refreshCoordinator.begin();
+  debugPrint('🔄 Network refresh #${ticket.generation} started: ${member.name}');
   try {
+    // Keep the currently rendered layer until a new fetch is needed.
+    debugPrint('🗑️ Removing existing network layers...');
+    await SourceManagementUtility.cleanupNetworkLayers(mapController);
+    debugPrint('✅ Existing layers removed');
+    if (!ticket.isCurrent) {
+      debugPrint('⏭️ Network refresh #${ticket.generation} superseded; discarding');
+      return false;
+    }
+
+    loadingNotifier.setLoading(true);
+    activeLayerNotifier.setActiveLayer(member);
+    debugPrint('📝 Set active layer and loading state');
+
     // Update the last bounds now that we're fetching new data
     lastBoundsNotifier.setLastBounds(currentBounds);
     debugPrint('📍 Updated last bounds');
 
+    var succeeded = true;
     if (member.subLayers != null && member.subLayers!.isNotEmpty) {
       for (final subLayer in member.subLayers!) {
-        await _loadSingleLayer(
+        if (!await _loadSingleLayer(
           mapController: mapController,
           subLayer: subLayer,
           visibleBounds: visibleBounds,
           memberName: member.name,
           ticket: ticket,
-        );
+        )) {
+          succeeded = false;
+        }
         if (!ticket.isCurrent) break;
       }
       debugPrint('✅ All sublayers processed');
     } else if (member.url != null && member.url!.isNotEmpty) {
-      await _loadSingleLayerFromMember(
+      succeeded = await _loadSingleLayerFromMember(
         mapController: mapController,
         member: member,
         visibleBounds: visibleBounds,
@@ -85,14 +86,17 @@ Future<void> loadNetworkLayerData({
       debugPrint('✅ Single layer loaded');
     } else {
       debugPrint('⚠️ No sublayers or URL found for member: ${member.name}');
+      succeeded = false;
     }
 
     debugPrint('🎉 Successfully loaded layer: ${member.name}');
+    return succeeded && ticket.isCurrent;
   } catch (e, stackTrace) {
     debugPrint('💥 Error loading network layer: $e');
     if (e is Error) {
       debugPrint('Stack trace: $stackTrace');
     }
+    return false;
   } finally {
     // A superseded refresh must not clear the loading flag of its successor.
     if (ticket.isLatestStarted) loadingNotifier.setLoading(false);
@@ -102,7 +106,7 @@ Future<void> loadNetworkLayerData({
 }
 
 /// Load a single layer from a group member
-Future<void> _loadSingleLayerFromMember({
+Future<bool> _loadSingleLayerFromMember({
   required MapLibreMapController mapController,
   required GroupMember member,
   required LatLngBounds visibleBounds,
@@ -135,7 +139,7 @@ Future<void> _loadSingleLayerFromMember({
       final response = await dio.get(url, cancelToken: ticket.cancelToken);
       if (!ticket.isCurrent) {
         debugPrint('⏭️ Discarding stale result (refresh #${ticket.generation}): $sourceId');
-        return;
+        return false;
       }
 
       if (response.statusCode == 200) {
@@ -189,23 +193,27 @@ Future<void> _loadSingleLayerFromMember({
             belowLayerId: 'Road labels',
           );
         }
+        return ticket.isCurrent && (await mapController.getLayerIds()).contains(layerId);
       }
+      return false;
     } else {
       debugPrint('⚠️ No URL provided for member: ${member.name}');
+      return false;
     }
     debugPrint('=== END LOADING SINGLE LAYER FROM MEMBER ===\n');
   } catch (e) {
     if (NetworkRefreshCoordinator.isExpectedCancellation(e)) {
       debugPrint('⏹️ Request cancelled (refresh #${ticket.generation}): $sourceId');
-      return;
+      return false;
     }
     debugPrint('💥 Error loading single layer from member: $e');
     debugPrint('=== END LOADING SINGLE LAYER FROM MEMBER (ERROR) ===\n');
+    return false;
   }
 }
 
 /// Load a single sublayer
-Future<void> _loadSingleLayer({
+Future<bool> _loadSingleLayer({
   required MapLibreMapController mapController,
   required SubLayer subLayer,
   required LatLngBounds visibleBounds,
@@ -254,7 +262,7 @@ Future<void> _loadSingleLayer({
     final response = await dio.get(url, cancelToken: ticket.cancelToken);
     if (!ticket.isCurrent) {
       debugPrint('    ⏭️ Discarding stale result (refresh #${ticket.generation}): $sourceId');
-      return;
+      return false;
     }
 
     if (response.statusCode != 200) {
@@ -283,7 +291,7 @@ Future<void> _loadSingleLayer({
     debugPrint('    🗂️ Map has ${sourceIds.length} sources and ${layerIds.length} layers');
     if (!ticket.isCurrent) {
       debugPrint('    ⏭️ Refresh #${ticket.generation} went stale before map update: $sourceId');
-      return;
+      return false;
     }
 
     // Use safe source management to prevent race conditions
@@ -334,18 +342,21 @@ Future<void> _loadSingleLayer({
         debugPrint('    ✅ Line layer added: $layerId');
       } else {
         debugPrint('    ⚠️ Unknown geometry type: ${subLayer.geometryType}');
+        return false;
       }
     } else {
       debugPrint('    ⚠️ Layer already exists: $layerId');
     }
     debugPrint('    === END LOADING SUBLAYER: ${subLayer.name} ===\n');
+    return ticket.isCurrent && (await mapController.getLayerIds()).contains(layerId);
   } catch (e) {
     if (NetworkRefreshCoordinator.isExpectedCancellation(e)) {
       debugPrint('    ⏹️ Request cancelled (refresh #${ticket.generation}): $sourceId');
-      return;
+      return false;
     }
     debugPrint('    💥 Error loading sublayer: $e');
     debugPrint('    === END LOADING SUBLAYER (ERROR): ${subLayer.name} ===\n');
+    return false;
   }
 }
 
