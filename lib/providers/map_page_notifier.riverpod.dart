@@ -13,6 +13,7 @@ import 'package:roads_map/providers/map_feature_handler.dart';
 import 'package:roads_map/providers/map_layer_manager.dart';
 import 'package:roads_map/providers/map_provider_state.dart';
 import 'package:roads_map/providers/map_utilities.dart';
+import 'package:roads_map/providers/network_refresh_coordinator.dart';
 import 'package:roads_map/utils/map_style_service.riverpod.dart';
 
 // Provider for the MapPageNotifier using traditional approach
@@ -25,9 +26,10 @@ class MapPageNotifier extends StateNotifier<MapProviderState> {
 
   // Component managers
   final MapControllerManager _controllerManager = MapControllerManager();
-  final MapCameraHandler _cameraHandler = MapCameraHandler();
+  final NetworkRefreshCoordinator _refreshCoordinator = NetworkRefreshCoordinator();
+  late final MapCameraHandler _cameraHandler = MapCameraHandler(_refreshCoordinator);
   final MapFeatureHandler _featureHandler = MapFeatureHandler();
-  final MapLayerManager _layerManager = MapLayerManager();
+  late final MapLayerManager _layerManager = MapLayerManager(_refreshCoordinator);
   MapPageNotifier(this._ref) : super(const MapProviderState(currentStyleUrl: '', isSatelliteLayerVisible: false, isTravelLayerVisible: false, isMapFullyLoaded: false)) {
     _initialize();
   }
@@ -69,6 +71,9 @@ class MapPageNotifier extends StateNotifier<MapProviderState> {
 
   Future<void> onStyleLoaded(BuildContext context, WidgetRef ref) async {
     debugPrint('🎨 Map style loaded');
+
+    // Anything fetched against the previous style must not touch the new one.
+    _refreshCoordinator.invalidate('style reloaded');
 
     await _controllerManager.onStyleLoaded(
       ref,
@@ -144,4 +149,11 @@ class MapPageNotifier extends StateNotifier<MapProviderState> {
 
   /// Check if the map is fully loaded
   bool get isMapFullyLoaded => state.isMapFullyLoaded;
+
+  @override
+  void dispose() {
+    _cameraHandler.dispose();
+    _refreshCoordinator.dispose();
+    super.dispose();
+  }
 }
