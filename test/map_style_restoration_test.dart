@@ -3,6 +3,7 @@ import 'dart:async';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:flutter_test/flutter_test.dart';
 import 'package:roads_map/providers/map_page_notifier.riverpod.dart';
+import 'package:roads_map/providers/map_provider_state.dart';
 import 'package:roads_map/providers/map_style_restoration.dart';
 import 'package:roads_map/providers/network_selection_provider.riverpod.dart';
 
