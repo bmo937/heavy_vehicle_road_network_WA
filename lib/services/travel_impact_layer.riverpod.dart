@@ -3,6 +3,7 @@ import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:maplibre_gl/maplibre_gl.dart';
 import 'package:riverpod_annotation/riverpod_annotation.dart';
+import 'package:roads_map/services/dio_provider.dart';
 import 'package:roads_map/utils/layer_naming_utilities.dart';
 import 'package:roads_map/utils/source_management_utility.dart';
 
@@ -18,7 +19,7 @@ final String travelImpactSymbolLayerId = LayerNamingUtility.getLayerId(LayerNami
 
 @riverpod
 Future<Map<String, dynamic>> fetchGeoJsonData(Ref ref) async {
-  final dio = Dio();
+  final dio = ref.watch(dioProvider);
   final response = await dio.get(apiUrlPROD);
 
   if (response.statusCode == 200) {

@@ -1,7 +1,7 @@
 // Layer management for POI and network layers
 import 'dart:convert';
 
-import 'package:dio/dio.dart';
+import 'package:roads_map/services/dio_provider.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:maplibre_gl/maplibre_gl.dart';
@@ -257,7 +257,7 @@ class MapLayerManager {
       final layerId = LayerNamingUtility.getPoiMemberLayerId(member.name);
 
       // Download and parse GeoJSON data
-      final dio = Dio();
+      final dio = buildAppDio();
       final response = await dio.get(member.url!);
 
       // Parse response data

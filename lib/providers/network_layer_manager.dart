@@ -1,6 +1,6 @@
 import 'dart:convert';
 
-import 'package:dio/dio.dart';
+import 'package:roads_map/services/dio_provider.dart';
 import 'package:flutter/foundation.dart';
 import 'package:maplibre_gl/maplibre_gl.dart';
 import 'package:roads_map/models/menu_assets.riverpod.dart';
@@ -116,7 +116,7 @@ Future<void> _loadSingleLayerFromMember({
       final boundsString = '${visibleBounds.southwest.longitude},${visibleBounds.southwest.latitude},${visibleBounds.northeast.longitude},${visibleBounds.northeast.latitude}';
       final url = constructUrlWithBounds(member.url!, boundsString);
 
-      final dio = Dio();
+      final dio = buildAppDio();
       final response = await dio.get(url);
 
       if (response.statusCode == 200) {
@@ -226,7 +226,7 @@ Future<void> _loadSingleLayer({
 
     // Fetch data with visible bounds
     debugPrint('    📡 Fetching data from server...');
-    final dio = Dio();
+    final dio = buildAppDio();
     final response = await dio.get(url);
 
     if (response.statusCode != 200) {
@@ -371,7 +371,7 @@ Future<void> updateNetworkLayerWithNewBounds({
             debugPrint('📡 Updating source: $sourceId');
 
             // Fetch updated data
-            final dio = Dio();
+            final dio = buildAppDio();
             final response = await dio.get(url);
 
             if (response.statusCode == 200) {
@@ -417,7 +417,7 @@ Future<void> updateNetworkLayerWithNewBounds({
           debugPrint('📡 Updating source: $sourceId');
 
           // Fetch updated data
-          final dio = Dio();
+          final dio = buildAppDio();
           final response = await dio.get(url);
 
           if (response.statusCode == 200) {
