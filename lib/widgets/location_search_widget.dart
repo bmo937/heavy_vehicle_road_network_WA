@@ -6,7 +6,7 @@ import 'package:roads_map/models/place_search_result.dart';
 import 'package:roads_map/providers/location_search_providers.dart';
 import 'package:roads_map/services/google_places_service.riverpod.dart';
 import 'package:roads_map/services/location_search_service.dart';
-import 'package:roads_map/utils/constants.dart';
+import 'package:roads_map/utils/app_config.dart';
 import 'package:roads_map/widgets/navigation_widget/navigation_widget.dart';
 
 /// Location search widget with autocomplete functionality
@@ -41,7 +41,7 @@ class _LocationSearchWidgetState extends ConsumerState<LocationSearchWidget> {
   @override
   void initState() {
     super.initState();
-    _placesService = ref.read(googlePlacesServiceProvider(gApiKey!));
+    _placesService = ref.read(googlePlacesServiceProvider(AppConfig.instance.googleApiKey));
     _searchService = LocationSearchService(ref, _placesService);
     _searchController.addListener(_onSearchChanged);
 

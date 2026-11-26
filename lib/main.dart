@@ -7,12 +7,21 @@ import 'package:hive_ce_flutter/hive_flutter.dart';
 import 'package:roads_map/widgets/app_wrapper.dart';
 import 'package:flutter_dotenv/flutter_dotenv.dart';
 import 'initialization_provider.dart';
+import 'utils/app_config.dart';
 import 'providers/settings_notifier.riverpod.dart';
 import 'utils/app_themes.riverpod.dart';
 
 void main() async {
   WidgetsFlutterBinding.ensureInitialized();
   await dotenv.load();
+  try {
+    AppConfig.initialize(dotenv.env);
+  } on ConfigurationException catch (e) {
+    runApp(MaterialApp(
+      home: Scaffold(body: Center(child: Padding(padding: const EdgeInsets.all(24), child: Text(e.toString())))),
+    ));
+    return;
+  }
   LicenseRegistry.addLicense(() async* {
     final license = await rootBundle.loadString('assets/fonts/OFL.txt');
     yield LicenseEntryWithLineBreaks(['google_fonts'], license);
