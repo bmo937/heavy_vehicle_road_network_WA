@@ -11,13 +11,13 @@ import 'providers/settings_notifier.riverpod.dart';
 import 'utils/app_themes.riverpod.dart';
 
 void main() async {
+  WidgetsFlutterBinding.ensureInitialized();
   await dotenv.load();
   LicenseRegistry.addLicense(() async* {
-    final license = await rootBundle.loadString('fonts/OFL.txt');
+    final license = await rootBundle.loadString('assets/fonts/OFL.txt');
     yield LicenseEntryWithLineBreaks(['google_fonts'], license);
   });
   GoogleFonts.config.allowRuntimeFetching = false;
-  WidgetsFlutterBinding.ensureInitialized();
   debugPrint = (String? message, {int? wrapWidth}) {
     if (kDebugMode) {
       debugPrintThrottled(message, wrapWidth: wrapWidth);
