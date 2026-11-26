@@ -200,7 +200,6 @@ Future<bool> _loadSingleLayerFromMember({
       debugPrint('⚠️ No URL provided for member: ${member.name}');
       return false;
     }
-    debugPrint('=== END LOADING SINGLE LAYER FROM MEMBER ===\n');
   } catch (e) {
     if (NetworkRefreshCoordinator.isExpectedCancellation(e)) {
       debugPrint('⏹️ Request cancelled (refresh #${ticket.generation}): $sourceId');
