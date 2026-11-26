@@ -4,14 +4,14 @@ import 'package:flutter/material.dart';
 import 'package:riverpod_annotation/riverpod_annotation.dart';
 import 'package:roads_map/providers/settings_notifier.riverpod.dart';
 
-import 'constants.dart';
+import 'app_config.dart';
 
 part 'map_style_service.riverpod.g.dart';
 
 class MapStyleService {
-  static String get lightStyleUrl => "https://api.maptiler.com/maps/backdrop/style.json?$mApiKey";
+  static String get lightStyleUrl => "https://api.maptiler.com/maps/backdrop/style.json?${AppConfig.instance.mapTilerApiKey}";
 
-  static String get darkStyleUrl => "https://api.maptiler.com/maps/backdrop-dark/style.json?$mApiKey";
+  static String get darkStyleUrl => "https://api.maptiler.com/maps/backdrop-dark/style.json?${AppConfig.instance.mapTilerApiKey}";
 
   static String getInitialMapStyle() {
     final brightness = WidgetsBinding.instance.platformDispatcher.platformBrightness;
@@ -23,19 +23,19 @@ class MapStyleService {
 class ThemeStyle extends _$ThemeStyle {
   void updateStyle(ThemeMode themeMode) {
     if (themeMode == ThemeMode.dark) {
-      state = "https://api.maptiler.com/maps/backdrop-dark/style.json?$mApiKey";
+      state = "https://api.maptiler.com/maps/backdrop-dark/style.json?${AppConfig.instance.mapTilerApiKey}";
     } else if (themeMode == ThemeMode.light) {
-      state = "https://api.maptiler.com/maps/backdrop/style.json?$mApiKey";
+      state = "https://api.maptiler.com/maps/backdrop/style.json?${AppConfig.instance.mapTilerApiKey}";
     } else {
       final brightness = PlatformDispatcher.instance.platformBrightness;
-      state = brightness == Brightness.dark ? "https://api.maptiler.com/maps/backdrop-dark/style.json?$mApiKey" : "https://api.maptiler.com/maps/backdrop/style.json?$mApiKey";
+      state = brightness == Brightness.dark ? "https://api.maptiler.com/maps/backdrop-dark/style.json?${AppConfig.instance.mapTilerApiKey}" : "https://api.maptiler.com/maps/backdrop/style.json?${AppConfig.instance.mapTilerApiKey}";
     }
   }
 
   @override
   String build() {
     final brightness = PlatformDispatcher.instance.platformBrightness;
-    return brightness == Brightness.dark ? "https://api.maptiler.com/maps/backdrop-dark/style.json?$mApiKey" : "https://api.maptiler.com/maps/backdrop/style.json?$mApiKey";
+    return brightness == Brightness.dark ? "https://api.maptiler.com/maps/backdrop-dark/style.json?${AppConfig.instance.mapTilerApiKey}" : "https://api.maptiler.com/maps/backdrop/style.json?${AppConfig.instance.mapTilerApiKey}";
   }
 }
 
