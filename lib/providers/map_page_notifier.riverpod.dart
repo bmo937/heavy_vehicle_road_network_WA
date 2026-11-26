@@ -12,9 +12,11 @@ import 'package:roads_map/providers/map_controller_manager.dart';
 import 'package:roads_map/providers/map_feature_handler.dart';
 import 'package:roads_map/providers/map_layer_manager.dart';
 import 'package:roads_map/providers/map_provider_state.dart';
+import 'package:roads_map/providers/map_style_restoration.dart';
 import 'package:roads_map/providers/map_utilities.dart';
 import 'package:roads_map/providers/network_refresh_coordinator.dart';
 import 'package:roads_map/utils/map_style_service.riverpod.dart';
+import 'package:roads_map/utils/marker_utilities.riverpod.dart';
 
 /// Snapshot of what the notifier needs before it can report ready.
 class MapInitialSettings {
@@ -58,6 +60,10 @@ class MapPageNotifier extends StateNotifier<MapProviderState> {
   late final MapCameraHandler _cameraHandler = MapCameraHandler(_refreshCoordinator);
   final MapFeatureHandler _featureHandler = MapFeatureHandler();
   late final MapLayerManager _layerManager = MapLayerManager(_refreshCoordinator);
+  final MapStyleRestorationCoordinator _restoration = MapStyleRestorationCoordinator();
+
+  @visibleForTesting
+  NetworkRefreshCoordinator get refreshCoordinator => _refreshCoordinator;
 
   MapPageNotifier(this._loadSettings)
       : super(const MapProviderState(currentStyleUrl: '', isSatelliteLayerVisible: false, isTravelLayerVisible: false, isMapFullyLoaded: false));
@@ -96,10 +102,26 @@ class MapPageNotifier extends StateNotifier<MapProviderState> {
 
   // Event handlers that delegate to specialized components
   Future<void> onMapCreated(MapLibreMapController controller, WidgetRef ref, BuildContext context) async {
+    // A new controller means a new style; anything bound to the old one is stale.
+    onStyleChangeBegan();
     await _controllerManager.onMapCreated(
         controller, ref, (id, point, coordinates, layerId) => _featureHandler.onFeatureInteraction(id, point, coordinates, layerId, ref, controller));
   }
 
+  /// Style lifecycle, step 1: a style change has begun (theme change or a
+  /// replaced controller). The old style's resources are going away, so
+  /// in-flight network work and restoration become invalid and the map is no
+  /// longer "fully loaded". Selections (providers/Hive) are deliberately untouched.
+  void onStyleChangeBegan() {
+    if (!mounted) return;
+    _refreshCoordinator.invalidate('style change began');
+    _restoration.invalidate();
+    _controllerManager.markStyleUnavailable();
+    if (state.isMapFullyLoaded) state = state.copyWith(isMapFullyLoaded: false);
+  }
+
+  /// Style lifecycle, steps 2-4: the base style loaded; restore everything the
+  /// application added on top of it. This is the only onStyleLoaded entry point.
   Future<void> onStyleLoaded(BuildContext context, WidgetRef ref) async {
     if (!mounted) return;
     debugPrint('🎨 Map style loaded');
@@ -107,21 +129,47 @@ class MapPageNotifier extends StateNotifier<MapProviderState> {
     // Anything fetched against the previous style must not touch the new one.
     _refreshCoordinator.invalidate('style reloaded');
 
-    await _controllerManager.onStyleLoaded(
-      ref,
-      () async {
-        debugPrint('🏪 Preloading POI layers...');
-        await _layerManager.preloadPoiLayers(ref, mapController);
-        debugPrint('✅ POI layers preloaded - marking map as fully loaded');
-        markMapAsFullyLoaded();
-      },
-      () async {
-        final controller = mapController;
-        if (!mounted || controller == null) return;
-        await forceLayerUpdate(controller, ref);
-      },
-      () => _cameraHandler.markStyleLoaded(),
-    );
+    final controller = mapController;
+    if (controller == null || !_controllerManager.markStyleAvailable()) return;
+    // Mark the style load time to prevent double-loading from camera idle.
+    _cameraHandler.markStyleLoaded();
+
+    await restoreApplicationMapState(_applicationRestorationSteps(controller, ref));
+  }
+
+  /// Ordered steps that rebuild application-owned MapLibre state for [controller]
+  /// from existing application state. New overlays (e.g. a future route layer)
+  /// are restored by appending a step here; order follows dependencies.
+  List<StyleRestorationStep> _applicationRestorationSteps(MapLibreMapController controller, WidgetRef ref) {
+    return [
+      // Symbol layers reference these images, so they come first. The decoded
+      // images are cached; only registration with MapLibre is repeated.
+      StyleRestorationStep('marker images', (run) => MarkerUtilities.addImagesToMap(controller)),
+      StyleRestorationStep('POI layers', (run) => _layerManager.preloadPoiLayers(ref, controller, isCurrent: () => run.isCurrent)),
+      // Applies persisted POI visibility and re-fetches the selected network.
+      StyleRestorationStep('selected network and POI visibility', (run) => _applySelections(controller, ref, () => run.isCurrent)),
+      StyleRestorationStep('travel impact and incident overlays', (run) => _layerManager.restoreSelectedOverlays(ref, controller, isCurrent: () => run.isCurrent),
+          required: false),
+    ];
+  }
+
+  /// Runs a restoration of the current style. Marks the map fully loaded only
+  /// if every required step succeeded and no newer style change superseded it.
+  @visibleForTesting
+  Future<StyleRestorationOutcome> restoreApplicationMapState(List<StyleRestorationStep> steps) async {
+    if (!mounted) return StyleRestorationOutcome.superseded;
+    final run = _restoration.begin();
+    if (state.isMapFullyLoaded) state = state.copyWith(isMapFullyLoaded: false);
+
+    final outcome = await _restoration.restore(run, steps);
+    if (!mounted || !run.isCurrent) return StyleRestorationOutcome.superseded;
+    if (outcome == StyleRestorationOutcome.completed) {
+      debugPrint('✅ Application map state restored - marking map as fully loaded');
+      markMapAsFullyLoaded();
+    } else {
+      debugPrint('⚠️ Application map state restoration did not complete: $outcome');
+    }
+    return outcome;
   }
 
   Future<void> onCameraIdle(BuildContext context, WidgetRef ref) async {
@@ -165,13 +213,22 @@ class MapPageNotifier extends StateNotifier<MapProviderState> {
     await _featureHandler.handleFeatureTap(context, id, point, coordinates, originalLayerId, ref, controller);
   }
 
+  /// Re-applies the current selections. Ignored for a controller that is no
+  /// longer the current one.
   Future<void> forceLayerUpdate(MapLibreMapController mapController, WidgetRef ref) async {
-    await _layerManager.forceLayerUpdate(
-      mapController,
+    await _applySelections(mapController, ref, null);
+  }
+
+  Future<bool> _applySelections(MapLibreMapController controller, WidgetRef ref, bool Function()? isCurrent) async {
+    bool current() => mounted && identical(controller, mapController) && (isCurrent?.call() ?? true);
+    if (!current()) return false;
+    final updated = await _layerManager.forceLayerUpdate(
+      controller,
       styleLoaded,
       ref,
-      (context, bounds) => _layerManager.updateVisibleLayers(context, bounds, ref, mapController),
+      (context, bounds) => _layerManager.updateVisibleLayers(context, bounds, ref, controller, isCurrent: current),
     );
+    return updated && current();
   }
 
   dynamic structuresIconSize(String sourceId) {
@@ -182,18 +239,22 @@ class MapPageNotifier extends StateNotifier<MapProviderState> {
     return MapUtilities.getIconImage(layerName);
   }
 
-  /// Mark the map as fully loaded (called after POI layers are preloaded)
+  /// Marks the current MapLibre style as loaded with its required
+  /// application-owned resources restored. Reset by [onStyleChangeBegan] and at
+  /// the start of every restoration. Not [MapInitStatus.ready], which only
+  /// means notifier settings/style initialisation finished.
   void markMapAsFullyLoaded() {
     if (!mounted) return;
     debugPrint('🎉 Map fully loaded - updating state');
     state = state.copyWith(isMapFullyLoaded: true);
   }
 
-  /// Check if the map is fully loaded
+  /// See [markMapAsFullyLoaded].
   bool get isMapFullyLoaded => state.isMapFullyLoaded;
 
   @override
   void dispose() {
+    _restoration.invalidate();
     _cameraHandler.dispose();
     _refreshCoordinator.dispose();
     _controllerManager.dispose();

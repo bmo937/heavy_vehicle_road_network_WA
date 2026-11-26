@@ -6,7 +6,6 @@ import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:maplibre_gl/maplibre_gl.dart';
 import 'package:roads_map/providers/map_utilities.dart';
-import 'package:roads_map/utils/marker_utilities.riverpod.dart';
 
 class MapControllerManager {
   MapLibreMapController? _mapController;
@@ -61,39 +60,21 @@ class MapControllerManager {
     styleIsLoaded = false;
   }
 
-  /// Handle when map style is loaded
-  Future<void> onStyleLoaded(WidgetRef ref, Function() preloadPoiLayers, Function() forceLayerUpdate, Function() markStyleLoaded) async {
-    debugPrint('\nMapControllerManager: onStyleLoaded called');
-    try {
-      if (_mapController == null) {
-        debugPrint('Map controller is null in onStyleLoaded');
-        return;
-      }
+  /// The current style is no longer usable (style change began or controller replaced).
+  void markStyleUnavailable() {
+    styleIsLoaded = false;
+  }
 
-      // Mark style as loaded first
-      styleIsLoaded = true;
-
-      // Mark the style load time to prevent double-loading
-      markStyleLoaded();
-
-      try {
-        // Add marker images safely (after style is loaded)
-        await MarkerUtilities.addImagesToMap(_mapController!);
-        debugPrint('Successfully added marker images to map');
-      } catch (imageError) {
-        debugPrint('Error adding marker images: $imageError');
-      } // Pre-load POI layers with standardized naming and hidden visibility
-      await preloadPoiLayers();
-
-      // After style loads (like when theme changes), reload any currently selected layers
-      await forceLayerUpdate();
-
-      debugPrint('🎉 onStyleLoaded completed - map is ready with all layers');
-    } catch (e) {
-      debugPrint('Error in onStyleLoaded: $e');
-    } finally {
-      debugPrint('MapControllerManager: onStyleLoaded completed\n');
+  /// The current controller's style finished loading. Restoration of
+  /// application-owned resources is orchestrated by MapPageNotifier.
+  /// Returns false when there is no controller to restore onto.
+  bool markStyleAvailable() {
+    if (_mapController == null) {
+      debugPrint('Map controller is null in onStyleLoaded');
+      return false;
     }
+    styleIsLoaded = true;
+    return true;
   }
 
   /// Update current zoom level

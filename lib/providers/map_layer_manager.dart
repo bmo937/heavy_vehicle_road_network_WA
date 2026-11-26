@@ -11,6 +11,8 @@ import 'package:roads_map/providers/map_utilities.dart';
 import 'package:roads_map/providers/network_refresh_coordinator.dart';
 import 'package:roads_map/providers/network_selection_provider.riverpod.dart';
 import 'package:roads_map/providers/online_layers.dart';
+import 'package:roads_map/services/traffic_services.riverpod.dart';
+import 'package:roads_map/services/travel_impact_layer.riverpod.dart';
 import 'package:roads_map/utils/layer_naming_utilities.dart';
 import 'package:roads_map/utils/source_management_utility.dart';
 
@@ -20,8 +22,11 @@ class MapLayerManager {
   MapLayerManager(this._refreshCoordinator);
 
   /// Force an immediate layer update without waiting for camera movement
-  /// This is useful when network selections change or theme changes
-  Future<void> forceLayerUpdate(
+  /// This is useful when network selections change or theme changes.
+  /// Returns true if the update ran; false if the map was not ready or the
+  /// bounds could not be read (network fetch failures are handled, and logged,
+  /// by the network layer loader itself).
+  Future<bool> forceLayerUpdate(
     MapLibreMapController? mapController,
     bool styleIsLoaded,
     WidgetRef ref,
@@ -31,7 +36,7 @@ class MapLayerManager {
       debugPrint('❌ Cannot force layer update - map controller or style not ready');
       debugPrint('   Map controller: ${mapController != null ? "✅" : "❌"}');
       debugPrint('   Style loaded: ${styleIsLoaded ? "✅" : "❌"}');
-      return;
+      return false;
     }
 
     debugPrint('\n🔥 === MapLayerManager: forceLayerUpdate called ===');
@@ -50,8 +55,10 @@ class MapLayerManager {
       await updateVisibleLayers(null, visibleBounds);
 
       debugPrint('✅ Force layer update completed');
+      return true;
     } catch (e) {
       debugPrint('❌ Error in forceLayerUpdate: $e');
+      return false;
     } finally {
       debugPrint('🔥 MapLayerManager: forceLayerUpdate completed\n');
     }
@@ -62,8 +69,9 @@ class MapLayerManager {
     BuildContext? context,
     LatLngBounds visibleBounds,
     WidgetRef ref,
-    MapLibreMapController? mapController,
-  ) async {
+    MapLibreMapController? mapController, {
+    bool Function()? isCurrent,
+  }) async {
     if (mapController == null) return;
 
     debugPrint('\n🔍 === _updateVisibleLayers called ===');
@@ -79,6 +87,9 @@ class MapLayerManager {
       } else {
         debugPrint('⚠️ No network layer selected');
       }
+
+      // A newer style/controller change owns the map now.
+      if (isCurrent != null && !isCurrent()) return;
 
       // Check POI layer selections
       final poiLayerSelections = ref.read(poiLayerSelectionProvider);
@@ -222,14 +233,21 @@ class MapLayerManager {
     );
   }
 
-  /// Pre-load POI layers with standardized naming convention and hidden visibility
-  Future<void> preloadPoiLayers(WidgetRef ref, MapLibreMapController? mapController) async {
-    if (mapController == null) return;
+  /// Pre-load POI layers with standardized naming convention and hidden visibility.
+  ///
+  /// Returns true only if every POI member with a URL was added. Stops (and
+  /// returns false) as soon as [isCurrent] reports the style/controller changed,
+  /// so a stale restoration never adds sources to a newer style.
+  Future<bool> preloadPoiLayers(WidgetRef ref, MapLibreMapController? mapController, {bool Function()? isCurrent}) async {
+    if (mapController == null) return false;
+    bool stale() => isCurrent != null && !isCurrent();
     debugPrint('\n🏪 === PRELOADING POI LAYERS ===');
 
+    var allLoaded = true;
     try {
       // Get POI layers from menu assets
       final menuAssets = await ref.read(menuAssetsNotifierProvider.future);
+      if (stale()) return false;
 
       debugPrint('✅ Menu assets loaded, processing POI layers');
 
@@ -241,19 +259,61 @@ class MapLayerManager {
 
         debugPrint('🏪 Processing POI group: ${layer.name}');
         for (final member in layer.groupMembers!) {
-          await _preloadPoiMember(member, mapController);
+          if (stale()) return false;
+          if (!await _preloadPoiMember(member, mapController, isCurrent: isCurrent)) allLoaded = false;
         }
       }
 
       debugPrint('✅ POI layers preloading completed');
+      return allLoaded && !stale();
     } catch (e) {
       debugPrint('❌ Error preloading POI layers: $e');
+      return false;
     }
   }
 
-  /// Pre-load a specific POI member layer
-  Future<void> _preloadPoiMember(GroupMember member, MapLibreMapController mapController) async {
-    if (member.url == null || member.url!.isEmpty) return;
+  /// Restores selected travel-impact and road-incident overlays, which are
+  /// driven by POI selections but are not part of [preloadPoiLayers].
+  /// Returns true if every selected overlay was restored.
+  Future<bool> restoreSelectedOverlays(WidgetRef ref, MapLibreMapController mapController, {bool Function()? isCurrent}) async {
+    bool stale() => isCurrent != null && !isCurrent();
+    final selections = ref.read(poiLayerSelectionProvider);
+    var ok = true;
+
+    final ravActive = selections['Rav Impacts'] ?? false;
+    final osomActive = selections['OSOM Impacts'] ?? false;
+    if (ravActive || osomActive) {
+      try {
+        final geoJsonData = await ref.read(fetchGeoJsonDataProvider.future);
+        if (stale()) return false;
+        final processed = processGeoJsonData({'data': geoJsonData, 'toggleRAV': ravActive, 'toggleOSOM': osomActive});
+        await displayTravelImpactLayer(mapController, processed);
+        if (stale()) return false;
+        await setTravelImpactLayerVisibility(mapController, true);
+      } catch (e) {
+        debugPrint('❌ Error restoring travel impact layers: $e');
+        ok = false;
+      }
+    }
+
+    if (selections['Road Incidents'] ?? false) {
+      try {
+        final incidents = await ref.read(fetchIncidentsDataProvider.future);
+        if (stale()) return false;
+        await displayIncidentsLayer(mapController, incidents);
+        if (stale()) return false;
+        await setIncidentsLayerVisibility(mapController, true);
+      } catch (e) {
+        debugPrint('❌ Error restoring road incidents layer: $e');
+        ok = false;
+      }
+    }
+    return ok && !stale();
+  }
+
+  /// Pre-load a specific POI member layer. Returns true if it was added (or has nothing to add).
+  Future<bool> _preloadPoiMember(GroupMember member, MapLibreMapController mapController, {bool Function()? isCurrent}) async {
+    if (member.url == null || member.url!.isEmpty) return true;
 
     try {
       debugPrint('   🔄 Preloading POI member: ${member.name}');
@@ -265,6 +325,7 @@ class MapLayerManager {
       // Download and parse GeoJSON data
       final dio = buildAppDio();
       final response = await dio.get(member.url!);
+      if (isCurrent != null && !isCurrent()) return false;
 
       // Parse response data
       dynamic jsonData;
@@ -280,6 +341,7 @@ class MapLayerManager {
         sourceId,
         jsonData,
       );
+      if (isCurrent != null && !isCurrent()) return false;
 
       // Add symbol layer with visibility set to false using safe layer addition
       final symbolProperties = SymbolLayerProperties(
@@ -309,9 +371,13 @@ class MapLayerManager {
         belowLayerId: 'Continent labels',
       );
 
-      debugPrint('   ✅ Preloaded POI layer: ${member.name}');
+      // SourceManagementUtility swallows add failures, so confirm the layer exists.
+      final added = (await mapController.getLayerIds()).contains(layerId);
+      debugPrint(added ? '   ✅ Preloaded POI layer: ${member.name}' : '   ❌ POI layer missing after add: ${member.name}');
+      return added;
     } catch (e) {
       debugPrint('   ❌ Error preloading POI member ${member.name}: $e');
+      return false;
     }
   }
 }
