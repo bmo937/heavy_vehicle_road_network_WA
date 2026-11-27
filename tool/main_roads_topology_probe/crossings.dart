@@ -198,13 +198,11 @@ CrossingAnalysis analyzeCrossings(
   final details = <Map<String, dynamic>>[];
   var truncated = false;
 
-  double nearestVertex(int feature, double x, double y) {
+  double nearestVertex(int feature, int part, double x, double y) {
     var best = double.infinity;
-    for (final g in features[feature].parts) {
-      for (final c in g) {
-        final d = haversineMetres(y, x, c.latitude, c.longitude);
-        if (d < best) best = d;
-      }
+    for (final c in features[feature].parts[part]) {
+      final d = haversineMetres(y, x, c.latitude, c.longitude);
+      if (d < best) best = d;
     }
     return best;
   }
@@ -245,16 +243,26 @@ CrossingAnalysis analyzeCrossings(
           (hit.x, hit.y),
           if (hit.kind == HitKind.overlap) (hit.x2!, hit.y2!),
         ];
-        // Represented = every intersection point is already an exact source vertex of both features.
-        if (points.every((p) => index.bothFeaturesHaveVertexAt((p.$1, p.$2), fa, fb))) continue;
+        // Represented = every intersection point is already an exact source vertex
+        // of both intersecting parts.
+        final isRepresented = points.every(
+          (p) => index.bothPartsHaveVertexAt(
+            (p.$1, p.$2),
+            fa,
+            a.part,
+            fb,
+            b.part,
+          ),
+        );
+        if (isRepresented) continue;
 
         final key = '$fa|${a.part}|$fb|${b.part}|${hit.kind.name}|${hit.x}|${hit.y}|${hit.x2}|${hit.y2}';
         if (!seen.add(key)) continue;
 
         final roleA = hit.kind == HitKind.overlap ? 'overlap' : role(fa, a.part, a.index, hit.x, hit.y);
         final roleB = hit.kind == HitKind.overlap ? 'overlap' : role(fb, b.part, b.index, hit.x, hit.y);
-        final nearA = nearestVertex(fa, hit.x, hit.y);
-        final nearB = nearestVertex(fb, hit.x, hit.y);
+        final nearA = nearestVertex(fa, a.part, hit.x, hit.y);
+        final nearB = nearestVertex(fb, b.part, hit.x, hit.y);
         final near = nearA < nearB ? nearA : nearB;
         final nearBucket = near == 0 ? '0 m' : bucketForDistance(near, exact: false).label;
         final endpointInvolved = roleA == 'endpoint' || roleB == 'endpoint';

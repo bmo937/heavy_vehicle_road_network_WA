@@ -468,6 +468,32 @@ void main() {
       expect(r.details.every((d) => d['globalIdA'] == 'm' && d['globalIdB'] == 'n'), isTrue);
     });
 
+    test('nearest-vertex distances use only the intersecting parts', () {
+      final r = crossings([
+        multiSeg('m', [
+          [[0, 0], [2, 2]],
+          [[1.002, 1], [1.003, 1]],
+        ]),
+        seg('n', [[1, 0], [1, 2]]),
+      ]);
+
+      expect(r.crossings, 1);
+      expect(r.details.single['nearestOwnVertexMetresA'], greaterThan(100));
+    });
+
+    test('represented crossings require vertices on the intersecting parts', () {
+      final r = crossings([
+        multiSeg('m', [
+          [[0, 0], [2, 2]],
+          [[0, 2], [1, 1], [2, 0]],
+        ]),
+        seg('n', [[1, 0], [1, 1], [1, 2]]),
+      ]);
+
+      expect(r.crossings, 1);
+      expect(r.details.single['partIndexA'], 0);
+    });
+
     test('no segment is created between the end of one part and the start of the next', () {
       final r = crossings([
         multiSeg('m', [

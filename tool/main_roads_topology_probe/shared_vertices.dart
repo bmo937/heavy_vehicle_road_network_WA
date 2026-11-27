@@ -46,14 +46,20 @@ class CoordinateIndex {
   final List<MainRoadsNetworkSegment> segments;
   final Map<CoordKey, List<VertexAppearance>> groups;
 
-  /// True when both features have a source vertex at exactly [key].
-  bool bothFeaturesHaveVertexAt(CoordKey key, int a, int b) {
+  /// True when both parts have a source vertex at exactly [key].
+  bool bothPartsHaveVertexAt(
+    CoordKey key,
+    int featureA,
+    int partA,
+    int featureB,
+    int partB,
+  ) {
     final apps = groups[key];
     if (apps == null) return false;
     var hasA = false, hasB = false;
     for (final x in apps) {
-      if (x.feature == a) hasA = true;
-      if (x.feature == b) hasB = true;
+      if (x.feature == featureA && x.part == partA) hasA = true;
+      if (x.feature == featureB && x.part == partB) hasB = true;
     }
     return hasA && hasB;
   }
