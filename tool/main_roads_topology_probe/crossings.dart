@@ -248,7 +248,7 @@ CrossingAnalysis analyzeCrossings(
         // Represented = every intersection point is already an exact source vertex of both features.
         if (points.every((p) => index.bothFeaturesHaveVertexAt((p.$1, p.$2), fa, fb))) continue;
 
-        final key = '$fa|$fb|${hit.kind.name}|${hit.x}|${hit.y}|${hit.x2}|${hit.y2}';
+        final key = '$fa|${a.part}|$fb|${b.part}|${hit.kind.name}|${hit.x}|${hit.y}|${hit.x2}|${hit.y2}';
         if (!seen.add(key)) continue;
 
         final roleA = hit.kind == HitKind.overlap ? 'overlap' : role(fa, a.part, a.index, hit.x, hit.y);
