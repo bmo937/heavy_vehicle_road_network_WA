@@ -40,7 +40,7 @@ dart run tool/main_roads_topology_probe.dart
 
 Options: `--output-report=PATH`, `--output-json=PATH`. Writes `docs/main_roads_topology_investigation.md` and `tool/output/main_roads_topology_summary.json`.
 
-Cloud: run the manually triggered **Main Roads topology probe** workflow (Actions tab -> Run workflow); outputs are uploaded as the `main-roads-topology-investigation` artifact even if the probe fails.
+Cloud: run the manually triggered **Main Roads topology probe** workflow (Actions tab -> Run workflow). Successful COMPLETE runs publish the two result files to `generated/topology-investigation`, so the latest COMPLETE investigation can be read through the GitHub repository API without downloading an Actions artifact. Incomplete or failed runs do not modify that branch. The `main-roads-topology-investigation` artifact is still uploaded for diagnostics, including failed or incomplete runs where files exist. The generated branch contains research output only; it is not production application state.
 
 ## Method notes
 

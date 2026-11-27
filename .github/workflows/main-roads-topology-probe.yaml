@@ -4,7 +4,7 @@ on:
   workflow_dispatch:
 
 permissions:
-  contents: read
+  contents: write
 
 jobs:
   probe:
@@ -27,6 +27,37 @@ jobs:
 
       - name: Run Main Roads topology probe
         run: dart run tool/main_roads_topology_probe.dart
+
+      - name: Publish COMPLETE investigation
+        if: success()
+        env:
+          GITHUB_REPOSITORY: ${{ github.repository }}
+        run: |
+          set -euo pipefail
+
+          report="docs/main_roads_topology_investigation.md"
+          summary="tool/output/main_roads_topology_summary.json"
+          test -f "$report"
+          test -f "$summary"
+          jq -e '.status == "COMPLETE"' "$summary" >/dev/null
+
+          publish_dir="$(mktemp -d)"
+          trap 'rm -rf "$publish_dir"' EXIT
+          mkdir -p "$publish_dir/docs" "$publish_dir/tool/output"
+          cp "$report" "$publish_dir/$report"
+          cp "$summary" "$publish_dir/$summary"
+
+          cd "$publish_dir"
+          git init
+          git config user.name "github-actions[bot]"
+          git config user.email "41898282+github-actions[bot]@users.noreply.github.com"
+          git add -- "$report" "$summary"
+          git commit -m "chore: update topology investigation results"
+          git remote add origin "https://github.com/${GITHUB_REPOSITORY}.git"
+
+          auth_header="$(git -C "$GITHUB_WORKSPACE" config --local --get http.https://github.com/.extraheader)"
+          git -c "http.https://github.com/.extraheader=$auth_header" \
+            push --force origin HEAD:refs/heads/generated/topology-investigation
 
       - name: Upload investigation output
         if: always()
