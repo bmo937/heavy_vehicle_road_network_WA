@@ -267,6 +267,8 @@ void main() {
       expect(r.crossingsInvolvingEndpoint, 1);
       expect(r.details.single['roleB'], 'endpoint');
       expect(r.details.single['roleA'], 'segmentInterior');
+      expect(r.nearestVertexBuckets['0 m'], 1);
+      expect(r.nearestVertexBuckets['>0 to 0.1 m'], 0);
     });
 
     test('parallel and disjoint lines do not cross', () {
@@ -402,9 +404,10 @@ void main() {
       expect(f.incompleteReasons.join(), contains('service reports 9'));
     });
 
-    test('service still flagging exceededTransferLimit is INCOMPLETE', () async {
-      final f = await fetchLayerGeoJson(_service(total: 4, serviceCount: 6, flagLastPage: true), delay: Duration.zero);
+    test('service still flagging exceededTransferLimit is INCOMPLETE when count matches', () async {
+      final f = await fetchLayerGeoJson(_service(total: 4, flagLastPage: true), delay: Duration.zero);
       expect(f.complete, isFalse);
+      expect(f.incompleteReasons.join(), contains('exceededTransferLimit'));
     });
 
     test('malformed geometry fails the run rather than being skipped', () {

@@ -114,7 +114,8 @@ class CrossingAnalysis {
   final int crossingsInvolvingEndpoint;
 
   /// Distance from the intersection to the nearer of the two features' own
-  /// nearest source vertex (exact class is unused: never 0 by construction).
+  /// nearest source vertex. A non-shared touch can be 0 m and has its own bucket;
+  /// exact shared-vertex identity is excluded from this analysis.
   final Map<String, int> nearestVertexBuckets;
   final Map<String, int> byRoadRelation;
   final List<Map<String, dynamic>> details;
@@ -186,7 +187,9 @@ CrossingAnalysis analyzeCrossings(
   final byKind = <String, int>{};
   final byRoles = <String, int>{};
   final byRoad = <String, int>{};
-  final nearestBuckets = emptyBucketCounts()..remove(DistanceBucket.exact.label);
+  final nearestBuckets = emptyBucketCounts()
+    ..remove(DistanceBucket.exact.label)
+    ..['0 m'] = 0;
   var involvesEndpoint = 0;
   var total = 0;
   final details = <Map<String, dynamic>>[];
@@ -248,7 +251,7 @@ CrossingAnalysis analyzeCrossings(
         final nearA = nearestVertex(fa, hit.x, hit.y);
         final nearB = nearestVertex(fb, hit.x, hit.y);
         final near = nearA < nearB ? nearA : nearB;
-        final nearBucket = near == 0 ? DistanceBucket.upTo0_1 : bucketForDistance(near, exact: false);
+        final nearBucket = near == 0 ? '0 m' : bucketForDistance(near, exact: false).label;
         final endpointInvolved = roleA == 'endpoint' || roleB == 'endpoint';
         final fA = features[fa], fB = features[fb];
         final relation = '${fA.road == fB.road ? 'same' : 'different'} ROAD, '
@@ -258,7 +261,7 @@ CrossingAnalysis analyzeCrossings(
         _bump(byKind, hit.kind.name);
         _bump(byRoles, 'A:$roleA / B:$roleB');
         _bump(byRoad, relation);
-        nearestBuckets.update(nearBucket.label, (v) => v + 1);
+        nearestBuckets.update(nearBucket, (v) => v + 1);
         if (endpointInvolved) involvesEndpoint++;
 
         if (details.length < detailLimit) {

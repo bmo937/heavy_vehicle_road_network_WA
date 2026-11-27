@@ -115,8 +115,8 @@ Future<GeoJsonFetchOutcome> fetchLayerGeoJson(
     }
 
     if (reasons.isEmpty) {
-      if (lastFlag && features.length < count) {
-        reasons.add('service still reported exceededTransferLimit on an empty/last page');
+      if (lastFlag) {
+        reasons.add('service still reported exceededTransferLimit on the final page');
       }
       if (features.length != count) {
         reasons.add('retrieved ${features.length} features but service reports $count');
