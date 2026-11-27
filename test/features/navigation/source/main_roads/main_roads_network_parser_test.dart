@@ -104,6 +104,35 @@ void main() {
     rejects([feature(p: {'MAX_NETWORK': null})], 'properties.MAX_NETWORK');
   });
 
+  test('integer fields reject out-of-range integral doubles', () {
+    for (final field in ['ROUTE_NE_ID', 'OBJECTID', 'MAX_NETWORK']) {
+      for (final value in [
+        1e30,
+        -1e30,
+        9223372036854775808.0,
+        -9223372036854777856.0,
+        1.5,
+        double.infinity,
+        double.nan,
+      ]) {
+        rejects([feature(p: {field: value})], 'properties.$field');
+      }
+    }
+  });
+
+  test('integer fields accept representable integral doubles', () {
+    final s = parse([
+      feature(p: {
+        'ROUTE_NE_ID': 9223372036854774784.0,
+        'OBJECTID': -9223372036854775808.0,
+        'MAX_NETWORK': 3.0,
+      })
+    ]).single;
+    expect(s.routeNeId, 9223372036854774784);
+    expect(s.objectId, -9223372036854775808);
+    expect(s.maxNetwork, 3);
+  });
+
   test('reversed ranges', () {
     rejects([feature(p: {'START_SLK': 5.0, 'END_SLK': 1.0})],
         'properties.END_SLK');

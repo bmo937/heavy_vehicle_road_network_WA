@@ -225,7 +225,11 @@ class MainRoadsNetworkParser {
 
   static int? _int(Object? v) {
     if (v is int) return v;
-    if (v is double) return v.isFinite && v == v.truncateToDouble() ? v.toInt() : null;
+    if (v is double) {
+      return v.isFinite && v == v.truncateToDouble()
+          ? int.tryParse(v.toStringAsFixed(0))
+          : null;
+    }
     if (v is String) return int.tryParse(v.trim());
     return null;
   }
