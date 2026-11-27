@@ -4,6 +4,7 @@ import 'package:roads_map/features/navigation/source/main_roads/main_roads_netwo
 import '../main_roads_probe/arcgis_client.dart';
 import 'crossings.dart';
 import 'endpoint_proximity.dart';
+import 'endpoint_segment_proximity.dart';
 import 'fetch.dart';
 import 'geometry_quality.dart';
 import 'shared_vertices.dart';
@@ -20,6 +21,10 @@ Map<String, dynamic> analyzeSegments(
   return {
     'geometryAndSharing': analyzeSharedVertices(index, detailLimit: detailLimit).toJson(),
     'endpointProximity': analyzeEndpointProximity(segments).toJson(),
+    'endpointSegmentProximity': analyzeEndpointSegmentProximity(
+      segments,
+      detailLimit: detailLimit,
+    ).toJson(),
     'crossings': analyzeCrossings(index, cellSizeDegrees: cellSizeDegrees, detailLimit: detailLimit).toJson(),
     'geometryQuality': analyzeGeometryQuality(segments, detailLimit: detailLimit).toJson(),
   };
