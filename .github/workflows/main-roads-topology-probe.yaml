@@ -1,0 +1,71 @@
+name: Main Roads topology probe
+
+on:
+  workflow_dispatch:
+
+permissions:
+  contents: write
+
+jobs:
+  probe:
+    name: Run topology probe
+    runs-on: ubuntu-latest
+
+    steps:
+      - name: Check out repository
+        uses: actions/checkout@v5
+
+      - name: Set up Flutter
+        uses: subosito/flutter-action@v2
+        with:
+          flutter-version: "3.44.0"
+          channel: stable
+          cache: true
+
+      - name: Resolve dependencies
+        run: flutter pub get
+
+      - name: Run Main Roads topology probe
+        run: dart run tool/main_roads_topology_probe.dart
+
+      - name: Publish COMPLETE investigation
+        if: success()
+        env:
+          GITHUB_REPOSITORY: ${{ github.repository }}
+        run: |
+          set -euo pipefail
+
+          report="docs/main_roads_topology_investigation.md"
+          summary="tool/output/main_roads_topology_summary.json"
+          test -f "$report"
+          test -f "$summary"
+          jq -e '.status == "COMPLETE"' "$summary" >/dev/null
+
+          publish_dir="$(mktemp -d)"
+          trap 'rm -rf "$publish_dir"' EXIT
+          mkdir -p "$publish_dir/docs" "$publish_dir/tool/output"
+          cp "$report" "$publish_dir/$report"
+          cp "$summary" "$publish_dir/$summary"
+
+          cd "$publish_dir"
+          git init
+          git config user.name "github-actions[bot]"
+          git config user.email "41898282+github-actions[bot]@users.noreply.github.com"
+          git add -- "$report" "$summary"
+          git commit -m "chore: update topology investigation results"
+          git remote add origin "https://github.com/${GITHUB_REPOSITORY}.git"
+
+          auth_header="$(git -C "$GITHUB_WORKSPACE" config --local --get http.https://github.com/.extraheader)"
+          git -c "http.https://github.com/.extraheader=$auth_header" \
+            push --force origin HEAD:refs/heads/generated/topology-investigation
+
+      - name: Upload investigation output
+        if: always()
+        uses: actions/upload-artifact@v7
+        with:
+          name: main-roads-topology-investigation
+          path: |
+            docs/main_roads_topology_investigation.md
+            tool/output/main_roads_topology_summary.json
+          if-no-files-found: error
+          retention-days: 14

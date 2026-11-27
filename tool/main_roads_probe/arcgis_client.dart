@@ -65,6 +65,9 @@ Future<Map<String, dynamic>> _get(Dio dio, int layerId, Uri uri) async {
   }
 }
 
+/// GET [uri] and decode a JSON object; same failure handling as the other probes.
+Future<Map<String, dynamic>> fetchJson(Dio dio, int layerId, Uri uri) => _get(dio, layerId, uri);
+
 Future<Map<String, dynamic>> fetchLayerMetadata(Dio dio, int layerId, {String baseUrl = investigationBaseUrl}) =>
     _get(dio, layerId, layerUri(layerId, query: {'f': 'json'}, baseUrl: baseUrl));
 
