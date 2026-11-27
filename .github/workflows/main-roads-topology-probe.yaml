@@ -1,0 +1,40 @@
+name: Main Roads topology probe
+
+on:
+  workflow_dispatch:
+
+permissions:
+  contents: read
+
+jobs:
+  probe:
+    name: Run topology probe
+    runs-on: ubuntu-latest
+
+    steps:
+      - name: Check out repository
+        uses: actions/checkout@v5
+
+      - name: Set up Flutter
+        uses: subosito/flutter-action@v2
+        with:
+          flutter-version: "3.44.0"
+          channel: stable
+          cache: true
+
+      - name: Resolve dependencies
+        run: flutter pub get
+
+      - name: Run Main Roads topology probe
+        run: dart run tool/main_roads_topology_probe.dart
+
+      - name: Upload investigation output
+        if: always()
+        uses: actions/upload-artifact@v7
+        with:
+          name: main-roads-topology-investigation
+          path: |
+            docs/main_roads_topology_investigation.md
+            tool/output/main_roads_topology_summary.json
+          if-no-files-found: error
+          retention-days: 14

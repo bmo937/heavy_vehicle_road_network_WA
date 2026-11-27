@@ -24,3 +24,32 @@ Exits with code 2 and marks the report INCOMPLETE if any layer fails or paginati
 ```
 flutter test test/tool/main_roads_schema_probe_test.dart
 ```
+
+# Tool: Main Roads topology probe
+
+Read-only research tooling for layer 78 PHYSICAL geometry topology. Not imported by `lib/`. It builds no `RoadGraph`, snaps no coordinates, creates no junctions and does not interpret `MAX_NETWORK`, network eligibility or restrictions.
+
+Retrieves all layer-78 features with geometry (`where=1=1`, `outFields=*`, `returnGeometry=true`, `outSR=4326`, `f=geojson`), paginated by `OBJECTID`. All pages are merged into one FeatureCollection and parsed with the production `MainRoadsNetworkParser` (so duplicate-GlobalID detection spans all pages). The run is INCOMPLETE (exit code 2, no analysis) if any page fails, pagination is partial, the retrieved count differs from the service's `returnCountOnly` total, or the parser rejects any feature.
+
+## Run (live service)
+
+```
+flutter pub get
+dart run tool/main_roads_topology_probe.dart
+```
+
+Options: `--output-report=PATH`, `--output-json=PATH`. Writes `docs/main_roads_topology_investigation.md` and `tool/output/main_roads_topology_summary.json`.
+
+Cloud: run the manually triggered **Main Roads topology probe** workflow (Actions tab -> Run workflow); outputs are uploaded as the `main-roads-topology-investigation` artifact even if the probe fails.
+
+## Method notes
+
+- Distances in metres use haversine on lon/lat degrees; exact equality (identical doubles) is kept separate from distance buckets.
+- Endpoint proximity: grid candidate filter, 10 m search radius.
+- Crossings: uniform lon/lat grid -> bounding-box filter -> exact segment intersection (axis-scaling invariant, no tolerance). Crossings are not junctions.
+
+## Tests (no network)
+
+```
+flutter test test/tool/main_roads_topology_probe_test.dart
+```
