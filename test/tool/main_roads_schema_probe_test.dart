@@ -149,6 +149,16 @@ void main() {
       expect(m.slkCandidates, [1]);
       expect(m.evidenceDisagrees, isTrue);
     });
+
+    test('segments missing either range are excluded from evidence comparisons', () {
+      final m = matchConditionRecord(
+        {'ROAD': 'H001', 'START_TRUE_DIST': 1, 'END_TRUE_DIST': 4, 'START_SLK': 1, 'END_SLK': 4},
+        [_seg(0, td0: 0, td1: 5)],
+      );
+      expect(m.result.candidates, [0]);
+      expect(m.slkCandidates, isEmpty);
+      expect(m.evidenceDisagrees, isFalse);
+    });
   });
 
   group('stats', () {
@@ -164,6 +174,13 @@ void main() {
       final d = duplicateStat(rows, 'G');
       expect([d.distinctValuesDuplicated, d.recordsInDuplicateGroups], [1, 2]);
       expect(fieldStats(rows, ['G'])['G']!.populated, 2);
+    });
+
+    test('value counts preserve distinct long values with shared prefixes', () {
+      final prefix = 'x' * 81;
+      final first = '${prefix}a';
+      final second = '${prefix}b';
+      expect(valueCounts([{'V': first}, {'V': second}], 'V'), {first: 1, second: 1});
     });
 
     test('MAX_NETWORK evidence never reports an established rule', () {
@@ -205,6 +222,25 @@ void main() {
       expect(d.complete, isTrue);
     });
 
+    test('empty page with exceeded transfer limit is incomplete', () async {
+      final a = _Adapter((o) => o.uri.path.endsWith('/query')
+          ? _body({'features': [], 'exceededTransferLimit': true})
+          : _body({'name': 'L'}));
+      final d = await fetchAllAttributes(_dio(a), 7, delay: Duration.zero);
+      expect(d.rows, isEmpty);
+      expect(d.complete, isFalse);
+      expect(d.incompleteReason, isNotNull);
+    });
+
+    test('successful empty page with false transfer-limit flag is complete', () async {
+      final a = _Adapter((o) => o.uri.path.endsWith('/query')
+          ? _body({'features': [], 'exceededTransferLimit': false})
+          : _body({'name': 'L'}));
+      final d = await fetchAllAttributes(_dio(a), 7, delay: Duration.zero);
+      expect(d.rows, isEmpty);
+      expect(d.complete, isTrue);
+    });
+
     test('hitting maxPages marks result incomplete', () async {
       final a = _Adapter((o) => o.uri.path.endsWith('/query')
           ? _body({'features': [_feat(1)], 'exceededTransferLimit': true})
@@ -237,6 +273,33 @@ void main() {
     test('truncates long sample text', () {
       final m = sample({'CONDITION': 'x' * 500}, ['CONDITION']);
       expect((m['CONDITION'] as String).length, lessThan(200));
+    });
+
+    test('long MAX_NETWORK values remain distinct summary keys', () {
+      final prefix = 'x' * 81;
+      final first = '${prefix}a';
+      final second = '${prefix}b';
+      final summary = buildSummary(
+        layers: {
+          78: LayerData(
+            78,
+            {'name': 'Core', 'fields': []},
+            [
+              {'MAX_NETWORK': first},
+              {'MAX_NETWORK': second},
+            ],
+            true,
+            1,
+            null,
+          ),
+        },
+        failures: {},
+        sampleLimit: 2,
+        generatedAt: 't',
+      );
+      final layer = summary['layer78'] as Map;
+      expect((layer['maxNetworkValues'] as Map).keys.toSet(), {first, second});
+      expect((layer['maxNetworkExamples'] as Map).keys.toSet(), {first, second});
     });
   });
 }

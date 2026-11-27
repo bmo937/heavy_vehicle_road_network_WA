@@ -156,6 +156,15 @@ ConditionMatch matchConditionRecord(Attrs rec, List<Segment> segments) {
 
   final tdIdx = [for (final s in tdHits) s.index];
   final slkIdx = [for (final s in slkHits) s.index];
+  final comparableSegments = sameRoad.where((s) => s.trueDist != null && s.slk != null);
+  final comparableTdIdx = [
+    for (final s in comparableSegments)
+      if (td != null && intervalsOverlap(td, s.trueDist!)) s.index
+  ];
+  final comparableSlkIdx = [
+    for (final s in comparableSegments)
+      if (slk != null && intervalsOverlap(slk, s.slk!)) s.index
+  ];
 
   final MatchResult result;
   if (td == null) {
@@ -170,8 +179,10 @@ ConditionMatch matchConditionRecord(Attrs rec, List<Segment> segments) {
       roadAgrees: true,
     );
   }
-  final evaluable = td != null && slk != null;
-  final disagrees = evaluable && !(tdIdx.length == slkIdx.length && tdIdx.toSet().containsAll(slkIdx));
+  final evaluable = td != null && slk != null && comparableSegments.isNotEmpty;
+  final disagrees = evaluable &&
+      !(comparableTdIdx.length == comparableSlkIdx.length &&
+          comparableTdIdx.toSet().containsAll(comparableSlkIdx));
   return ConditionMatch(result, slkIdx, disagrees);
 }
 
@@ -198,7 +209,7 @@ Map<String, int> valueCounts(List<Attrs> rows, String field, {int maxDistinct = 
     if (v != null) m[v] = (m[v] ?? 0) + 1;
   }
   final entries = m.entries.toList()..sort((a, b) => b.value.compareTo(a.value));
-  return {for (final e in entries.take(maxDistinct)) truncate(e.key, 80): e.value};
+  return {for (final e in entries.take(maxDistinct)) e.key: e.value};
 }
 
 class DuplicateStat {

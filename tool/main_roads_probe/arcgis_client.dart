@@ -111,7 +111,13 @@ Future<LayerData> fetchAllAttributes(
     pages++;
     offset += features.length;
     final more = data['exceededTransferLimit'] == true;
-    if (features.isEmpty || !more) break;
+    if (features.isEmpty) {
+      if (more) {
+        return LayerData(layerId, metadata, rows, false, pages, 'empty page while exceededTransferLimit was true');
+      }
+      break;
+    }
+    if (!more) break;
     if (delay > Duration.zero) await Future<void>.delayed(delay);
   }
   return LayerData(layerId, metadata, rows, true, pages, null);

@@ -92,7 +92,7 @@ Map<String, dynamic> buildSummary({
       'trueDistRanges': rangeStats(rows, 'START_TRUE_DIST', 'END_TRUE_DIST').toJson(),
       'maxNetworkExamples': {
         for (final k in maxCounts.keys)
-          k: sample(rows.firstWhere((r) => asText(r['MAX_NETWORK']) != null && truncate(asText(r['MAX_NETWORK'])!, 80) == k),
+          k: sample(rows.firstWhere((r) => asText(r['MAX_NETWORK']) == k),
               layer78Fields),
       },
       'note': 'MAX_NETWORK values are reported as observed; no eligibility hierarchy is inferred.',
