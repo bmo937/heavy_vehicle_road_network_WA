@@ -62,7 +62,7 @@ void main() {
     final d = r.details.firstWhere((x) => x['sourceGlobalId'] == 'source');
     expect(d['targetGlobalId'], 'long-target');
     expect(d['targetLocation'], 'segmentInterior');
-    expect(d['distanceMetres'], closeTo(1.11, 0.1));
+    expect(d['distanceMetres'], closeTo(0.784, 0.01));
   });
 
   test('requires a finite search radius of at least 10 metres', () {
