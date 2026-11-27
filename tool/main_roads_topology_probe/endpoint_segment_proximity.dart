@@ -174,25 +174,42 @@ EndpointSegmentProximity analyzeEndpointSegmentProximity(
   final expandLng = expandLat / cosLat;
   final grid = <(int, int), List<int>>{};
   final oversizedSegments = <int>[];
-  const maxCellsPerSegment = 10000;
+  const maxCellsPerSegment = 200000;
   for (var i = 0; i < segments.length; i++) {
     final s = segments[i];
-    final minCellX = cx(s.minLng - expandLng);
-    final maxCellX = cx(s.maxLng + expandLng);
-    final minCellY = cy(s.minLat - expandLat);
-    final maxCellY = cy(s.maxLat + expandLat);
-    final cellsWide = maxCellX - minCellX + 1;
-    final cellsHigh = maxCellY - minCellY + 1;
-    if (cellsWide > maxCellsPerSegment ||
-        cellsHigh > maxCellsPerSegment ||
-        cellsWide > maxCellsPerSegment ~/ cellsHigh) {
+    // Register the segment per piece (at most about one cell long) rather
+    // than over its whole bounding box, which is huge for long diagonals.
+    final pieces = math.max(
+      1,
+      math.max(
+        ((s.maxLng - s.minLng) / cellLng).ceil(),
+        ((s.maxLat - s.minLat) / cellLat).ceil(),
+      ),
+    );
+    if (pieces > maxCellsPerSegment) {
       oversizedSegments.add(i);
       continue;
     }
-    for (var x = minCellX; x <= maxCellX; x++) {
-      for (var y = minCellY; y <= maxCellY; y++) {
-        (grid[(x, y)] ??= []).add(i);
+    final cells = <(int, int)>{};
+    final dLng = s.b.longitude - s.a.longitude;
+    final dLat = s.b.latitude - s.a.latitude;
+    for (var k = 0; k < pieces; k++) {
+      final lng0 = s.a.longitude + dLng * k / pieces;
+      final lng1 = s.a.longitude + dLng * (k + 1) / pieces;
+      final lat0 = s.a.latitude + dLat * k / pieces;
+      final lat1 = s.a.latitude + dLat * (k + 1) / pieces;
+      final minX = cx(math.min(lng0, lng1) - expandLng);
+      final maxX = cx(math.max(lng0, lng1) + expandLng);
+      final minY = cy(math.min(lat0, lat1) - expandLat);
+      final maxY = cy(math.max(lat0, lat1) + expandLat);
+      for (var x = minX; x <= maxX; x++) {
+        for (var y = minY; y <= maxY; y++) {
+          cells.add((x, y));
+        }
       }
+    }
+    for (final c in cells) {
+      (grid[c] ??= []).add(i);
     }
   }
 
