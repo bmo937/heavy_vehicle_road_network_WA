@@ -35,9 +35,9 @@ class MainRoadsParseException implements Exception {
 /// into source segments. Performs no I/O, topology, snapping or eligibility
 /// logic. Any invalid feature fails the whole parse.
 ///
-/// GeoJSON coordinates are `[longitude, latitude]`. Only `LineString` is
-/// supported; `MultiLineString` is rejected explicitly so no line parts are
-/// silently dropped.
+/// GeoJSON coordinates are `[longitude, latitude]`. `LineString` (one part)
+/// and `MultiLineString` (one part per member line, kept separate and never
+/// joined) are supported; both keep the feature's GlobalID and metadata.
 class MainRoadsNetworkParser {
   const MainRoadsNetworkParser();
 
@@ -142,7 +142,7 @@ class MainRoadsNetworkParser {
           'properties.OBJECTID');
     }
 
-    final geometry = _parseGeometry(raw['geometry'], f);
+    final parts = _parseGeometry(raw['geometry'], f);
 
     return MainRoadsNetworkSegment(
       globalId: globalId,
@@ -157,34 +157,55 @@ class MainRoadsNetworkParser {
       networkType: _string(props['NETWORK_TYPE']),
       networkCategory: _string(props['NETWORK_CATEGORY']),
       maxNetwork: maxNetwork,
-      geometry: geometry,
+      parts: parts,
     );
   }
 
-  List<SourceCoordinate> _parseGeometry(
+  List<List<SourceCoordinate>> _parseGeometry(
     Object? geometry,
     MainRoadsParseException Function(String, String) f,
   ) {
     if (geometry is! Map) throw f('missing or invalid geometry', 'geometry');
     final type = geometry['type'];
-    if (type == 'MultiLineString') {
-      throw f('MultiLineString is not supported', 'geometry.type');
-    }
-    if (type != 'LineString') {
-      throw f('unsupported geometry type ${_describe(type)}', 'geometry.type');
-    }
     final coords = geometry['coordinates'];
-    if (coords is! List) {
-      throw f('coordinates must be a list', 'geometry.coordinates');
+    if (type == 'LineString') {
+      if (coords is! List) {
+        throw f('coordinates must be a list', 'geometry.coordinates');
+      }
+      return [_parseLine(coords, 'geometry.coordinates', f)];
     }
+    if (type == 'MultiLineString') {
+      if (coords is! List) {
+        throw f('coordinates must be a list', 'geometry.coordinates');
+      }
+      if (coords.isEmpty) {
+        throw f('MultiLineString needs at least 1 line', 'geometry.coordinates');
+      }
+      final parts = <List<SourceCoordinate>>[];
+      for (var p = 0; p < coords.length; p++) {
+        final line = coords[p];
+        final path = 'geometry.coordinates[$p]';
+        if (line is! List) throw f('line part must be a list', path);
+        parts.add(_parseLine(line, path, f));
+      }
+      return parts;
+    }
+    throw f('unsupported geometry type ${_describe(type)}', 'geometry.type');
+  }
+
+  List<SourceCoordinate> _parseLine(
+    List coords,
+    String path,
+    MainRoadsParseException Function(String, String) f,
+  ) {
     if (coords.length < 2) {
       throw f('LineString needs at least 2 coordinates, got ${coords.length}',
-          'geometry.coordinates');
+          path);
     }
 
     final result = <SourceCoordinate>[];
     for (var i = 0; i < coords.length; i++) {
-      final field = 'geometry.coordinates[$i]';
+      final field = '$path[$i]';
       final c = coords[i];
       // Optional third element (elevation) is ignored.
       if (c is! List || c.length < 2 || c.length > 3) {

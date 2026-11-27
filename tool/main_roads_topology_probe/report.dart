@@ -49,12 +49,13 @@ String renderTopologyReport(Map<String, dynamic> s) {
   b.writeln('## B. Geometry inventory');
   b.writeln();
   _table(b, ['Measure', 'Count'], [
-    ['Source LineStrings', g['features']],
+    ['Source features (GlobalIDs)', g['features']],
+    ['Line parts (LineString = 1, MultiLineString = one per member line)', g['parts']],
     ['Total vertices', g['totalVertices']],
     ['Distinct exact coordinates', g['distinctCoordinates']],
-    ['Source endpoints (2 per LineString)', endpoints],
+    ['Source part endpoints (2 per line part)', endpoints],
     ['Distinct endpoint coordinates', g['distinctEndpointCoordinates']],
-    ['Closed-loop LineStrings (first == last)', g['closedLoopFeatures']],
+    ['Closed-loop line parts (first == last)', g['closedLoopParts']],
   ]);
   b.writeln();
   b.writeln('Coordinates are WGS84 longitude/latitude degrees; "exact" means identical doubles, no rounding.');

@@ -35,6 +35,26 @@ MainRoadsNetworkSegment seg(String id, List<List<num>> pts, {String road = 'R1',
       geometry: [for (final p in pts) SourceCoordinate(longitude: _lng0 + p[0] * 0.001, latitude: _lat0 + p[1] * 0.001)],
     );
 
+MainRoadsNetworkSegment multiSeg(String id, List<List<List<num>>> parts, {String road = 'R1', int route = 1}) =>
+    MainRoadsNetworkSegment(
+      globalId: id,
+      objectId: null,
+      road: road,
+      roadName: null,
+      routeNeId: route,
+      startSlk: 0,
+      endSlk: 1,
+      startTrueDist: 0,
+      endTrueDist: 1,
+      networkType: null,
+      networkCategory: null,
+      maxNetwork: 1,
+      parts: [
+        for (final pts in parts)
+          [for (final p in pts) SourceCoordinate(longitude: _lng0 + p[0] * 0.001, latitude: _lat0 + p[1] * 0.001)],
+      ],
+    );
+
 SharedVertexAnalysis shared(List<MainRoadsNetworkSegment> s) => analyzeSharedVertices(CoordinateIndex.build(s));
 CrossingAnalysis crossings(List<MainRoadsNetworkSegment> s) => analyzeCrossings(CoordinateIndex.build(s));
 
@@ -366,6 +386,152 @@ void main() {
       expect(r.tinySegments, 1);
       expect(r.featuresWithTinySegments, 1);
       expect(r.segmentLengthBuckets['>0.5 to 1 m'], 1);
+    });
+  });
+
+  group('multipart features', () {
+    test('every part is indexed and has its own endpoints', () {
+      final r = shared([
+        multiSeg('m', [
+          [[0, 0], [1, 0]],
+          [[5, 0], [6, 0], [7, 0]],
+        ]),
+      ]);
+      expect(r.features, 1);
+      expect(r.parts, 2);
+      expect(r.totalVertices, 5);
+      expect(r.distinctCoordinates, 5);
+      expect(r.endpointAppearances, 4);
+      expect(r.internalVertexAppearances, 1);
+    });
+
+    test('parts of one feature are not other features, even where they touch', () {
+      final r = shared([
+        multiSeg('m', [
+          [[0, 0], [1, 0]],
+          [[1, 0], [2, 0]], // starts where the first part ends
+        ]),
+      ]);
+      expect(r.endpointsCoincidingWithOtherFeatureEndpoint, 0);
+      expect(r.endpointGroupsSharedByMultipleFeatures, 0);
+      expect(r.sharedGroupDetails, isEmpty);
+    });
+
+    test('a part endpoint meeting another feature is exact connectivity', () {
+      final r = shared([
+        multiSeg('m', [
+          [[0, 0], [1, 0]],
+          [[5, 0], [6, 0]],
+        ]),
+        seg('n', [[6, 0], [6, 1]]),
+      ]);
+      expect(r.endpointsCoincidingWithOtherFeatureEndpoint, 2);
+      expect(r.sharedGroupDetails.single['globalIds'], ['m', 'n']);
+    });
+
+    test('closed-loop counts are per part', () {
+      final r = shared([
+        multiSeg('m', [
+          [[0, 0], [1, 0], [0, 0]],
+          [[5, 0], [6, 0], [5, 0]],
+        ]),
+        seg('n', [[9, 0], [9, 1]]),
+      ]);
+      expect(r.closedLoopParts, 2);
+      expect(r.closedLoopFeatures, 1);
+    });
+
+    test('no edge is implied between parts: endpoints of one feature are not neighbours', () {
+      final r = analyzeEndpointProximity([
+        multiSeg('m', [
+          [[0, 0], [1, 0]],
+          [[1, 0], [2, 0]],
+        ]),
+      ]);
+      expect(r.endpointCount, 4);
+      expect(r.nearestOther['>10 m'], 4);
+    });
+
+    test('crossing reports the part that crosses and ignores same-feature parts', () {
+      final r = crossings([
+        multiSeg('m', [
+          [[0, 5], [2, 5]],
+          [[0, 0], [2, 2]],
+          [[0, 2], [2, 0]], // crosses the previous part of the SAME feature
+        ]),
+        seg('n', [[1.5, -1], [1.5, 3]]),
+      ]);
+      expect(r.indexedSegments, 4);
+      // n crosses parts 1 and 2 of m; m's parts crossing each other at (1,1) are not reported.
+      expect(r.crossings, 2);
+      expect(r.details.map((d) => d['partIndexA']).toSet(), {1, 2});
+      expect(r.details.every((d) => d['globalIdA'] == 'm' && d['globalIdB'] == 'n'), isTrue);
+    });
+
+    test('no segment is created between the end of one part and the start of the next', () {
+      final r = crossings([
+        multiSeg('m', [
+          [[0, 0], [1, 0]],
+          [[3, 0], [4, 0]],
+        ]),
+        seg('n', [[2, -1], [2, 1]]), // would cross a bridging 1,0 -> 3,0 edge
+      ]);
+      expect(r.indexedSegments, 3);
+      expect(r.crossings, 0);
+    });
+
+    test('geometry quality processes every part and keeps GlobalID', () {
+      final r = analyzeGeometryQuality([
+        multiSeg('m', [
+          [[0, 0], [1, 0], [1, 0]],
+          [[5, 0], [6, 0]],
+        ]),
+        seg('dup', [[6, 0], [5, 0]]),
+        multiSeg('deg', [
+          [[9, 9], [9, 9]],
+          [[8, 8], [8, 8]],
+        ]),
+      ]);
+      expect(r.zeroLengthPairs, 3);
+      expect(r.featuresWithZeroLengthPairs, 2);
+      expect(r.degenerateFeatures, 1);
+      expect(r.reversedDuplicatePairs, 1);
+      expect(r.duplicateDetails.single['globalIdA'], 'm');
+      expect(r.duplicateDetails.single['globalIdB'], 'dup');
+      expect(r.zeroLengthDetails.first, containsPair('partIndex', 0));
+      expect(r.zeroLengthDetails.first['globalId'], 'm');
+    });
+
+    test('end-to-end summary over MultiLineString features', () {
+      Map<String, dynamic> multiFeature(String id, List<List<List<double>>> lines) => {
+            ...geoFeature(id, null),
+            'geometry': {'type': 'MultiLineString', 'coordinates': lines},
+          };
+      final outcome = GeoJsonFetchOutcome(
+        collection: {
+          'type': 'FeatureCollection',
+          'features': [
+            multiFeature('m', [
+              [[115.0, -32.0], [115.001, -32.0]],
+              [[115.01, -32.0], [115.011, -32.0]],
+            ]),
+            geoFeature('n', [[115.001, -32.0], [115.001, -31.999]], objectId: 2),
+          ],
+        },
+        complete: true,
+        pages: 1,
+        expectedCount: 2,
+        incompleteReasons: const [],
+      );
+      final s = buildTopologySummary(outcome, generatedAt: 'now');
+      expect(s['status'], 'COMPLETE');
+      expect(s['recordCount'], 2);
+      expect(s['partCount'], 3);
+      final g = (s['analysis'] as Map)['geometryAndSharing'] as Map;
+      expect(g['features'], 2);
+      expect(g['parts'], 3);
+      expect(g['endpointsCoincidingWithOtherFeatureEndpoint'], 2);
+      expect(renderTopologyReport(s), contains('Status: COMPLETE'));
     });
   });
 
