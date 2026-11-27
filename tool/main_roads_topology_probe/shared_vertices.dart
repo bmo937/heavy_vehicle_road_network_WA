@@ -2,17 +2,21 @@ import 'package:roads_map/features/navigation/source/main_roads/main_roads_netwo
 
 import 'geo.dart';
 
-/// One occurrence of an exact coordinate in a source LineString.
+/// One occurrence of an exact coordinate in a source line part.
 class VertexAppearance {
-  const VertexAppearance(this.feature, this.vertex, this.isEndpoint);
+  const VertexAppearance(this.feature, this.part, this.vertex, this.isEndpoint);
 
-  /// Index into the analysed segment list.
+  /// Index into the analysed segment list (the source feature).
   final int feature;
 
-  /// Vertex index within that feature's coordinate list.
+  /// Index of the line part within that feature.
+  final int part;
+
+  /// Vertex index within that part's coordinate list.
   final int vertex;
 
-  /// True for the first and last vertex of the LineString.
+  /// True for the first and last vertex of the part. Each part has its own
+  /// endpoints; parts of one feature are never treated as connected.
   final bool isEndpoint;
 }
 
@@ -24,13 +28,16 @@ class CoordinateIndex {
   factory CoordinateIndex.build(List<MainRoadsNetworkSegment> segments) {
     final groups = <CoordKey, List<VertexAppearance>>{};
     for (var f = 0; f < segments.length; f++) {
-      final g = segments[f].geometry;
-      if (g.length < 2) {
-        throw ArgumentError('feature ${segments[f].globalId} has fewer than 2 vertices');
-      }
-      for (var v = 0; v < g.length; v++) {
-        final isEnd = v == 0 || v == g.length - 1;
-        (groups[(g[v].longitude, g[v].latitude)] ??= []).add(VertexAppearance(f, v, isEnd));
+      final parts = segments[f].parts;
+      for (var p = 0; p < parts.length; p++) {
+        final g = parts[p];
+        if (g.length < 2) {
+          throw ArgumentError('feature ${segments[f].globalId} part $p has fewer than 2 vertices');
+        }
+        for (var v = 0; v < g.length; v++) {
+          final isEnd = v == 0 || v == g.length - 1;
+          (groups[(g[v].longitude, g[v].latitude)] ??= []).add(VertexAppearance(f, p, v, isEnd));
+        }
       }
     }
     return CoordinateIndex._(segments, groups);
@@ -39,14 +46,20 @@ class CoordinateIndex {
   final List<MainRoadsNetworkSegment> segments;
   final Map<CoordKey, List<VertexAppearance>> groups;
 
-  /// True when both features have a source vertex at exactly [key].
-  bool bothFeaturesHaveVertexAt(CoordKey key, int a, int b) {
+  /// True when both parts have a source vertex at exactly [key].
+  bool bothPartsHaveVertexAt(
+    CoordKey key,
+    int featureA,
+    int partA,
+    int featureB,
+    int partB,
+  ) {
     final apps = groups[key];
     if (apps == null) return false;
     var hasA = false, hasB = false;
     for (final x in apps) {
-      if (x.feature == a) hasA = true;
-      if (x.feature == b) hasB = true;
+      if (x.feature == featureA && x.part == partA) hasA = true;
+      if (x.feature == featureB && x.part == partB) hasB = true;
     }
     return hasA && hasB;
   }
@@ -66,11 +79,13 @@ String continuityCategory(MainRoadsNetworkSegment a, MainRoadsNetworkSegment b) 
 class SharedVertexAnalysis {
   SharedVertexAnalysis({
     required this.features,
+    required this.parts,
     required this.totalVertices,
     required this.distinctCoordinates,
     required this.endpointAppearances,
     required this.distinctEndpointCoordinates,
     required this.closedLoopFeatures,
+    required this.closedLoopParts,
     required this.endpointsCoincidingWithOtherFeatureEndpoint,
     required this.endpointGroupSizeHistogram,
     required this.endpointGroupsSharedByMultipleFeatures,
@@ -90,14 +105,22 @@ class SharedVertexAnalysis {
     required this.sharedGroupDetailsTruncated,
   });
 
+  /// Source features (one per GlobalID).
   final int features;
+
+  /// Line parts across all features (a LineString is one part).
+  final int parts;
   final int totalVertices;
   final int distinctCoordinates;
   final int endpointAppearances;
   final int distinctEndpointCoordinates;
 
-  /// Features whose first and last vertex are the same coordinate.
+  /// Features with at least one part whose first and last vertex are the same
+  /// coordinate.
   final int closedLoopFeatures;
+
+  /// Parts whose first and last vertex are the same coordinate.
+  final int closedLoopParts;
 
   /// Endpoint appearances with an endpoint of a DIFFERENT feature at the exact
   /// same coordinate.
@@ -144,11 +167,13 @@ class SharedVertexAnalysis {
 
   Map<String, dynamic> toJson() => {
         'features': features,
+        'parts': parts,
         'totalVertices': totalVertices,
         'distinctCoordinates': distinctCoordinates,
         'endpointAppearances': endpointAppearances,
         'distinctEndpointCoordinates': distinctEndpointCoordinates,
         'closedLoopFeatures': closedLoopFeatures,
+        'closedLoopParts': closedLoopParts,
         'endpointsCoincidingWithOtherFeatureEndpoint': endpointsCoincidingWithOtherFeatureEndpoint,
         'endpointGroupSizeDistribution': {
           'oneEndpoint': endpointGroupsWithOneEndpoint,
@@ -186,14 +211,21 @@ SharedVertexAnalysis analyzeSharedVertices(
 }) {
   final segs = index.segments;
   var totalVertices = 0;
-  for (final s in segs) {
-    totalVertices += s.geometry.length;
-  }
-
+  var totalParts = 0;
   var closed = 0;
+  var closedParts = 0;
   for (final s in segs) {
-    final a = s.geometry.first, b = s.geometry.last;
-    if (a.latitude == b.latitude && a.longitude == b.longitude) closed++;
+    var featureClosed = false;
+    for (final g in s.parts) {
+      totalParts++;
+      totalVertices += g.length;
+      final a = g.first, b = g.last;
+      if (a.latitude == b.latitude && a.longitude == b.longitude) {
+        closedParts++;
+        featureClosed = true;
+      }
+    }
+    if (featureClosed) closed++;
   }
 
   var endpointAppearances = 0;
@@ -295,11 +327,13 @@ SharedVertexAnalysis analyzeSharedVertices(
 
   return SharedVertexAnalysis(
     features: segs.length,
+    parts: totalParts,
     totalVertices: totalVertices,
     distinctCoordinates: index.groups.length,
     endpointAppearances: endpointAppearances,
     distinctEndpointCoordinates: distinctEndpointCoords,
     closedLoopFeatures: closed,
+    closedLoopParts: closedParts,
     endpointsCoincidingWithOtherFeatureEndpoint: endpointsCoincide,
     endpointGroupSizeHistogram: sizeHist,
     endpointGroupsSharedByMultipleFeatures: endpointGroupsMulti,

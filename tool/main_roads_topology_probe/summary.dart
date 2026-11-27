@@ -61,6 +61,7 @@ Map<String, dynamic> buildTopologySummary(
       'serviceReportedCount': fetch.expectedCount,
     },
     'recordCount': segments?.length,
+    'partCount': segments?.fold<int>(0, (n, s) => n + s.parts.length),
     'scope': 'Physical geometry topology only. MAX_NETWORK, network eligibility, restrictions and '
         'Tandem Drive Network 1 semantics are deliberately not interpreted. No RoadGraph was built, '
         'no coordinate was snapped and no feature was merged or removed.',

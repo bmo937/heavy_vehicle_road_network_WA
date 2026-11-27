@@ -142,8 +142,8 @@ class CrossingAnalysis {
 }
 
 class _Seg {
-  _Seg(this.feature, this.index, this.x1, this.y1, this.x2, this.y2);
-  final int feature, index;
+  _Seg(this.feature, this.part, this.index, this.x1, this.y1, this.x2, this.y2);
+  final int feature, part, index;
   final double x1, y1, x2, y2;
   double get minX => x1 < x2 ? x1 : x2;
   double get maxX => x1 < x2 ? x2 : x1;
@@ -160,14 +160,17 @@ CrossingAnalysis analyzeCrossings(
   final segs = <_Seg>[];
   var skipped = 0;
   for (var f = 0; f < features.length; f++) {
-    final g = features[f].geometry;
-    for (var i = 0; i + 1 < g.length; i++) {
-      final a = g[i], b = g[i + 1];
-      if (a.longitude == b.longitude && a.latitude == b.latitude) {
-        skipped++;
-        continue;
+    final parts = features[f].parts;
+    for (var p = 0; p < parts.length; p++) {
+      final g = parts[p];
+      for (var i = 0; i + 1 < g.length; i++) {
+        final a = g[i], b = g[i + 1];
+        if (a.longitude == b.longitude && a.latitude == b.latitude) {
+          skipped++;
+          continue;
+        }
+        segs.add(_Seg(f, p, i, a.longitude, a.latitude, b.longitude, b.latitude));
       }
-      segs.add(_Seg(f, i, a.longitude, a.latitude, b.longitude, b.latitude));
     }
   }
 
@@ -195,17 +198,17 @@ CrossingAnalysis analyzeCrossings(
   final details = <Map<String, dynamic>>[];
   var truncated = false;
 
-  double nearestVertex(int feature, double x, double y) {
+  double nearestVertex(int feature, int part, double x, double y) {
     var best = double.infinity;
-    for (final c in features[feature].geometry) {
+    for (final c in features[feature].parts[part]) {
       final d = haversineMetres(y, x, c.latitude, c.longitude);
       if (d < best) best = d;
     }
     return best;
   }
 
-  String role(int feature, int segIndex, double x, double y) {
-    final g = features[feature].geometry;
+  String role(int feature, int part, int segIndex, double x, double y) {
+    final g = features[feature].parts[part];
     for (final v in [segIndex, segIndex + 1]) {
       if (g[v].longitude == x && g[v].latitude == y) {
         return v == 0 || v == g.length - 1 ? 'endpoint' : 'internalVertex';
@@ -240,16 +243,26 @@ CrossingAnalysis analyzeCrossings(
           (hit.x, hit.y),
           if (hit.kind == HitKind.overlap) (hit.x2!, hit.y2!),
         ];
-        // Represented = every intersection point is already an exact source vertex of both features.
-        if (points.every((p) => index.bothFeaturesHaveVertexAt((p.$1, p.$2), fa, fb))) continue;
+        // Represented = every intersection point is already an exact source vertex
+        // of both intersecting parts.
+        final isRepresented = points.every(
+          (p) => index.bothPartsHaveVertexAt(
+            (p.$1, p.$2),
+            fa,
+            a.part,
+            fb,
+            b.part,
+          ),
+        );
+        if (isRepresented) continue;
 
-        final key = '$fa|$fb|${hit.kind.name}|${hit.x}|${hit.y}|${hit.x2}|${hit.y2}';
+        final key = '$fa|${a.part}|$fb|${b.part}|${hit.kind.name}|${hit.x}|${hit.y}|${hit.x2}|${hit.y2}';
         if (!seen.add(key)) continue;
 
-        final roleA = hit.kind == HitKind.overlap ? 'overlap' : role(fa, a.index, hit.x, hit.y);
-        final roleB = hit.kind == HitKind.overlap ? 'overlap' : role(fb, b.index, hit.x, hit.y);
-        final nearA = nearestVertex(fa, hit.x, hit.y);
-        final nearB = nearestVertex(fb, hit.x, hit.y);
+        final roleA = hit.kind == HitKind.overlap ? 'overlap' : role(fa, a.part, a.index, hit.x, hit.y);
+        final roleB = hit.kind == HitKind.overlap ? 'overlap' : role(fb, b.part, b.index, hit.x, hit.y);
+        final nearA = nearestVertex(fa, a.part, hit.x, hit.y);
+        final nearB = nearestVertex(fb, b.part, hit.x, hit.y);
         final near = nearA < nearB ? nearA : nearB;
         final nearBucket = near == 0 ? '0 m' : bucketForDistance(near, exact: false).label;
         final endpointInvolved = roleA == 'endpoint' || roleB == 'endpoint';
@@ -277,6 +290,8 @@ CrossingAnalysis analyzeCrossings(
             'roadB': fB.road,
             'routeNeIdA': fA.routeNeId,
             'routeNeIdB': fB.routeNeId,
+            'partIndexA': a.part,
+            'partIndexB': b.part,
             'roleA': roleA,
             'roleB': roleB,
             'atEndpoint': endpointInvolved,

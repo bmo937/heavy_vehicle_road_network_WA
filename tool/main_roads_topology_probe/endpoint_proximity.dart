@@ -40,7 +40,7 @@ class _Ep {
   final double lat, lng;
 }
 
-/// Measures, for every source endpoint, the great-circle distance in metres to
+/// Measures, for every source part endpoint (two per line part), the great-circle distance in metres to
 /// the nearest endpoint of a different feature.
 ///
 /// Candidate stage: endpoints are hashed into a lat/lng cell grid whose cells
@@ -54,13 +54,16 @@ EndpointProximity analyzeEndpointProximity(
   final eps = <_Ep>[];
   var maxAbsLat = 0.0;
   for (var f = 0; f < segments.length; f++) {
-    final g = segments[f].geometry;
-    if (g.length < 2) {
-      throw ArgumentError('feature ${segments[f].globalId} has fewer than 2 vertices');
-    }
-    for (final c in [g.first, g.last]) {
-      eps.add(_Ep(f, c.latitude, c.longitude));
-      maxAbsLat = math.max(maxAbsLat, c.latitude.abs());
+    final parts = segments[f].parts;
+    for (var p = 0; p < parts.length; p++) {
+      final g = parts[p];
+      if (g.length < 2) {
+        throw ArgumentError('feature ${segments[f].globalId} part $p has fewer than 2 vertices');
+      }
+      for (final c in [g.first, g.last]) {
+        eps.add(_Ep(f, c.latitude, c.longitude));
+        maxAbsLat = math.max(maxAbsLat, c.latitude.abs());
+      }
     }
   }
 

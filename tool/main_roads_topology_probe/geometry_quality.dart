@@ -23,7 +23,7 @@ class GeometryQuality {
     required this.zeroLengthDetails,
   });
 
-  /// Sets of >= 2 features sharing one coordinate sequence (either direction).
+  /// Sets of >= 2 line parts sharing one coordinate sequence (either direction).
   final int duplicateGroups;
   final int exactDuplicatePairs;
   final int reversedDuplicatePairs;
@@ -35,7 +35,7 @@ class GeometryQuality {
   final int zeroLengthPairs;
   final int featuresWithZeroLengthPairs;
 
-  /// Features whose coordinates are all identical (no distinct vertices).
+  /// Features whose coordinates (across all parts) are all identical.
   final int degenerateFeatures;
 
   /// Bucketed lengths of segments; `exact same coordinate` = zero length.
@@ -88,38 +88,50 @@ GeometryQuality analyzeGeometryQuality(
 
   for (var f = 0; f < segments.length; f++) {
     final s = segments[f];
-    final g = s.geometry;
-    if (g.length < 2) throw ArgumentError('feature ${s.globalId} has fewer than 2 vertices');
-
-    final fwd = _seqKey(g);
-    final rev = _seqKey(g.reversed);
-    final forwardIsCanonical = fwd.compareTo(rev) <= 0;
-    (groups[forwardIsCanonical ? fwd : rev] ??= []).add((f, forwardIsCanonical || fwd == rev));
-
     var zero = 0;
     var tinyHere = 0;
-    for (var i = 0; i + 1 < g.length; i++) {
-      final a = g[i], b = g[i + 1];
-      final identical = a.latitude == b.latitude && a.longitude == b.longitude;
-      final len = identical ? 0.0 : haversineMetres(a.latitude, a.longitude, b.latitude, b.longitude);
-      lengthBuckets.update(bucketForDistance(len, exact: identical).label, (v) => v + 1);
-      if (identical) {
-        zero++;
-        if (zeroDetails.length < detailLimit) {
-          zeroDetails.add({'globalId': s.globalId, 'segmentIndex': i, 'longitude': a.longitude, 'latitude': a.latitude});
+    var allIdentical = true;
+    for (var p = 0; p < s.parts.length; p++) {
+      final g = s.parts[p];
+      if (g.length < 2) throw ArgumentError('feature ${s.globalId} part $p has fewer than 2 vertices');
+
+      final fwd = _seqKey(g);
+      final rev = _seqKey(g.reversed);
+      final forwardIsCanonical = fwd.compareTo(rev) <= 0;
+      (groups[forwardIsCanonical ? fwd : rev] ??= []).add((f, forwardIsCanonical || fwd == rev));
+
+      for (var i = 0; i + 1 < g.length; i++) {
+        final a = g[i], b = g[i + 1];
+        final identical = a.latitude == b.latitude && a.longitude == b.longitude;
+        final len = identical ? 0.0 : haversineMetres(a.latitude, a.longitude, b.latitude, b.longitude);
+        lengthBuckets.update(bucketForDistance(len, exact: identical).label, (v) => v + 1);
+        if (identical) {
+          zero++;
+          if (zeroDetails.length < detailLimit) {
+            zeroDetails.add({
+              'globalId': s.globalId,
+              'partIndex': p,
+              'segmentIndex': i,
+              'longitude': a.longitude,
+              'latitude': a.latitude,
+            });
+          }
+        } else if (len <= tinySegmentMetres) {
+          tinyHere++;
+          if (tinyDetails.length < detailLimit) {
+            tinyDetails.add({'globalId': s.globalId, 'partIndex': p, 'segmentIndex': i, 'lengthMetres': len});
+          }
         }
-      } else if (len <= tinySegmentMetres) {
-        tinyHere++;
-        if (tinyDetails.length < detailLimit) {
-          tinyDetails.add({'globalId': s.globalId, 'segmentIndex': i, 'lengthMetres': len});
-        }
+      }
+      if (!g.every((c) => c.latitude == g.first.latitude && c.longitude == g.first.longitude)) {
+        allIdentical = false;
       }
     }
     zeroPairs += zero;
     if (zero > 0) zeroFeatures++;
     tiny += tinyHere;
     if (tinyHere > 0) tinyFeatures++;
-    if (g.every((c) => c.latitude == g.first.latitude && c.longitude == g.first.longitude)) degenerate++;
+    if (allIdentical) degenerate++;
   }
 
   var dupGroups = 0;

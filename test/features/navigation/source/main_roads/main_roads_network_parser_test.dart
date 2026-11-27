@@ -37,6 +37,9 @@ Map<String, dynamic> feature({
       'geometry': identical(geometry, _unset) ? line() : geometry,
     };
 
+Map<String, dynamic> multi(Object? lines) =>
+    {'type': 'MultiLineString', 'coordinates': lines};
+
 const _unset = Object();
 
 Map<String, dynamic> collection(List<Object?> features) =>
@@ -140,21 +143,100 @@ void main() {
         'properties.END_TRUE_DIST');
   });
 
+  group('MultiLineString', () {
+    final partA = [
+      [115.8, -31.9],
+      [115.9, -32.0],
+    ];
+    final partB = [
+      [116.0, -32.1],
+      [116.1, -32.2],
+      [116.2, -32.3],
+    ];
+
+    test('keeps every part separate and in source order', () {
+      final s = parse([feature(geometry: multi([partA, partB]))]).single;
+      expect(s.parts.length, 2);
+      expect(s.parts[0].length, 2);
+      expect(s.parts[1].length, 3);
+      expect(s.parts[0].first.longitude, 115.8);
+      expect(s.parts[0].first.latitude, -31.9);
+      expect(s.parts[1].last.longitude, 116.2);
+      expect(s.parts[1].last.latitude, -32.3);
+    });
+
+    test('does not invent a connection between parts', () {
+      final s = parse([feature(geometry: multi([partA, partB]))]).single;
+      final all = [for (final p in s.parts) ...p];
+      expect(all.length, partA.length + partB.length);
+      expect(s.parts[0].last, isNot(s.parts[1].first));
+      expect(() => s.geometry, throwsStateError);
+    });
+
+    test('one source feature, one GlobalID and its metadata', () {
+      final s = parse([
+        feature(geometry: multi([partA, partB])),
+      ]).single;
+      expect(s.globalId, 'g1');
+      expect(s.objectId, 7);
+      expect(s.road, 'H001');
+      expect(s.routeNeId, 100);
+      expect(s.maxNetwork, 3);
+    });
+
+    test('single-line MultiLineString has one part', () {
+      final s = parse([feature(geometry: multi([partA]))]).single;
+      expect(s.parts.length, 1);
+      expect(s.geometry.length, 2);
+    });
+
+    test('LineString is still one part and exposes geometry', () {
+      final s = parse([feature()]).single;
+      expect(s.parts.length, 1);
+      expect(s.geometry, same(s.parts.single));
+    });
+
+    test('duplicate GlobalID across multipart features is still rejected', () {
+      expect(
+        () => parse([
+          feature(geometry: multi([partA, partB])),
+          feature(),
+        ]),
+        throwsA(isA<MainRoadsParseException>()
+            .having((e) => e.featureIndex, 'index', 1)),
+      );
+    });
+  });
+
   test('geometry problems', () {
     rejects([feature(geometry: null)], 'geometry');
     rejects([feature(geometry: {'type': 'Point', 'coordinates': [1, 2]})],
         'geometry.type');
+    rejects([feature(geometry: multi([]))], 'geometry.coordinates');
+    rejects([feature(geometry: multi([5]))], 'geometry.coordinates[0]');
     rejects([
-      feature(geometry: {
-        'type': 'MultiLineString',
-        'coordinates': [
-          [
-            [115.8, -31.9],
-            [115.9, -32.0]
-          ]
+      feature(geometry: multi([
+        [
+          [115.8, -31.9],
+          [115.9, -32.0]
+        ],
+        [
+          [115.0, -31.0]
         ]
-      })
-    ], 'geometry.type');
+      ]))
+    ], 'geometry.coordinates[1]');
+    rejects([
+      feature(geometry: multi([
+        [
+          [115.8, -31.9],
+          [115.9, -32.0]
+        ],
+        [
+          [115.0, -31.0],
+          [115.1, 'x']
+        ]
+      ]))
+    ], 'geometry.coordinates[1][1]');
     rejects([
       feature(geometry: line([
         [115.8, -31.9]
