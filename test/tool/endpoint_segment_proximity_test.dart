@@ -43,6 +43,46 @@ void main() {
     expect(d['distanceMetres'], closeTo(1.11, 0.1));
   });
 
+  test('checks long diagonal segments through the oversized-segment fallback', () {
+    final r = analyzeEndpointSegmentProximity([
+      feature('source', [
+        [
+          [0.0375, 0.03201],
+          [0.0375, 0.033],
+        ],
+      ]),
+      feature('long-target', [
+        [
+          [0, 0],
+          [0.075, 0.064],
+        ],
+      ]),
+    ]);
+
+    final d = r.details.firstWhere((x) => x['sourceGlobalId'] == 'source');
+    expect(d['targetGlobalId'], 'long-target');
+    expect(d['targetLocation'], 'segmentInterior');
+    expect(d['distanceMetres'], closeTo(1.11, 0.1));
+  });
+
+  test('requires a finite search radius of at least 10 metres', () {
+    final features = [
+      feature('a', [
+        [
+          [0, 0],
+          [0, 0.001],
+        ],
+      ]),
+    ];
+
+    for (final radius in [2.0, 9.99, double.nan, double.infinity]) {
+      expect(
+        () => analyzeEndpointSegmentProximity(features, radiusMetres: radius),
+        throwsArgumentError,
+      );
+    }
+  });
+
   test('excludes exact endpoint partners from eligible population', () {
     final r = analyzeEndpointSegmentProximity([
       feature('a', [

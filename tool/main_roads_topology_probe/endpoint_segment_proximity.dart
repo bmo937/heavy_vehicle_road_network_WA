@@ -134,7 +134,9 @@ EndpointSegmentProximity analyzeEndpointSegmentProximity(
   double radiusMetres = 10,
   int detailLimit = 20000,
 }) {
-  if (radiusMetres <= 0) throw ArgumentError.value(radiusMetres, 'radiusMetres');
+  if (!radiusMetres.isFinite || radiusMetres < 10) {
+    throw ArgumentError.value(radiusMetres, 'radiusMetres');
+  }
 
   final endpoints = <_Endpoint>[];
   final endpointFeatures = <(double, double), Set<int>>{};
@@ -171,10 +173,24 @@ EndpointSegmentProximity analyzeEndpointSegmentProximity(
   final expandLat = radiusMetres / metresPerDegreeLatitude;
   final expandLng = expandLat / cosLat;
   final grid = <(int, int), List<int>>{};
+  final oversizedSegments = <int>[];
+  const maxCellsPerSegment = 10000;
   for (var i = 0; i < segments.length; i++) {
     final s = segments[i];
-    for (var x = cx(s.minLng - expandLng); x <= cx(s.maxLng + expandLng); x++) {
-      for (var y = cy(s.minLat - expandLat); y <= cy(s.maxLat + expandLat); y++) {
+    final minCellX = cx(s.minLng - expandLng);
+    final maxCellX = cx(s.maxLng + expandLng);
+    final minCellY = cy(s.minLat - expandLat);
+    final maxCellY = cy(s.maxLat + expandLat);
+    final cellsWide = maxCellX - minCellX + 1;
+    final cellsHigh = maxCellY - minCellY + 1;
+    if (cellsWide > maxCellsPerSegment ||
+        cellsHigh > maxCellsPerSegment ||
+        cellsWide > maxCellsPerSegment ~/ cellsHigh) {
+      oversizedSegments.add(i);
+      continue;
+    }
+    for (var x = minCellX; x <= maxCellX; x++) {
+      for (var y = minCellY; y <= maxCellY; y++) {
         (grid[(x, y)] ??= []).add(i);
       }
     }
@@ -201,7 +217,10 @@ EndpointSegmentProximity analyzeEndpointSegmentProximity(
 
     _Match? best;
     _Match? bestInterior;
-    final candidates = grid[(cx(e.lng), cy(e.lat))] ?? const <int>[];
+    final candidates = [
+      ...?grid[(cx(e.lng), cy(e.lat))],
+      ...oversizedSegments,
+    ];
     for (final id in candidates) {
       final s = segments[id];
       if (s.feature == e.feature) continue;
