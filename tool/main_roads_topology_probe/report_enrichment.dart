@@ -15,7 +15,7 @@ String enrichTopologyReportWithEndpointSegmentProximity(
   final details = proximity['details'] as List;
 
   final b = StringBuffer()
-    ..writeln('## I. Endpoint-to-segment proximity')
+    ..writeln('## I.1 Endpoint-to-segment proximity')
     ..writeln()
     ..writeln('For endpoints without an exact different-feature endpoint partner, this diagnostic searches for the nearest finite segment belonging to another source feature within ${proximity['searchRadiusMetres']} m. Candidates are diagnostic only: no coordinate was snapped, no feature was split and no junction was created.')
     ..writeln()
@@ -45,7 +45,7 @@ String enrichTopologyReportWithEndpointSegmentProximity(
   }
 
   enriched = enriched.replaceAll('endpoint-to-segment proximity (not measured)',
-      'endpoint-to-segment proximity (measured; see section I)');
+      'endpoint-to-segment proximity (measured; see section I.1)');
   enriched = enriched.replaceAll(
     'near-collinear overlaps and endpoint-to-segment near-misses (no tolerance is applied)',
     'near-collinear overlaps; whether endpoint-to-segment near-misses represent true junctions (no tolerance is applied)',

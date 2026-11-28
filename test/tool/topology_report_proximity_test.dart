@@ -53,7 +53,12 @@ void main() {
 
     expect(report, contains('Endpoint-to-segment proximity'));
     expect(report, contains('Eligible endpoints without an exact different-feature endpoint partner'));
-    expect(report, contains('${proximity['eligibleEndpointCount']}'));
+    expect(
+      report,
+      contains(
+        '| Eligible endpoints without an exact different-feature endpoint partner | ${proximity['eligibleEndpointCount']} |',
+      ),
+    );
     expect(report, contains('Nearest finite-segment distance'));
     expect(report, contains('Nearest segment-interior distance'));
     expect(report, contains('Nearest target location'));
