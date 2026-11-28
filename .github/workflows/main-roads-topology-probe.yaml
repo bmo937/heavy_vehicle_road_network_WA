@@ -10,6 +10,7 @@ jobs:
   probe:
     name: Run topology probe
     runs-on: ubuntu-latest
+    timeout-minutes: 20
 
     steps:
       - name: Check out repository

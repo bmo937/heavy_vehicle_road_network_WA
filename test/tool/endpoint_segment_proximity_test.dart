@@ -43,7 +43,7 @@ void main() {
     expect(d['distanceMetres'], closeTo(1.11, 0.1));
   });
 
-  test('checks long diagonal segments through the oversized-segment fallback', () {
+  test('finds long diagonal segments through piecewise grid registration', () {
     final r = analyzeEndpointSegmentProximity([
       feature('source', [
         [
@@ -63,6 +63,58 @@ void main() {
     expect(d['targetGlobalId'], 'long-target');
     expect(d['targetLocation'], 'segmentInterior');
     expect(d['distanceMetres'], closeTo(0.784, 0.01));
+  });
+
+  test('finds an oversized segment interior through the fallback', () {
+    final r = analyzeEndpointSegmentProximity([
+      feature('source', [
+        [[15, 0.00001], [15, 0.001]],
+      ]),
+      feature('long-target', [
+        [[0, 0], [30, 0]],
+      ]),
+    ]);
+
+    final d = r.details.firstWhere((x) => x['sourceGlobalId'] == 'source');
+    expect(d['targetGlobalId'], 'long-target');
+    expect(d['targetLocation'], 'segmentInterior');
+    expect(d['distanceMetres'], closeTo(1.11, 0.1));
+  });
+
+  test('falls back when unique cells exceed the budget before pieces do', () {
+    final r = analyzeEndpointSegmentProximity([
+      feature('long-target', [
+        [[0, 0], [4, 4]],
+      ]),
+      feature('short-target', [
+        [[1.999, 2], [2.001, 2]],
+      ]),
+      feature('source', [
+        [[2, 2], [2, 2.001]],
+      ]),
+    ]);
+
+    final d = r.details.firstWhere(
+      (x) => x['sourceGlobalId'] == 'source' && x['sourceEndpoint'] == 'start',
+    );
+    expect(d['targetGlobalId'], 'short-target');
+    expect(d['targetLocation'], 'segmentInterior');
+    expect(d['distanceMetres'], 0);
+
+    final fallback = analyzeEndpointSegmentProximity([
+      feature('long-target', [
+        [[0, 0], [4, 4]],
+      ]),
+      feature('source', [
+        [[3, 3], [3, 3.001]],
+      ]),
+    ]);
+    final fallbackMatch = fallback.details.firstWhere(
+      (x) => x['sourceGlobalId'] == 'source' && x['sourceEndpoint'] == 'start',
+    );
+    expect(fallbackMatch['targetGlobalId'], 'long-target');
+    expect(fallbackMatch['targetLocation'], 'segmentInterior');
+    expect(fallbackMatch['distanceMetres'], closeTo(0, 0.000001));
   });
 
   test('requires a finite search radius of at least 10 metres', () {
