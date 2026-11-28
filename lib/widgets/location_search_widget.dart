@@ -1,7 +1,7 @@
 import 'dart:async';
 
-import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
+import 'package:material_ui/material_ui.dart';
 import 'package:roads_map/models/place_search_result.dart';
 import 'package:roads_map/providers/location_search_providers.dart';
 import 'package:roads_map/services/google_places_service.riverpod.dart';

@@ -1,6 +1,6 @@
 // App wrapper that manages splash screen and main app transition
-import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
+import 'package:material_ui/material_ui.dart';
 import 'package:roads_map/providers/map_page_notifier.riverpod.dart';
 import 'package:roads_map/widgets/navigation_widget/navigation_widget.dart';
 import 'package:roads_map/widgets/splash_screen.dart';

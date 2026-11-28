@@ -1,4 +1,4 @@
-import 'package:flutter/material.dart';
+import 'package:material_ui/material_ui.dart';
 import 'package:hooks_riverpod/hooks_riverpod.dart';
 import 'package:roads_map/providers/on_feature_tapped.riverpod.dart';
 import 'package:roads_map/widgets/feature_display/feature_display_providers.dart';

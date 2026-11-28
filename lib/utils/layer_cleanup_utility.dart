@@ -1,5 +1,5 @@
 // Function to remove any existing network layers before adding new ones
-import 'package:flutter/material.dart';
+import 'package:material_ui/material_ui.dart';
 import 'package:maplibre_gl/maplibre_gl.dart';
 import 'package:roads_map/utils/layer_naming_utilities.dart';
 

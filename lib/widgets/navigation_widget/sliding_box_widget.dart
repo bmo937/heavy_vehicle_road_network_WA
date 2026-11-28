@@ -4,7 +4,7 @@ Im Hamed Shirvanie, i build and defines this plugin in 5/29/23
 LICENSE: https://github.com/shirvanie/flutter_sliding_box/blob/master/LICENSE
 */
 
-import 'package:flutter/material.dart';
+import 'package:material_ui/material_ui.dart';
 
 class SlidingBox extends StatefulWidget {
   SlidingBox({
@@ -1125,7 +1125,8 @@ class BoxController extends ValueNotifier<MenuIconValue> {
     try {
       assert(isAttached, "BoxController must be attached to a SlidingBox");
       value = MenuIconValue.openMenu();
-      return _boxState!._closeBox().then((_) => notifyListeners());
+      await _boxState!._closeBox();
+      notifyListeners();
     } catch (e) {
       return;
     }
@@ -1137,7 +1138,8 @@ class BoxController extends ValueNotifier<MenuIconValue> {
     try {
       assert(isAttached, "BoxController must be attached to a SlidingBox");
       value = MenuIconValue.closeMenu();
-      return _boxState!._openBox().then((_) => notifyListeners());
+      await _boxState!._openBox();
+      notifyListeners();
     } catch (e) {
       return;
     }
@@ -1147,7 +1149,7 @@ class BoxController extends ValueNotifier<MenuIconValue> {
   Future<void> hideBox() async {
     try {
       assert(isAttached, "BoxController must be attached to a SlidingBox");
-      return _boxState!._hideBox();
+      await _boxState!._hideBox();
     } catch (e) {
       return;
     }
@@ -1157,7 +1159,7 @@ class BoxController extends ValueNotifier<MenuIconValue> {
   Future<void> showBox() async {
     try {
       assert(isAttached, "BoxController must be attached to a SlidingBox");
-      return _boxState!._showBox();
+      await _boxState!._showBox();
     } catch (e) {
       return;
     }
@@ -1170,7 +1172,8 @@ class BoxController extends ValueNotifier<MenuIconValue> {
       value = _boxState!._isBoxOpen
           ? MenuIconValue.closeMenu()
           : MenuIconValue.openMenu();
-      return _boxState!._hideSearchBox().then((_) => notifyListeners());
+      await _boxState!._hideSearchBox();
+      notifyListeners();
     } catch (e) {
       return;
     }
@@ -1180,7 +1183,7 @@ class BoxController extends ValueNotifier<MenuIconValue> {
   Future<void> showSearchBox() async {
     try {
       assert(isAttached, "BoxController must be attached to a SlidingBox");
-      return _boxState!._showSearchBox();
+      await _boxState!._showSearchBox();
     } catch (e) {
       return;
     }
@@ -1191,7 +1194,7 @@ class BoxController extends ValueNotifier<MenuIconValue> {
   Future<void> setSearchBody({required Widget child}) async {
     try {
       assert(isAttached, "BoxController must be attached to a SlidingBox");
-      return _boxState!._setSearchBody(child);
+      await _boxState!._setSearchBody(child);
     } catch (e) {
       return;
     }
@@ -1201,7 +1204,7 @@ class BoxController extends ValueNotifier<MenuIconValue> {
     try {
       assert(isAttached, "BoxController must be attached to a SlidingBox");
       assert(0.0 <= value && value <= 1.0);
-      return _boxState!._setPosition(value);
+      await _boxState!._setPosition(value);
     } catch (e) {
       return;
     }

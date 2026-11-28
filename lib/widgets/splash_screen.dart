@@ -1,9 +1,9 @@
 // Beautiful splash screen for Western Australian truck drivers
 import 'dart:math' as math;
 
-import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:google_fonts/google_fonts.dart';
+import 'package:material_ui/material_ui.dart';
 import 'package:roads_map/providers/map_page_notifier.riverpod.dart';
 import 'package:roads_map/providers/splash_screen_provider.dart';
 import 'package:roads_map/utils/icons.riverpod.dart';

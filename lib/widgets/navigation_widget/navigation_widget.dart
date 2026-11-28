@@ -1,5 +1,5 @@
 // Refactored Navigation Widget that uses MenuAssets
-import 'package:flutter/material.dart' hide debugPrint;
+import 'package:material_ui/material_ui.dart' hide debugPrint;
 import 'package:flutter/rendering.dart';
 import 'package:hooks_riverpod/hooks_riverpod.dart';
 import 'package:roads_map/models/menu_helpers.dart';

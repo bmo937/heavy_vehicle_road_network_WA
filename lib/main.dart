@@ -1,14 +1,15 @@
 import 'package:flutter/foundation.dart';
-import 'package:flutter/material.dart';
 import 'package:flutter/services.dart';
+import 'package:flutter_dotenv/flutter_dotenv.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:google_fonts/google_fonts.dart';
 import 'package:hive_ce_flutter/hive_flutter.dart';
+import 'package:material_ui/material_ui.dart';
 import 'package:roads_map/widgets/app_wrapper.dart';
-import 'package:flutter_dotenv/flutter_dotenv.dart';
+
 import 'initialization_provider.dart';
-import 'utils/app_config.dart';
 import 'providers/settings_notifier.riverpod.dart';
+import 'utils/app_config.dart';
 import 'utils/app_themes.riverpod.dart';
 
 void main() async {

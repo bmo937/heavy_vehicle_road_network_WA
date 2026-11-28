@@ -1,5 +1,5 @@
 import 'dart:convert';
-import 'package:flutter/material.dart';
+import 'package:material_ui/material_ui.dart';
 
 class Base64Image extends StatelessWidget {
   final String? base64String;

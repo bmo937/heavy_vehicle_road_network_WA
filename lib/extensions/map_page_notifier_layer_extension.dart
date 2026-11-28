@@ -1,6 +1,6 @@
 // This file extends the MapPageNotifier with better network layer selection handling
 
-import 'package:flutter/material.dart';
+import 'package:material_ui/material_ui.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:roads_map/models/menu_assets.riverpod.dart';
 import 'package:roads_map/providers/map_page_notifier.riverpod.dart';

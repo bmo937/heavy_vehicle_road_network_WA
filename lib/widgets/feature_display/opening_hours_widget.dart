@@ -1,4 +1,4 @@
-import 'package:flutter/material.dart';
+import 'package:material_ui/material_ui.dart';
 
 class OpeningHoursWidget extends StatefulWidget {
   final Map<String, dynamic> openingHours;

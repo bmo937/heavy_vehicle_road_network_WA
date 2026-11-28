@@ -1,7 +1,7 @@
 // Feature interaction handling for map taps and queries
 import 'dart:math';
 
-import 'package:flutter/material.dart';
+import 'package:material_ui/material_ui.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:maplibre_gl/maplibre_gl.dart';
 import 'package:roads_map/providers/map_utilities.dart';

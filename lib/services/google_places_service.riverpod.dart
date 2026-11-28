@@ -1,7 +1,7 @@
 import 'dart:math';
 
 import 'package:dio/dio.dart';
-import 'package:flutter/material.dart';
+import 'package:material_ui/material_ui.dart';
 import 'package:riverpod_annotation/riverpod_annotation.dart';
 
 part 'google_places_service.riverpod.g.dart';
@@ -179,6 +179,9 @@ class GooglePlacesService extends _$GooglePlacesService {
         break;
       case DioExceptionType.connectionError:
         debugPrint('Connection Timeout: ${error.message}');
+        break;
+      case DioExceptionType.transformTimeout:
+        debugPrint('Transform Timeout: ${error.message}');
         break;
     }
   }
