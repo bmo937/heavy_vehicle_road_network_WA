@@ -4,6 +4,7 @@ import 'dart:io';
 import 'main_roads_probe/arcgis_client.dart';
 import 'main_roads_topology_probe/fetch.dart';
 import 'main_roads_topology_probe/report.dart';
+import 'main_roads_topology_probe/report_enrichment.dart';
 import 'main_roads_topology_probe/summary.dart';
 
 /// Read-only research probe. See tool/README.md. Not imported by lib/.
@@ -30,9 +31,10 @@ Future<void> main(List<String> args) async {
   File(jsonPath)
     ..parent.createSync(recursive: true)
     ..writeAsStringSync('${const JsonEncoder.withIndent('  ').convert(summary)}\n');
+  final report = enrichTopologyReportWithEndpointSegmentProximity(renderTopologyReport(summary), summary);
   File(reportPath)
     ..parent.createSync(recursive: true)
-    ..writeAsStringSync(renderTopologyReport(summary));
+    ..writeAsStringSync(report);
   stdout.writeln('Wrote $reportPath and $jsonPath');
 
   if (summary['status'] != 'COMPLETE') {
