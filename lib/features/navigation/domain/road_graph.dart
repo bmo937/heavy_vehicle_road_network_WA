@@ -8,6 +8,7 @@ import 'road_node.dart';
 /// - edge IDs are unique;
 /// - edge lengths are non-negative;
 /// - every edge's `fromNodeId` and `toNodeId` refer to a node in the graph.
+/// - source geometry, when present, starts and ends at the directed nodes.
 ///
 /// Lookups of unknown IDs return null (or an empty list for outgoing edges);
 /// they never throw.
@@ -42,6 +43,19 @@ class RoadGraph {
         throw ArgumentError(
           'Edge ${edge.id} references missing to-node: ${edge.toNodeId}',
         );
+      }
+      final geometry = edge.mainRoadsSource?.geometry;
+      if (geometry != null) {
+        final from = nodesById[edge.fromNodeId]!;
+        final to = nodesById[edge.toNodeId]!;
+        if (geometry.first.latitude != from.latitude ||
+            geometry.first.longitude != from.longitude ||
+            geometry.last.latitude != to.latitude ||
+            geometry.last.longitude != to.longitude) {
+          throw ArgumentError(
+            'Edge ${edge.id} source geometry does not match its directed nodes',
+          );
+        }
       }
       edgesById[edge.id] = edge;
       outgoing.putIfAbsent(edge.fromNodeId, () => []).add(edge);

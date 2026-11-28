@@ -1,29 +1,6 @@
-/// A geographic position parsed from GeoJSON.
-///
-/// GeoJSON stores positions as `[longitude, latitude]`; this class keeps the
-/// two values in named fields so the order cannot be reversed accidentally.
-/// Pure Dart: deliberately independent of MapLibre's `LatLng`.
-class SourceCoordinate {
-  const SourceCoordinate({required this.latitude, required this.longitude});
+import '../../domain/source_coordinate.dart';
 
-  /// Degrees, -90..90.
-  final double latitude;
-
-  /// Degrees, -180..180.
-  final double longitude;
-
-  @override
-  bool operator ==(Object other) =>
-      other is SourceCoordinate &&
-      other.latitude == latitude &&
-      other.longitude == longitude;
-
-  @override
-  int get hashCode => Object.hash(latitude, longitude);
-
-  @override
-  String toString() => 'SourceCoordinate(lat: $latitude, lng: $longitude)';
-}
+export '../../domain/source_coordinate.dart';
 
 /// One physical road feature from Main Roads WA layer 78
 /// ("Tandem Drive 1-10 All Networks").
@@ -91,7 +68,8 @@ class MainRoadsNetworkSegment {
   /// use [parts] when the geometry may have more than one part.
   List<SourceCoordinate> get geometry {
     if (parts.length != 1) {
-      throw StateError('feature $globalId has ${parts.length} parts; use parts');
+      throw StateError(
+          'feature $globalId has ${parts.length} parts; use parts');
     }
     return parts.single;
   }

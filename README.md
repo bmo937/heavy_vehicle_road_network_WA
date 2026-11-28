@@ -28,9 +28,18 @@ Primary directories:
 - `lib/widgets/`: UI screens and composable widgets (map, navigation panel, feature display)
 - `lib/providers/`: app and map state, layer coordination, network/POI selections
 - `lib/services/`: external services (traffic, places, online layers)
+- `lib/features/navigation/`: source parsing and directed road graph models
 - `lib/models/`: data models and generated adapters/serializers
 - `lib/utils/`: constants, map style utilities, icon and layer helpers
 - `assets/`: JSON configs, icons, fonts, and geo assets
+
+The Main Roads edge builder accepts an explicitly selected source part and
+inclusive vertex range; it does not discover junctions or build a graph.
+Each edge retains the original feature attributes and its own ordered geometry.
+Reversing an edge reverses its geometry, not the source attributes or their
+feature-wide SLK and distance ranges. Network metadata is not interpreted:
+Tandem Drive Network 1's exclusion-road semantics are not generalized to
+other networks.
 
 ## Requirements
 
