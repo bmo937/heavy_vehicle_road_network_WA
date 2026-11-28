@@ -193,6 +193,7 @@ EndpointSegmentProximity analyzeEndpointSegmentProximity(
     final cells = <(int, int)>{};
     final dLng = s.b.longitude - s.a.longitude;
     final dLat = s.b.latitude - s.a.latitude;
+    pieceLoop:
     for (var k = 0; k < pieces; k++) {
       final lng0 = s.a.longitude + dLng * k / pieces;
       final lng1 = s.a.longitude + dLng * (k + 1) / pieces;
@@ -205,8 +206,13 @@ EndpointSegmentProximity analyzeEndpointSegmentProximity(
       for (var x = minX; x <= maxX; x++) {
         for (var y = minY; y <= maxY; y++) {
           cells.add((x, y));
+          if (cells.length > maxCellsPerSegment) break pieceLoop;
         }
       }
+    }
+    if (cells.length > maxCellsPerSegment) {
+      oversizedSegments.add(i);
+      continue;
     }
     for (final c in cells) {
       (grid[c] ??= []).add(i);
