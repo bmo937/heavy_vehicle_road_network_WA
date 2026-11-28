@@ -6,7 +6,7 @@ part of 'icons.riverpod.dart';
 // RiverpodGenerator
 // **************************************************************************
 
-String _$appSvgIconHash() => r'e42570f124411ab79e4fb8ca57d49c2b94c6ca59';
+String _$appSvgIconHash() => r'59c8c3cf76ba4d884eb9627c3016a76302a782d5';
 
 /// AppSvgIcon class provides a centralized way to access and use SVG icons
 /// throughout the application

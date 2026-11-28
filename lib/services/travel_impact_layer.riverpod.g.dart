@@ -6,7 +6,7 @@ part of 'travel_impact_layer.riverpod.dart';
 // RiverpodGenerator
 // **************************************************************************
 
-String _$fetchGeoJsonDataHash() => r'e6c7ee3e4621ab8426ab64ff931f3805972fb838';
+String _$fetchGeoJsonDataHash() => r'd0fd81ba4356cc18a3730bd9c957c4bf20a4bbcd';
 
 /// See also [fetchGeoJsonData].
 @ProviderFor(fetchGeoJsonData)

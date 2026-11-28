@@ -6,7 +6,7 @@ part of 'divider.riverpod.dart';
 // RiverpodGenerator
 // **************************************************************************
 
-String _$dividerHash() => r'aa9efc58cbddb2364945e05bb0b4cfc2a6447f34';
+String _$dividerHash() => r'e5e1fc3d0f518045f5f7b3d3fd63f2751ce0f62d';
 
 /// See also [divider].
 @ProviderFor(divider)

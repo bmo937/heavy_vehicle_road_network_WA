@@ -6,7 +6,7 @@ part of 'app_themes.riverpod.dart';
 // RiverpodGenerator
 // **************************************************************************
 
-String _$primaryColorHash() => r'38698d0c28c3b4f6d0a5e02f0652e627569525a4';
+String _$primaryColorHash() => r'eec3b4381c4a25a5113e332ade24c3ef398d1105';
 
 /// See also [primaryColor].
 @ProviderFor(primaryColor)
@@ -22,7 +22,7 @@ final primaryColorProvider = AutoDisposeProvider<Color>.internal(
 @Deprecated('Will be removed in 3.0. Use Ref instead')
 // ignore: unused_element
 typedef PrimaryColorRef = AutoDisposeProviderRef<Color>;
-String _$oppositeColorHash() => r'4ab69e313e691b03b7139bd94798564b306fde85';
+String _$oppositeColorHash() => r'8822ea01ce97e4c7c93989f77ca13fda877b05d2';
 
 /// See also [oppositeColor].
 @ProviderFor(oppositeColor)

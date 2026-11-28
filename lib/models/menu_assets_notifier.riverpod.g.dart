@@ -6,7 +6,7 @@ part of 'menu_assets_notifier.riverpod.dart';
 // RiverpodGenerator
 // **************************************************************************
 
-String _$menuAssetsHash() => r'dc237d15557fe3a4cfcb53e81f105704bcdf2227';
+String _$menuAssetsHash() => r'3a82240ec49e2ff3033c896165e05c5435ad4a25';
 
 /// See also [menuAssets].
 @ProviderFor(menuAssets)

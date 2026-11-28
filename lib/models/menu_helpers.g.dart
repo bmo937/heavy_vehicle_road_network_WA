@@ -7,7 +7,7 @@ part of 'menu_helpers.dart';
 // **************************************************************************
 
 String _$pointsOfInterestSelectionNotifierHash() =>
-    r'c3c9e9052b9e6fea16791c5a8ed21b210b24e99b';
+    r'1f346859ef9071a5a71b80ac78ce34098cdf8f1b';
 
 /// See also [PointsOfInterestSelectionNotifier].
 @ProviderFor(PointsOfInterestSelectionNotifier)

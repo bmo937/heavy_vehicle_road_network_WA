@@ -6,7 +6,7 @@ part of 'network_selection_provider.riverpod.dart';
 // RiverpodGenerator
 // **************************************************************************
 
-String _$poiLayerSelectionHash() => r'0d199405cf0718bc54c515902655ccf20f1d399b';
+String _$poiLayerSelectionHash() => r'a37c8d2de6e3a1f1cddd8e153710f9010bfbf649';
 
 /// Provider to track POI layer selections using Riverpod annotation
 ///
@@ -25,7 +25,7 @@ final poiLayerSelectionProvider =
 
 typedef _$PoiLayerSelection = AutoDisposeNotifier<Map<String, bool>>;
 String _$networkLayerSelectionHash() =>
-    r'160197c536adee99d3a1a28cc7962a8525d2b886';
+    r'76d5667644f964b812772146ac9ecb8636b164cd';
 
 /// Provider to track network layer selection using Riverpod annotation
 ///

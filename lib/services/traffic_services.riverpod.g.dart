@@ -7,7 +7,7 @@ part of 'traffic_services.riverpod.dart';
 // **************************************************************************
 
 String _$fetchIncidentsDataHash() =>
-    r'ab861c61075894eeb7e3fad61debea5c0475f3d1';
+    r'c1b4a5bd5ba1346e4d82ba1441214323e78898c1';
 
 /// See also [fetchIncidentsData].
 @ProviderFor(fetchIncidentsData)

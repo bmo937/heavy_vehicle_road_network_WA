@@ -6,7 +6,7 @@ part of 'settings_notifier.riverpod.dart';
 // RiverpodGenerator
 // **************************************************************************
 
-String _$settingsNotifierHash() => r'6d3e54a20da344af1ecdc24db14bad33552d2fed';
+String _$settingsNotifierHash() => r'9e3e8179dba1076f1f3da064679a4dbc39f0385f';
 
 /// See also [SettingsNotifier].
 @ProviderFor(SettingsNotifier)
@@ -23,7 +23,7 @@ final settingsNotifierProvider =
 
 typedef _$SettingsNotifier = AutoDisposeNotifier<ThemeMode>;
 String _$markerColorNotifierHash() =>
-    r'7f9d4952abb11797b05bf2ce48b9a9ed28be9eb0';
+    r'859922e493c335b81f97ebfb932b65cddd2c666e';
 
 /// See also [MarkerColorNotifier].
 @ProviderFor(MarkerColorNotifier)

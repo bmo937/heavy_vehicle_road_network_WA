@@ -6,7 +6,7 @@ part of 'map_style_service.riverpod.dart';
 // RiverpodGenerator
 // **************************************************************************
 
-String _$themeStyleHash() => r'ae1fd05b98f0004d29d5085172265d83f342c253';
+String _$themeStyleHash() => r'f329c697d232957d74fd0da052777547d87fd4b7';
 
 /// See also [ThemeStyle].
 @ProviderFor(ThemeStyle)
