@@ -5,8 +5,7 @@ import 'package:dio/dio.dart';
 const String mainRoadsNetworkServiceUrl =
     'https://gisservices.mainroads.wa.gov.au/arcgis/rest/services/OpenData/HVS_Networks_DataPortal/MapServer';
 const int mainRoadsNetworkLayerId = 78;
-const String mainRoadsNetworkLayerName =
-    'Tandem Drive 1-10 All Networks';
+const String mainRoadsNetworkLayerName = 'Tandem Drive 1-10 All Networks';
 
 /// Base type for failures while loading the Main Roads source.
 abstract class MainRoadsNetworkLoadException implements Exception {
@@ -20,8 +19,7 @@ abstract class MainRoadsNetworkLoadException implements Exception {
 }
 
 /// A request, metadata, or pagination failure.
-class MainRoadsNetworkRetrievalException
-    extends MainRoadsNetworkLoadException {
+class MainRoadsNetworkRetrievalException extends MainRoadsNetworkLoadException {
   const MainRoadsNetworkRetrievalException(
     super.context,
     super.message, {

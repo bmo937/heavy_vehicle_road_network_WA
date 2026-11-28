@@ -117,6 +117,28 @@ powershell.exe -NoProfile -ExecutionPolicy Bypass -File tool/local_review.ps1
 ```
 
 The review runs the full checks and shows branch commits and a diff summary.
+Hooks and scripts are check-only by default: a formatting failure does not
+save the reported changes. To save Dart formatting and rerun validation:
+
+```powershell
+# Format and run the fast commit checks.
+powershell.exe -NoProfile -ExecutionPolicy Bypass -File tool/local_checks.ps1 -Mode Commit -FixFormat
+
+# Or format and run the full local review.
+powershell.exe -NoProfile -ExecutionPolicy Bypass -File tool/local_review.ps1 -FixFormat
+```
+
+`-FixFormat` formats all Dart files in the repository, then checks formatting
+again and runs the usual validation. It never stages files. Review and stage
+the resulting changes before retrying the commit; before retrying a push,
+commit them too. The hooks remain check-only to protect partially staged edits.
+
+Test the check scripts in isolation (no Flutter commands run):
+
+```powershell
+powershell.exe -NoProfile -ExecutionPolicy Bypass -File test/tool/local_checks_test.ps1
+```
+
 Hooks can be bypassed with Git's `--no-verify` in an emergency, but should not
 be bypassed routinely.
 

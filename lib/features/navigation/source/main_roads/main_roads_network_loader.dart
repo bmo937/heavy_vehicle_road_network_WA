@@ -29,8 +29,7 @@ class MainRoadsNetworkLoader {
   })  : acceptedSourceWkids = Set.unmodifiable(acceptedSourceWkids),
         equivalentSourceWkidAliases = Map.unmodifiable(
           equivalentSourceWkidAliases.map(
-            (wkid, aliases) =>
-                MapEntry(wkid, Set<int>.unmodifiable(aliases)),
+            (wkid, aliases) => MapEntry(wkid, Set<int>.unmodifiable(aliases)),
           ),
         );
 
@@ -384,8 +383,7 @@ class MainRoadsNetworkLoader {
       context: context,
     );
     final objectIds = response['objectIds'];
-    if (objectIds is! List ||
-        objectIds.any((id) => id is! int || id < 0)) {
+    if (objectIds is! List || objectIds.any((id) => id is! int || id < 0)) {
       throw MainRoadsNetworkRetrievalException(
         context,
         'ArcGIS did not return a valid OBJECTID list',
@@ -411,9 +409,7 @@ class MainRoadsNetworkLoader {
 
   int? _asWkid(Object? value) {
     if (value is int) return value;
-    if (value is num &&
-        value.isFinite &&
-        value == value.truncateToDouble()) {
+    if (value is num && value.isFinite && value == value.truncateToDouble()) {
       return value.toInt();
     }
     return null;

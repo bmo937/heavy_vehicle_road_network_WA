@@ -87,8 +87,7 @@ Map<String, dynamic> _page(
     {
       'type': 'FeatureCollection',
       'features': features,
-      if (exceededTransferLimit)
-        'exceededTransferLimit': exceededTransferLimit,
+      if (exceededTransferLimit) 'exceededTransferLimit': exceededTransferLimit,
     };
 
 class _TrackingParser extends MainRoadsNetworkParser {
@@ -103,9 +102,8 @@ class _TrackingParser extends MainRoadsNetworkParser {
   }
 }
 
-Dio _dio(_Adapter adapter) =>
-    Dio(BaseOptions(responseType: ResponseType.plain))
-      ..httpClientAdapter = adapter;
+Dio _dio(_Adapter adapter) => Dio(BaseOptions(responseType: ResponseType.plain))
+  ..httpClientAdapter = adapter;
 
 MainRoadsNetworkLoader _loader(
   _Adapter adapter, {
@@ -127,8 +125,7 @@ MainRoadsNetworkLoader _loader(
     3857: {102100},
   },
 }) {
-  final sourceMetadata = metadata ??
-      _metadata(maxRecordCount: servicePageSize);
+  final sourceMetadata = metadata ?? _metadata(maxRecordCount: servicePageSize);
   var pageIndex = 0;
   var objectIdResponseIndex = 0;
   adapter.handler = (options) {
@@ -148,8 +145,7 @@ MainRoadsNetworkLoader _loader(
       } else {
         ids = pages
             .expand((page) => page['features'] as List)
-            .map((feature) =>
-                (feature as Map)['properties']['OBJECTID'] as int)
+            .map((feature) => (feature as Map)['properties']['OBJECTID'] as int)
             .toSet()
             .toList()
           ..sort();
@@ -256,7 +252,9 @@ void main() {
         metadata: _metadata(
           spatialReference: {'wkid': 102100, 'latestWkid': 3857},
         ),
-        pages: [_page([_feature('g1')])],
+        pages: [
+          _page([_feature('g1')])
+        ],
       );
 
       final result = await loader.load();
@@ -307,7 +305,9 @@ void main() {
         metadata: _metadata(
           spatialReference: {'wkid': 900001, 'latestWkid': 900002},
         ),
-        pages: [_page([_feature('g1')])],
+        pages: [
+          _page([_feature('g1')])
+        ],
       );
 
       final result = await loader.load();
@@ -434,11 +434,11 @@ void main() {
       expect(queries.every((query) => query['orderByFields'] == 'OBJECTID'),
           isTrue);
       expect(queries.every((query) => query['outFields'] == '*'), isTrue);
-      expect(queries.every((query) => query['returnGeometry'] == 'true'), isTrue);
+      expect(
+          queries.every((query) => query['returnGeometry'] == 'true'), isTrue);
     });
 
-    test('retrieves offset pages when limit flag is absent',
-        () async {
+    test('retrieves offset pages when limit flag is absent', () async {
       final adapter = _Adapter((_) => _json({}));
       final loader = _loader(
         adapter,
@@ -468,7 +468,10 @@ void main() {
         final loader = _loader(adapter, pages: [
           {
             ..._page([_feature('g1')]),
-            'crs': {'type': 'name', 'properties': {'name': name}},
+            'crs': {
+              'type': 'name',
+              'properties': {'name': name}
+            },
           },
         ]);
         expect((await loader.load()).segments, hasLength(1), reason: name);
@@ -478,9 +481,18 @@ void main() {
         null,
         'EPSG:4326',
         {},
-        {'type': 'name', 'properties': {'name': 'EPSG:7844'}},
-        {'type': 'name', 'properties': {'name': 4326}},
-        {'type': 'link', 'properties': {'name': 'EPSG:4326'}},
+        {
+          'type': 'name',
+          'properties': {'name': 'EPSG:7844'}
+        },
+        {
+          'type': 'name',
+          'properties': {'name': 4326}
+        },
+        {
+          'type': 'link',
+          'properties': {'name': 'EPSG:4326'}
+        },
       ]) {
         final adapter = _Adapter((_) => _json({}));
         final parser = _TrackingParser();
@@ -491,7 +503,10 @@ void main() {
           parser: parser,
           pages: [
             _page([_feature('g1')]),
-            {..._page([_feature('g2', objectId: 2)]), 'crs': crs},
+            {
+              ..._page([_feature('g2', objectId: 2)]),
+              'crs': crs
+            },
           ],
         );
         await expectLater(
@@ -506,7 +521,12 @@ void main() {
 
     test('rejects unusable explicit source CRS instead of falling back',
         () async {
-      for (final reference in [null, {}, {'wkt': 'WKT'}, 'invalid']) {
+      for (final reference in [
+        null,
+        {},
+        {'wkt': 'WKT'},
+        'invalid'
+      ]) {
         final adapter = _Adapter((_) => _json({}));
         final parser = _TrackingParser();
         final loader = _loader(
@@ -514,7 +534,8 @@ void main() {
           parser: parser,
           metadata: {..._metadata(), 'sourceSpatialReference': reference},
         );
-        await expectLater(loader.load(), throwsA(isA<MainRoadsNetworkCrsException>()));
+        await expectLater(
+            loader.load(), throwsA(isA<MainRoadsNetworkCrsException>()));
         expect(parser.called, isFalse);
         expect(adapter.requests, hasLength(1));
       }
@@ -534,7 +555,9 @@ void main() {
         final loader = _loader(
           adapter,
           parser: parser,
-          pages: [_page([_feature('g1')])],
+          pages: [
+            _page([_feature('g1')])
+          ],
           responseOverride: (options) {
             if (options.uri.path.endsWith('/78') && ++metadataRequests == 2) {
               return _json(_metadata(spatialReference: reference));
@@ -609,7 +632,8 @@ void main() {
       expect(parser.called, isFalse);
     });
 
-    test('rejects invalid layer identity, geometry type and metadata', () async {
+    test('rejects invalid layer identity, geometry type and metadata',
+        () async {
       for (final metadata in [
         _metadata(id: 77),
         _metadata(name: 'Other layer'),
@@ -715,7 +739,8 @@ void main() {
       );
     });
 
-    test('detects an OBJECTID set changing during geometry retrieval', () async {
+    test('detects an OBJECTID set changing during geometry retrieval',
+        () async {
       final adapter = _Adapter((_) => _json({}));
       final parser = _TrackingParser();
       final loader = _loader(
@@ -784,11 +809,13 @@ void main() {
       }
     });
 
-    test('reports structured errors for failed or malformed retrievals', () async {
+    test('reports structured errors for failed or malformed retrievals',
+        () async {
       final cases = <String, ResponseBody? Function(RequestOptions)>{
-        'non-200': (options) => options.uri.queryParameters['returnCountOnly'] == 'true'
-            ? _json({'error': 'unavailable'}, 503)
-            : null,
+        'non-200': (options) =>
+            options.uri.queryParameters['returnCountOnly'] == 'true'
+                ? _json({'error': 'unavailable'}, 503)
+                : null,
         'invalid JSON': (options) =>
             options.uri.path.endsWith('/78') ? _raw('{') : null,
         'non-object body': (options) =>
@@ -799,7 +826,9 @@ void main() {
                 : null,
         'page ArcGIS error': (options) =>
             options.uri.queryParameters['f'] == 'geojson'
-                ? _json({'error': {'code': 400, 'message': 'bad query'}})
+                ? _json({
+                    'error': {'code': 400, 'message': 'bad query'}
+                  })
                 : null,
       };
 
