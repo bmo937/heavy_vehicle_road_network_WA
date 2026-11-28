@@ -34,9 +34,12 @@ class MainRoadsNetworkLoader {
   final String? datumTransformation;
 
   Future<MainRoadsNetworkLoadResult> load() async {
-    if (requestedOutputWkid <= 0 || pageSize <= 0 || maxPages <= 0) {
+    if (requestedOutputWkid != _defaultOutputWkid ||
+        pageSize <= 0 ||
+        maxPages <= 0) {
       throw ArgumentError(
-        'requestedOutputWkid, pageSize, and maxPages must be positive',
+        'requestedOutputWkid must be 4326; pageSize and maxPages '
+        'must be positive',
       );
     }
 
@@ -47,18 +50,23 @@ class MainRoadsNetworkLoader {
     _validateLayerMetadata(metadata);
     final reference = _sourceReference(metadata);
     final sourceWkid = reference.wkid ?? reference.latestWkid;
-    if (sourceWkid == null) {
-      throw const MainRoadsNetworkCrsException(
+    if (reference.hasInvalidWkid ||
+        reference.hasInvalidLatestWkid ||
+        sourceWkid == null) {
+      throw MainRoadsNetworkCrsException(
         'layer metadata',
-        'source WKID is missing',
+        'source WKID is missing or malformed',
+        sourceWkid: reference.wkid,
+        latestWkid: reference.latestWkid,
       );
     }
-    if (!acceptedSourceWkids.contains(sourceWkid) &&
-        (reference.latestWkid == null ||
+    if ((reference.wkid != null &&
+            !acceptedSourceWkids.contains(reference.wkid)) ||
+        (reference.latestWkid != null &&
             !acceptedSourceWkids.contains(reference.latestWkid))) {
       throw MainRoadsNetworkCrsException(
         'layer metadata',
-        'unsupported source WKID $sourceWkid'
+        'unsupported source WKID ${reference.wkid}'
             '${reference.latestWkid == null ? '' : ' (latestWkid ${reference.latestWkid})'}',
         sourceWkid: reference.wkid,
         latestWkid: reference.latestWkid,
@@ -91,9 +99,22 @@ class MainRoadsNetworkLoader {
       );
     }
 
+    final initialObjectIds = await _getObjectIds('feature IDs');
+    final objectIdBatches = <List<int>>[];
+    for (var start = 0;
+        start < initialObjectIds.length;
+        start += requestedPageSize) {
+      final end = start + requestedPageSize < initialObjectIds.length
+          ? start + requestedPageSize
+          : initialObjectIds.length;
+      objectIdBatches.add(initialObjectIds.sublist(start, end));
+    }
+    if (objectIdBatches.isEmpty) objectIdBatches.add(const []);
+
     final features = <dynamic>[];
+    final retrievedObjectIds = <int>[];
     var pages = 0;
-    while (features.length < expectedCount) {
+    for (final objectIds in objectIdBatches) {
       if (pages >= maxPages) {
         throw MainRoadsNetworkRetrievalException(
           'feature pagination',
@@ -107,9 +128,9 @@ class MainRoadsNetworkLoader {
         'returnGeometry': 'true',
         'orderByFields': 'OBJECTID',
         'outSR': '$requestedOutputWkid',
-        'resultOffset': '${features.length}',
         'resultRecordCount': '$requestedPageSize',
         'f': 'geojson',
+        if (objectIds.isNotEmpty) 'objectIds': objectIds.join(','),
         if (datumTransformation != null &&
             datumTransformation!.trim().isNotEmpty) ...{
           'datumTransformation': datumTransformation!,
@@ -133,31 +154,51 @@ class MainRoadsNetworkLoader {
         );
       }
 
-      pages++;
-      final transferLimitExceeded = _isTransferLimitExceeded(page);
-      if (pageFeatures.isEmpty && transferLimitExceeded) {
+      final transferLimitExceeded = _isTransferLimitExceeded(page, pages + 1);
+      if (transferLimitExceeded) {
         throw MainRoadsNetworkRetrievalException(
-          'feature page $pages',
-          'empty page returned while exceededTransferLimit is true',
+          'feature page ${pages + 1}',
+          'service reports exceededTransferLimit for an OBJECTID batch',
         );
       }
+      pages++;
       features.addAll(pageFeatures);
-      if (transferLimitExceeded && features.length >= expectedCount) {
-        throw const MainRoadsNetworkRetrievalException(
-          'feature pagination',
-          'service still reports exceededTransferLimit after the expected count',
-        );
+      for (final feature in pageFeatures) {
+        final properties = (feature as Map)['properties'];
+        final objectId =
+            properties is Map ? _asWkid(properties['OBJECTID']) : null;
+        if (objectId == null) {
+          throw MainRoadsNetworkRetrievalException(
+            'feature page $pages',
+            'feature is missing a valid OBJECTID',
+          );
+        }
+        retrievedObjectIds.add(objectId);
       }
-      if (pageFeatures.isEmpty || features.length >= expectedCount) break;
-      if (interPageDelay > Duration.zero) {
+      if (pages < objectIdBatches.length && interPageDelay > Duration.zero) {
         await Future<void>.delayed(interPageDelay);
       }
+    }
+
+    final finalObjectIds = await _getObjectIds('feature ID verification');
+    if (!_sameIds(initialObjectIds, finalObjectIds)) {
+      throw const MainRoadsNetworkRetrievalException(
+        'feature pagination',
+        'OBJECTID set changed during retrieval',
+      );
     }
 
     if (features.length != expectedCount) {
       throw MainRoadsNetworkRetrievalException(
         'feature pagination',
         'retrieved ${features.length} features, expected $expectedCount',
+      );
+    }
+    retrievedObjectIds.sort();
+    if (!_sameIds(initialObjectIds, retrievedObjectIds)) {
+      throw const MainRoadsNetworkRetrievalException(
+        'feature pagination',
+        'retrieved OBJECTIDs do not match the stable source ID set',
       );
     }
 
@@ -231,13 +272,58 @@ class MainRoadsNetworkLoader {
     ];
     for (final candidate in candidates) {
       if (candidate is! Map) continue;
-      final wkid = _asWkid(candidate['wkid']);
-      final latestWkid = _asWkid(candidate['latestWkid']);
-      if (wkid != null || latestWkid != null) {
-        return _SpatialReference(wkid, latestWkid);
+      if (candidate.containsKey('wkid') ||
+          candidate.containsKey('latestWkid')) {
+        final rawWkid = candidate['wkid'];
+        final rawLatestWkid = candidate['latestWkid'];
+        final wkid = _asWkid(rawWkid);
+        final latestWkid = _asWkid(rawLatestWkid);
+        return _SpatialReference(
+          wkid,
+          latestWkid,
+          hasInvalidWkid: candidate.containsKey('wkid') && wkid == null,
+          hasInvalidLatestWkid:
+              candidate.containsKey('latestWkid') && latestWkid == null,
+        );
       }
     }
     return const _SpatialReference(null, null);
+  }
+
+  Future<List<int>> _getObjectIds(String context) async {
+    final response = await client.getJson(
+      client.layerUri(mainRoadsNetworkLayerId, path: 'query', query: const {
+        'where': '1=1',
+        'returnIdsOnly': 'true',
+        'returnGeometry': 'false',
+        'f': 'json',
+      }),
+      context: context,
+    );
+    final objectIds = response['objectIds'];
+    if (objectIds is! List ||
+        objectIds.any((id) => id is! int || id < 0)) {
+      throw MainRoadsNetworkRetrievalException(
+        context,
+        'ArcGIS did not return a valid OBJECTID list',
+      );
+    }
+    final ids = objectIds.cast<int>()..sort();
+    if (ids.toSet().length != ids.length) {
+      throw MainRoadsNetworkRetrievalException(
+        context,
+        'ArcGIS returned duplicate OBJECTIDs',
+      );
+    }
+    return ids;
+  }
+
+  bool _sameIds(List<int> first, List<int> second) {
+    if (first.length != second.length) return false;
+    for (var i = 0; i < first.length; i++) {
+      if (first[i] != second[i]) return false;
+    }
+    return true;
   }
 
   int? _asWkid(Object? value) {
@@ -250,16 +336,34 @@ class MainRoadsNetworkLoader {
     return null;
   }
 
-  bool _isTransferLimitExceeded(Map<String, dynamic> page) {
+  bool _isTransferLimitExceeded(Map<String, dynamic> page, int pageNumber) {
     final properties = page['properties'];
-    return page['exceededTransferLimit'] == true ||
-        (properties is Map && properties['exceededTransferLimit'] == true);
+    final topLevel = page['exceededTransferLimit'];
+    final propertyLevel =
+        properties is Map ? properties['exceededTransferLimit'] : null;
+    if ((page.containsKey('exceededTransferLimit') && topLevel is! bool) ||
+        (properties is Map &&
+            properties.containsKey('exceededTransferLimit') &&
+            propertyLevel is! bool)) {
+      throw MainRoadsNetworkRetrievalException(
+        'feature page $pageNumber',
+        'exceededTransferLimit must be a boolean when supplied',
+      );
+    }
+    return topLevel == true || propertyLevel == true;
   }
 }
 
 class _SpatialReference {
-  const _SpatialReference(this.wkid, this.latestWkid);
+  const _SpatialReference(
+    this.wkid,
+    this.latestWkid, {
+    this.hasInvalidWkid = false,
+    this.hasInvalidLatestWkid = false,
+  });
 
   final int? wkid;
   final int? latestWkid;
+  final bool hasInvalidWkid;
+  final bool hasInvalidLatestWkid;
 }

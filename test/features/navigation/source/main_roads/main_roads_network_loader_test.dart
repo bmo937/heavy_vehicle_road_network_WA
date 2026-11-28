@@ -33,6 +33,11 @@ ResponseBody _json(Object value, [int status = 200]) =>
       Headers.contentTypeHeader: ['application/json'],
     });
 
+ResponseBody _raw(String value, [int status = 200]) =>
+    ResponseBody.fromString(value, status, headers: {
+      Headers.contentTypeHeader: ['application/json'],
+    });
+
 Map<String, dynamic> _metadata({
   Object? spatialReference = const {'wkid': 4283},
   int id = 78,
@@ -113,16 +118,43 @@ MainRoadsNetworkLoader _loader(
   List<Map<String, dynamic>>? pages,
   Object? invalidPage,
   int servicePageSize = 1000,
+  List<int>? objectIds,
+  List<List<int>>? objectIdResponses,
+  ResponseBody? Function(RequestOptions)? responseOverride,
 }) {
   final sourceMetadata = metadata ??
       _metadata(maxRecordCount: servicePageSize);
   var pageIndex = 0;
+  var objectIdResponseIndex = 0;
   adapter.handler = (options) {
+    final override = responseOverride?.call(options);
+    if (override != null) return override;
     final query = options.uri.queryParameters;
     if (options.uri.path.endsWith('/78')) return _json(sourceMetadata);
     if (query['returnCountOnly'] == 'true') return _json({'count': count});
+    if (query['returnIdsOnly'] == 'true') {
+      final List<int> ids;
+      if (objectIdResponses != null) {
+        ids = objectIdResponses[objectIdResponseIndex++];
+      } else if (objectIds != null) {
+        ids = objectIds;
+      } else if (pages == null) {
+        ids = List<int>.generate(count, (index) => index + 1);
+      } else {
+        ids = pages
+            .expand((page) => page['features'] as List)
+            .map((feature) =>
+                (feature as Map)['properties']['OBJECTID'] as int)
+            .toSet()
+            .toList()
+          ..sort();
+      }
+      return _json({'objectIds': ids});
+    }
     if (invalidPage != null) return _json(invalidPage);
-    if (pages != null) return _json(pages[pageIndex++]);
+    if (pages != null) {
+      return _json(pageIndex < pages.length ? pages[pageIndex++] : _page([]));
+    }
     return _json(_page([]));
   };
   return MainRoadsNetworkLoader(
@@ -226,7 +258,12 @@ void main() {
 
     test('rejects missing and unknown source WKIDs before querying features',
         () async {
-      for (final reference in [null, {'wkid': 9999}]) {
+      for (final reference in [
+        null,
+        {'wkid': 9999},
+        {'wkid': 9999, 'latestWkid': 7844},
+        {'wkid': 4283, 'latestWkid': 9999},
+      ]) {
         final adapter = _Adapter((_) => _json({}));
         final loader = _loader(
           adapter,
@@ -244,6 +281,20 @@ void main() {
       }
     });
 
+    test('rejects unsupported output WKID before retrieval', () async {
+      final adapter = _Adapter((_) => _json({}));
+      final loader = MainRoadsNetworkLoader(
+        client: MainRoadsNetworkClient(
+          dio: _dio(adapter),
+          serviceUrl: 'https://example.com/MapServer',
+        ),
+        requestedOutputWkid: 7844,
+      );
+
+      await expectLater(loader.load(), throwsArgumentError);
+      expect(adapter.requests, isEmpty);
+    });
+
     test('includes and records optional datum transformation on every page',
         () async {
       final adapter = _Adapter((_) => _json({}));
@@ -253,7 +304,7 @@ void main() {
         pageSize: 1,
         datumTransformation: '{"wkid":1234}',
         pages: [
-          _page([_feature('g1')], exceededTransferLimit: true),
+          _page([_feature('g1')]),
           _page([_feature('g2', objectId: 2)]),
         ],
       );
@@ -285,7 +336,7 @@ void main() {
           _page([
             _feature('g1'),
             _feature('g2', objectId: 2),
-          ], exceededTransferLimit: true),
+          ]),
           _page([_feature('g3', objectId: 3)]),
         ],
       );
@@ -300,14 +351,16 @@ void main() {
           ['g1', 'g2', 'g3']);
       expect(result.pageCount, 2);
       expect(queries.map((query) => query['resultRecordCount']), ['2', '2']);
-      expect(queries.map((query) => query['resultOffset']), ['0', '2']);
+      expect(queries.map((query) => query['objectIds']), ['1,2', '3']);
+      expect(queries.every((query) => !query.containsKey('resultOffset')),
+          isTrue);
       expect(queries.every((query) => query['orderByFields'] == 'OBJECTID'),
           isTrue);
       expect(queries.every((query) => query['outFields'] == '*'), isTrue);
       expect(queries.every((query) => query['returnGeometry'] == 'true'), isTrue);
     });
 
-    test('uses the service count to continue when a page omits the limit flag',
+    test('retrieves deterministic OBJECTID batches when limit flag is absent',
         () async {
       final adapter = _Adapter((_) => _json({}));
       final loader = _loader(
@@ -333,15 +386,26 @@ void main() {
       final loader = _loader(
         adapter,
         count: 2,
+        pageSize: 1,
         parser: parser,
+        objectIds: [1, 2],
         pages: [
           _page([_feature('g1')]),
+          _page([]),
         ],
       );
 
       await expectLater(
         loader.load(),
-        throwsA(isA<MainRoadsNetworkRetrievalException>()),
+        throwsA(
+          isA<MainRoadsNetworkRetrievalException>()
+              .having((error) => error.context, 'context', 'feature pagination')
+              .having(
+                (error) => error.message,
+                'message',
+                'retrieved 1 features, expected 2',
+              ),
+        ),
       );
       expect(parser.called, isFalse);
     });
@@ -354,9 +418,11 @@ void main() {
         adapter,
         count: 3,
         maxPages: 1,
+        pageSize: 1,
         parser: parser,
+        objectIds: [1, 2, 3],
         pages: [
-          _page([_feature('g1')], exceededTransferLimit: true),
+          _page([_feature('g1')]),
         ],
       );
 
@@ -426,6 +492,211 @@ void main() {
       );
     });
 
+    test('fetches a geometry page when the reported and ID counts are zero',
+        () async {
+      final adapter = _Adapter((_) => _json({}));
+      final loader = _loader(adapter, count: 0, pages: [_page([])]);
+
+      final result = await loader.load();
+
+      expect(result.segments, isEmpty);
+      expect(result.pageCount, 1);
+      expect(
+        adapter.requests.where((uri) => uri.queryParameters['f'] == 'geojson'),
+        hasLength(1),
+      );
+    });
+
+    test('checks for features even when the reported count is zero', () async {
+      final adapter = _Adapter((_) => _json({}));
+      final parser = _TrackingParser();
+      final loader = _loader(
+        adapter,
+        count: 0,
+        parser: parser,
+        objectIds: [1],
+        pages: [
+          _page([_feature('g1')]),
+        ],
+      );
+
+      await expectLater(
+        loader.load(),
+        throwsA(
+          isA<MainRoadsNetworkRetrievalException>()
+              .having((error) => error.context, 'context', 'feature pagination')
+              .having(
+                (error) => error.message,
+                'message',
+                'retrieved 1 features, expected 0',
+              ),
+        ),
+      );
+      expect(parser.called, isFalse);
+      expect(
+        adapter.requests.where((uri) => uri.queryParameters['f'] == 'geojson'),
+        hasLength(1),
+      );
+    });
+
+    test('detects an OBJECTID set changing during geometry retrieval', () async {
+      final adapter = _Adapter((_) => _json({}));
+      final parser = _TrackingParser();
+      final loader = _loader(
+        adapter,
+        count: 2,
+        pageSize: 1,
+        parser: parser,
+        objectIds: [1, 2],
+        objectIdResponses: [
+          [1, 2],
+          [1, 3],
+        ],
+        pages: [
+          _page([_feature('g1')]),
+          _page([_feature('g2', objectId: 2)]),
+        ],
+      );
+
+      await expectLater(
+        loader.load(),
+        throwsA(
+          isA<MainRoadsNetworkRetrievalException>()
+              .having((error) => error.context, 'context', 'feature pagination')
+              .having(
+                (error) => error.message,
+                'message',
+                'OBJECTID set changed during retrieval',
+              ),
+        ),
+      );
+      expect(parser.called, isFalse);
+    });
+
+    test('rejects malformed transfer-limit flags', () async {
+      for (final page in [
+        {
+          ..._page([_feature('g1')]),
+          'exceededTransferLimit': 'true',
+        },
+        {
+          ..._page([_feature('g1')]),
+          'properties': {'exceededTransferLimit': 'false'},
+        },
+      ]) {
+        final adapter = _Adapter((_) => _json({}));
+        final parser = _TrackingParser();
+        final loader = _loader(
+          adapter,
+          parser: parser,
+          pages: [page],
+        );
+
+        await expectLater(
+          loader.load(),
+          throwsA(
+            isA<MainRoadsNetworkRetrievalException>()
+                .having((error) => error.context, 'context', 'feature page 1')
+                .having(
+                  (error) => error.message,
+                  'message',
+                  'exceededTransferLimit must be a boolean when supplied',
+                ),
+          ),
+        );
+        expect(parser.called, isFalse);
+      }
+    });
+
+    test('reports structured errors for failed or malformed retrievals', () async {
+      final cases = <String, ResponseBody? Function(RequestOptions)>{
+        'non-200': (options) => options.uri.queryParameters['returnCountOnly'] == 'true'
+            ? _json({'error': 'unavailable'}, 503)
+            : null,
+        'invalid JSON': (options) =>
+            options.uri.path.endsWith('/78') ? _raw('{') : null,
+        'non-object body': (options) =>
+            options.uri.path.endsWith('/78') ? _raw('[]') : null,
+        'malformed count': (options) =>
+            options.uri.queryParameters['returnCountOnly'] == 'true'
+                ? _json({'count': 'one'})
+                : null,
+        'page ArcGIS error': (options) =>
+            options.uri.queryParameters['f'] == 'geojson'
+                ? _json({'error': {'code': 400, 'message': 'bad query'}})
+                : null,
+      };
+
+      for (final entry in cases.entries) {
+        final adapter = _Adapter((_) => _json({}));
+        final parser = _TrackingParser();
+        final loader = _loader(
+          adapter,
+          parser: parser,
+          responseOverride: entry.value,
+        );
+        final expectedContext = switch (entry.key) {
+          'non-200' || 'malformed count' => 'feature count',
+          'page ArcGIS error' => 'feature page 1',
+          _ => 'layer metadata',
+        };
+        final expectedStatusCode = switch (entry.key) {
+          'non-200' => 503,
+          'malformed count' => null,
+          _ => 200,
+        };
+
+        await expectLater(
+          loader.load(),
+          throwsA(
+            isA<MainRoadsNetworkRetrievalException>()
+                .having((error) => error.context, 'context', expectedContext)
+                .having(
+                  (error) => error.statusCode,
+                  'statusCode',
+                  expectedStatusCode,
+                )
+                .having((error) => error.message, 'message', isNotEmpty),
+          ),
+          reason: entry.key,
+        );
+        expect(parser.called, isFalse, reason: entry.key);
+      }
+    });
+
+    test('reports Dio failure type and retrieval context', () async {
+      final adapter = _Adapter((_) => _json({}));
+      final parser = _TrackingParser();
+      final loader = _loader(
+        adapter,
+        parser: parser,
+        responseOverride: (options) {
+          if (options.uri.queryParameters['returnCountOnly'] == 'true') {
+            throw DioException(
+              requestOptions: options,
+              type: DioExceptionType.connectionTimeout,
+            );
+          }
+          return null;
+        },
+      );
+
+      await expectLater(
+        loader.load(),
+        throwsA(
+          isA<MainRoadsNetworkRetrievalException>()
+              .having((error) => error.context, 'context', 'feature count')
+              .having((error) => error.statusCode, 'statusCode', isNull)
+              .having(
+                (error) => error.failureType,
+                'failureType',
+                DioExceptionType.connectionTimeout,
+              ),
+        ),
+      );
+      expect(parser.called, isFalse);
+    });
+
     test('rejects a transfer-limit flag after the reported count is reached',
         () async {
       final adapter = _Adapter((_) => _json({}));
@@ -451,7 +722,7 @@ void main() {
         count: 2,
         pageSize: 1,
         pages: [
-          _page([_feature('duplicate')], exceededTransferLimit: true),
+          _page([_feature('duplicate')]),
           _page([_feature('duplicate', objectId: 2)]),
         ],
       );
