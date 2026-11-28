@@ -41,6 +41,11 @@ feature-wide SLK and distance ranges. Network metadata is not interpreted:
 Tandem Drive Network 1's exclusion-road semantics are not generalized to
 other networks.
 
+The production Main Roads layer-78 loader records the source WKID, requested
+output WKID, and any datum transformation in its load result. Exact coordinate
+identity is only meaningful within the same recorded CRS and transformation
+contract; coordinates from different contracts must not be joined by equality.
+
 ## Requirements
 
 Install the following before running locally:
