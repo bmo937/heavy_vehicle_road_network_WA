@@ -24,9 +24,7 @@ class ExactTopologyRoadGraphCompiler {
     final firstFeatureByCoordinate = <_CoordinateKey, int>{};
     final sharedAcrossFeatures = <_CoordinateKey>{};
 
-    for (var featureIndex = 0;
-        featureIndex < segments.length;
-        featureIndex++) {
+    for (var featureIndex = 0; featureIndex < segments.length; featureIndex++) {
       final segment = segments[featureIndex];
       for (final part in segment.parts) {
         if (part.length < 2) {
@@ -77,9 +75,7 @@ class ExactTopologyRoadGraphCompiler {
 
     final edges = <RoadEdge>[];
     for (final segment in segments) {
-      for (var partIndex = 0;
-          partIndex < segment.parts.length;
-          partIndex++) {
+      for (var partIndex = 0; partIndex < segment.parts.length; partIndex++) {
         final part = segment.parts[partIndex];
         final splitVertices = <int>[0];
         for (var vertex = 1; vertex < part.length - 1; vertex++) {
@@ -149,9 +145,10 @@ String partScopedNodeId({
 
 String _canonical(double value) => value == 0 ? '0.0' : value.toString();
 
-_CoordinateKey _key(SourceCoordinate coordinate) =>
-    (coordinate.longitude == 0 ? 0.0 : coordinate.longitude,
-        coordinate.latitude == 0 ? 0.0 : coordinate.latitude);
+_CoordinateKey _key(SourceCoordinate coordinate) => (
+      coordinate.longitude == 0 ? 0.0 : coordinate.longitude,
+      coordinate.latitude == 0 ? 0.0 : coordinate.latitude
+    );
 
 double _polylineLengthMetres(
   List<SourceCoordinate> part,

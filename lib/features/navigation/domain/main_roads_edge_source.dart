@@ -76,7 +76,8 @@ class MainRoadsEdgeSource {
     required Iterable<SourceCoordinate> geometry,
     required this.isReversed,
   }) : geometry = List.unmodifiable(geometry) {
-    if (partIndex < 0 || startVertexIndex < 0 ||
+    if (partIndex < 0 ||
+        startVertexIndex < 0 ||
         endVertexIndex <= startVertexIndex) {
       throw ArgumentError(
         'Invalid source part $partIndex or vertex range '

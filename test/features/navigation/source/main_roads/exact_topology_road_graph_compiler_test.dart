@@ -72,8 +72,7 @@ void main() {
     expect(graph.nodes.length, 4);
     expect(graph.edges.length, 6);
     final trunk = graph.edges
-        .where((edge) =>
-            edge.mainRoadsSource!.provenance.globalId == 'trunk')
+        .where((edge) => edge.mainRoadsSource!.provenance.globalId == 'trunk')
         .toList();
     expect(trunk.length, 4);
     expect(
@@ -98,9 +97,11 @@ void main() {
     expect(graph.nodes.length, 5);
     expect(graph.edges.length, 8);
     expect(
-      graph.outgoingEdges(
-        exactCoordinateNodeId(longitude: 116, latitude: -32),
-      ).length,
+      graph
+          .outgoingEdges(
+            exactCoordinateNodeId(longitude: 116, latitude: -32),
+          )
+          .length,
       4,
     );
   });
@@ -173,7 +174,8 @@ void main() {
 
     expect(graph.nodes.length, 4);
     expect(graph.edges.length, 4);
-    expect(graph.edges.every((edge) => edge.mainRoadsSource!.geometry.length == 3),
+    expect(
+        graph.edges.every((edge) => edge.mainRoadsSource!.geometry.length == 3),
         isTrue);
   });
 
@@ -224,8 +226,10 @@ void main() {
     final first = compiler.compile(source);
     final second = compiler.compile(source);
 
-    expect(first.nodes.map((node) => node.id), second.nodes.map((node) => node.id));
-    expect(first.edges.map((edge) => edge.id), second.edges.map((edge) => edge.id));
+    expect(first.nodes.map((node) => node.id),
+        second.nodes.map((node) => node.id));
+    expect(first.edges.map((edge) => edge.id),
+        second.edges.map((edge) => edge.id));
     expect(first.edges.first.lengthMetres, greaterThan(0));
   });
 }
