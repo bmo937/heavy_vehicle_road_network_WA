@@ -25,6 +25,20 @@ MainRoadsNetworkSegment segment(
       parts: parts,
     );
 
+bool hasPath(dynamic graph, String start, String target) {
+  final pending = <String>[start];
+  final visited = <String>{};
+  while (pending.isNotEmpty) {
+    final current = pending.removeLast();
+    if (current == target) return true;
+    if (!visited.add(current)) continue;
+    for (final edge in graph.outgoingEdges(current)) {
+      pending.add(edge.toNodeId);
+    }
+  }
+  return false;
+}
+
 void main() {
   const compiler = ExactTopologyRoadGraphCompiler();
 
@@ -91,7 +105,7 @@ void main() {
     );
   });
 
-  test('does not bridge or connect parts of one feature', () {
+  test('coincident endpoints in separate parts remain disconnected', () {
     final graph = compiler.compile([
       segment('multi', [
         [c(115, -32), c(116, -32)],
@@ -99,15 +113,24 @@ void main() {
       ]),
     ]);
 
-    expect(graph.nodes.length, 3);
+    expect(graph.nodes.length, 4);
     expect(graph.edges.length, 4);
+    final left = partScopedNodeId(
+      globalId: 'multi',
+      partIndex: 0,
+      longitude: 115,
+      latitude: -32,
+    );
+    final right = partScopedNodeId(
+      globalId: 'multi',
+      partIndex: 1,
+      longitude: 117,
+      latitude: -32,
+    );
+    expect(hasPath(graph, left, right), isFalse);
     expect(
       graph.edges.map((edge) => edge.mainRoadsSource!.partIndex).toSet(),
       {0, 1},
-    );
-    expect(
-      graph.edges.any((edge) => edge.mainRoadsSource!.geometry.length > 2),
-      isFalse,
     );
   });
 
@@ -133,6 +156,20 @@ void main() {
       ),
       isNull,
     );
+  });
+
+  test('measures every segment of an unsplit bent polyline in metres', () {
+    final graph = compiler.compile([
+      segment('bent', [
+        [c(0, 0), c(0, 1), c(1, 1)]
+      ]),
+    ]);
+
+    expect(graph.edges.length, 2);
+    for (final edge in graph.edges) {
+      expect(edge.mainRoadsSource!.geometry.length, 3);
+      expect(edge.lengthMetres, closeTo(222373, 10));
+    }
   });
 
   test('node and edge identities are deterministic', () {
