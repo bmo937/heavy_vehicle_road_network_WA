@@ -78,6 +78,13 @@ class MainRoadsNetworkClient {
     Uri uri, {
     required String context,
   }) async {
+    return (await getJsonWithStatus(uri, context: context)).data;
+  }
+
+  Future<MainRoadsNetworkJsonResponse> getJsonWithStatus(
+    Uri uri, {
+    required String context,
+  }) async {
     final Response response;
     try {
       response = await dio.getUri(
@@ -134,6 +141,19 @@ class MainRoadsNetworkClient {
         statusCode: response.statusCode,
       );
     }
-    return data;
+    return MainRoadsNetworkJsonResponse(
+      data: data,
+      statusCode: response.statusCode!,
+    );
   }
+}
+
+class MainRoadsNetworkJsonResponse {
+  const MainRoadsNetworkJsonResponse({
+    required this.data,
+    required this.statusCode,
+  });
+
+  final Map<String, dynamic> data;
+  final int statusCode;
 }

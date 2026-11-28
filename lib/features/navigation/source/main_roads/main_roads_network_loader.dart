@@ -72,7 +72,7 @@ class MainRoadsNetworkLoader {
     final requestedPageSize =
         pageSize < maxRecordCount ? pageSize : maxRecordCount;
 
-    final countResponse = await client.getJson(
+    final countResponse = await client.getJsonWithStatus(
       client.layerUri(mainRoadsNetworkLayerId, path: 'query', query: const {
         'where': '1=1',
         'returnCountOnly': 'true',
@@ -80,11 +80,12 @@ class MainRoadsNetworkLoader {
       }),
       context: 'feature count',
     );
-    final expectedCount = countResponse['count'];
+    final expectedCount = countResponse.data['count'];
     if (expectedCount is! int || expectedCount < 0) {
-      throw const MainRoadsNetworkRetrievalException(
+      throw MainRoadsNetworkRetrievalException(
         'feature count',
         'ArcGIS did not return a non-negative integer count',
+        statusCode: countResponse.statusCode,
       );
     }
 
