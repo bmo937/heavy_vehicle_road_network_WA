@@ -24,7 +24,8 @@ class SourceManagementUtility {
           // Try to remove it first
           try {
             await mapController.removeSource(sourceId);
-            debugPrint('✅ Removed existing source: $sourceId'); // Small delay to ensure cleanup completes
+            debugPrint(
+                '✅ Removed existing source: $sourceId'); // Small delay to ensure cleanup completes
             await Future.delayed(const Duration(milliseconds: 150));
           } catch (removeError) {
             debugPrint('⚠️ Warning removing existing source: $removeError');
@@ -38,7 +39,8 @@ class SourceManagementUtility {
               debugPrint('❌ Failed to update source: $updateError');
               // If updating also fails, skip this source to prevent crash
               if (attempt == maxRetries) {
-                debugPrint('💥 Skipping source $sourceId to prevent crash after $maxRetries attempts');
+                debugPrint(
+                    '💥 Skipping source $sourceId to prevent crash after $maxRetries attempts');
                 return; // Return instead of throwing to prevent crash
               }
               await Future.delayed(retryDelay);
@@ -55,7 +57,8 @@ class SourceManagementUtility {
         debugPrint('❌ Error adding source $sourceId (attempt $attempt): $e');
 
         if (attempt == maxRetries) {
-          debugPrint('💥 Failed to add source $sourceId after $maxRetries attempts - skipping to prevent crash');
+          debugPrint(
+              '💥 Failed to add source $sourceId after $maxRetries attempts - skipping to prevent crash');
           return; // Return instead of throwing to prevent crash
         }
 
@@ -95,7 +98,8 @@ class SourceManagementUtility {
           } catch (removeError) {
             debugPrint('⚠️ Warning removing existing layer: $removeError');
             if (attempt == maxRetries) {
-              debugPrint('💥 Layer $layerId already exists and cannot be removed - skipping to prevent crash');
+              debugPrint(
+                  '💥 Layer $layerId already exists and cannot be removed - skipping to prevent crash');
               return; // Return instead of throwing to prevent crash
             }
             await Future.delayed(retryDelay);
@@ -132,7 +136,8 @@ class SourceManagementUtility {
       } catch (e) {
         debugPrint('❌ Error adding layer $layerId (attempt $attempt): $e');
         if (attempt == maxRetries) {
-          debugPrint('💥 Failed to add layer $layerId after $maxRetries attempts - skipping to prevent crash');
+          debugPrint(
+              '💥 Failed to add layer $layerId after $maxRetries attempts - skipping to prevent crash');
           return; // Return instead of throwing to prevent crash
         }
 
@@ -171,7 +176,8 @@ class SourceManagementUtility {
       if (associatedLayers != null) {
         for (String additionalLayerId in associatedLayers) {
           if (layerIds.contains(additionalLayerId)) {
-            await _safeRemoveLayer(mapController, additionalLayerId, maxRetries, retryDelay);
+            await _safeRemoveLayer(
+                mapController, additionalLayerId, maxRetries, retryDelay);
           }
         }
       }
@@ -183,9 +189,11 @@ class SourceManagementUtility {
           debugPrint('✅ Removed source: $sourceId');
           return;
         } catch (e) {
-          debugPrint('❌ Error removing source $sourceId (attempt $attempt): $e');
+          debugPrint(
+              '❌ Error removing source $sourceId (attempt $attempt): $e');
           if (attempt == maxRetries) {
-            debugPrint('💥 Failed to remove source $sourceId after $maxRetries attempts');
+            debugPrint(
+                '💥 Failed to remove source $sourceId after $maxRetries attempts');
             throw Exception('Failed to remove source $sourceId: $e');
           }
           await Future.delayed(retryDelay);
@@ -212,7 +220,8 @@ class SourceManagementUtility {
       } catch (e) {
         debugPrint('❌ Error removing layer $layerId (attempt $attempt): $e');
         if (attempt == maxRetries) {
-          debugPrint('💥 Failed to remove layer $layerId after $maxRetries attempts');
+          debugPrint(
+              '💥 Failed to remove layer $layerId after $maxRetries attempts');
           throw Exception('Failed to remove layer $layerId: $e');
         }
         await Future.delayed(retryDelay);
@@ -249,7 +258,8 @@ class SourceManagementUtility {
         debugPrint('❌ Error updating source $sourceId (attempt $attempt): $e');
 
         if (attempt == maxRetries) {
-          debugPrint('💥 Failed to update source $sourceId after $maxRetries attempts - skipping to prevent crash');
+          debugPrint(
+              '💥 Failed to update source $sourceId after $maxRetries attempts - skipping to prevent crash');
           return; // Return instead of throwing to prevent crash
         }
 
@@ -284,7 +294,8 @@ class SourceManagementUtility {
       // Remove layers first (layers depend on sources)
       int removedLayers = 0;
       for (String layerId in layerIds) {
-        bool shouldRemove = networkPatterns.any((pattern) => layerId.contains(pattern) || layerId.startsWith(pattern));
+        bool shouldRemove = networkPatterns.any((pattern) =>
+            layerId.contains(pattern) || layerId.startsWith(pattern));
 
         if (shouldRemove) {
           try {
@@ -305,7 +316,8 @@ class SourceManagementUtility {
       // Remove sources
       int removedSources = 0;
       for (String sourceId in sourceIds) {
-        bool shouldRemove = networkPatterns.any((pattern) => sourceId.contains(pattern) || sourceId.startsWith(pattern));
+        bool shouldRemove = networkPatterns.any((pattern) =>
+            sourceId.contains(pattern) || sourceId.startsWith(pattern));
 
         if (shouldRemove || removeAllSources) {
           try {
@@ -318,7 +330,8 @@ class SourceManagementUtility {
         }
       }
 
-      debugPrint('✅ Cleanup complete: removed $removedLayers layers and $removedSources sources');
+      debugPrint(
+          '✅ Cleanup complete: removed $removedLayers layers and $removedSources sources');
     } catch (e) {
       debugPrint('❌ Error during cleanup: $e');
     }

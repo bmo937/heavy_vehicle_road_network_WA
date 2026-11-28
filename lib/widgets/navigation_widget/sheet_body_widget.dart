@@ -23,7 +23,8 @@ class SheetBodyWidget extends ConsumerStatefulWidget {
   ConsumerState<SheetBodyWidget> createState() => _SheetBodyWidgetState();
 }
 
-class _SheetBodyWidgetState extends ConsumerState<SheetBodyWidget> with SingleTickerProviderStateMixin {
+class _SheetBodyWidgetState extends ConsumerState<SheetBodyWidget>
+    with SingleTickerProviderStateMixin {
   TabController? _tabController;
   BoxController get boxController => ref.read(boxControllerProvider);
   @override
@@ -58,7 +59,8 @@ class _SheetBodyWidgetState extends ConsumerState<SheetBodyWidget> with SingleTi
       ref.read(activeTabIndexProvider.notifier).state = newTabIndex;
       // Update selectedIndex to match tab selection (1 for Road Networks, 2 for POI)
       ref.read(selectedIndexProvider.notifier).state = newTabIndex + 1;
-      debugPrint('Tab changed to index: $newTabIndex, selectedIndex updated to: ${newTabIndex + 1}');
+      debugPrint(
+          'Tab changed to index: $newTabIndex, selectedIndex updated to: ${newTabIndex + 1}');
     }
   }
 
@@ -69,7 +71,8 @@ class _SheetBodyWidgetState extends ConsumerState<SheetBodyWidget> with SingleTi
     if (tappedFeature != null) {
       // Reduced logging - only log unique feature taps
       if (oldWidget.hashCode != hashCode) {
-        debugPrint('SheetBodyWidget updated with tapped feature: ${tappedFeature.layerId}');
+        debugPrint(
+            'SheetBodyWidget updated with tapped feature: ${tappedFeature.layerId}');
       }
 
       // Ensure the feature details view is shown
@@ -96,7 +99,8 @@ class _SheetBodyWidgetState extends ConsumerState<SheetBodyWidget> with SingleTi
   // Helper method to handle feature taps properly
   void _handleFeatureTapDisplay(TappedFeature? feature) {
     if (feature != null) {
-      debugPrint('Handling feature tap display for feature: ${feature.layerId}');
+      debugPrint(
+          'Handling feature tap display for feature: ${feature.layerId}');
 
       // First, make sure the feature details flag is enabled
       ref.read(showFeatureDetailsProvider.notifier).state = true;
@@ -110,12 +114,14 @@ class _SheetBodyWidgetState extends ConsumerState<SheetBodyWidget> with SingleTi
         boxController.openBox();
       }
 
-      debugPrint('State updated: showFeatureDetails=true, selectedIndex=3, box opened');
+      debugPrint(
+          'State updated: showFeatureDetails=true, selectedIndex=3, box opened');
     }
   }
 
   // Helper method to build the tab-based navigation view
-  Widget _buildTabView(AsyncValue<dynamic> menuAssets, double dynamicMaxHeight) {
+  Widget _buildTabView(
+      AsyncValue<dynamic> menuAssets, double dynamicMaxHeight) {
     return Column(
       mainAxisSize: MainAxisSize.min,
       children: [
@@ -126,7 +132,8 @@ class _SheetBodyWidgetState extends ConsumerState<SheetBodyWidget> with SingleTi
             Tab(text: "Points of Interest"),
           ],
           labelColor: Theme.of(context).colorScheme.primary,
-          unselectedLabelColor: Theme.of(context).colorScheme.onSurface.withValues(alpha: 0.6),
+          unselectedLabelColor:
+              Theme.of(context).colorScheme.onSurface.withValues(alpha: 0.6),
           indicatorSize: TabBarIndicatorSize.tab,
         ),
         SizedBox(
@@ -142,7 +149,8 @@ class _SheetBodyWidgetState extends ConsumerState<SheetBodyWidget> with SingleTi
                     menuAssets: assets,
                     showOnlyDownloaded: !ref.watch(showAllLayersProvider),
                   ),
-                  loading: () => const Center(child: CircularProgressIndicator()),
+                  loading: () =>
+                      const Center(child: CircularProgressIndicator()),
                   error: (error, stack) => Center(
                     child: Text('Error loading networks: $error'),
                   ),
@@ -153,7 +161,8 @@ class _SheetBodyWidgetState extends ConsumerState<SheetBodyWidget> with SingleTi
                     menuAssets: assets,
                     showOnlyDownloaded: !ref.watch(showAllLayersProvider),
                   ),
-                  loading: () => const Center(child: CircularProgressIndicator()),
+                  loading: () =>
+                      const Center(child: CircularProgressIndicator()),
                   error: (error, stack) => Center(
                     child: Text('Error loading POIs: $error'),
                   ),
@@ -247,7 +256,8 @@ class _SheetBodyWidgetState extends ConsumerState<SheetBodyWidget> with SingleTi
   }
 
   // Helper method to determine which view index to show
-  int _getViewIndex(int selectedIndex, bool hasFeatureTapped, bool showFeatureDetails) {
+  int _getViewIndex(
+      int selectedIndex, bool hasFeatureTapped, bool showFeatureDetails) {
     // Priority order: Feature details > Settings > Location search > Tab view
     if (hasFeatureTapped && showFeatureDetails) return 0;
     if (selectedIndex == 4) return 1; // Settings
@@ -284,7 +294,8 @@ class _SheetBodyWidgetState extends ConsumerState<SheetBodyWidget> with SingleTi
       // debugPrint('showFeatureDetails=${ref.read(showFeatureDetailsProvider)}');
     }
 
-    final currentViewIndex = _getViewIndex(selectedIndex, tappedFeature != null, showFeatureDetails);
+    final currentViewIndex =
+        _getViewIndex(selectedIndex, tappedFeature != null, showFeatureDetails);
     return IndexedStack(
       index: currentViewIndex,
       children: [

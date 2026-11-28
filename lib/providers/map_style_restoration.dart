@@ -54,7 +54,8 @@ class MapStyleRestorationCoordinator {
   /// Runs [steps] in order. Steps are sequential because later ones depend on
   /// earlier ones (e.g. symbol layers need marker images). After every step the
   /// run's freshness is re-checked, so a stale run stops touching the map.
-  Future<StyleRestorationOutcome> restore(StyleRestorationRun run, List<StyleRestorationStep> steps) async {
+  Future<StyleRestorationOutcome> restore(
+      StyleRestorationRun run, List<StyleRestorationStep> steps) async {
     var requiredFailed = false;
     for (final step in steps) {
       if (!run.isCurrent) return StyleRestorationOutcome.superseded;
@@ -62,14 +63,18 @@ class MapStyleRestorationCoordinator {
       try {
         ok = await step.action(run);
       } catch (e) {
-        debugPrint('Style restoration step "${step.name}" threw: ${e.runtimeType}');
+        debugPrint(
+            'Style restoration step "${step.name}" threw: ${e.runtimeType}');
       }
       if (!run.isCurrent) return StyleRestorationOutcome.superseded;
       if (!ok) {
-        debugPrint('Style restoration step "${step.name}" failed (${step.required ? "required" : "optional"})');
+        debugPrint(
+            'Style restoration step "${step.name}" failed (${step.required ? "required" : "optional"})');
         if (step.required) requiredFailed = true;
       }
     }
-    return requiredFailed ? StyleRestorationOutcome.failed : StyleRestorationOutcome.completed;
+    return requiredFailed
+        ? StyleRestorationOutcome.failed
+        : StyleRestorationOutcome.completed;
   }
 }

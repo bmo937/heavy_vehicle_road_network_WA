@@ -8,7 +8,8 @@ import '../feature_display_helpers.dart';
 /// Search result display builder
 class SearchResultDisplayBuilder {
   /// Build search result display
-  static Widget buildSearchResultDisplay(BuildContext context, TappedFeature feature, String title) {
+  static Widget buildSearchResultDisplay(
+      BuildContext context, TappedFeature feature, String title) {
     final Map<String, dynamic> properties = feature.properties;
     // final TextTheme textTheme = Theme.of(context).textTheme;
     // final colorScheme = Theme.of(context).colorScheme;
@@ -51,16 +52,33 @@ class SearchResultDisplayBuilder {
             ),
           ),
           const SizedBox(height: 16), */ // Main Information
-          if (properties['name'] != null || properties['NAME'] != null) Center(child: FeatureDisplayHelpers.buildSubTitle(context, properties['name'] ?? properties['NAME'])),
+          if (properties['name'] != null || properties['NAME'] != null)
+            Center(
+                child: FeatureDisplayHelpers.buildSubTitle(
+                    context, properties['name'] ?? properties['NAME'])),
 
           customDivider,
 
-          if (properties['formatted_address'] != null) FeatureDisplayHelpers.buildSearchProperty(context, properties['formatted_address'], propertyType: 'formatted_address'),
-          if (properties['vicinity'] != null) FeatureDisplayHelpers.buildSearchProperty(context, properties['vicinity'], propertyType: 'vicinity'),
-          if (properties['opening_hours'] != null) FeatureDisplayHelpers.buildSearchProperty(context, properties['opening_hours'], propertyType: 'opening_hours'),
+          if (properties['formatted_address'] != null)
+            FeatureDisplayHelpers.buildSearchProperty(
+                context, properties['formatted_address'],
+                propertyType: 'formatted_address'),
+          if (properties['vicinity'] != null)
+            FeatureDisplayHelpers.buildSearchProperty(
+                context, properties['vicinity'],
+                propertyType: 'vicinity'),
+          if (properties['opening_hours'] != null)
+            FeatureDisplayHelpers.buildSearchProperty(
+                context, properties['opening_hours'],
+                propertyType: 'opening_hours'),
           if (properties['formatted_phone_number'] != null)
-            FeatureDisplayHelpers.buildSearchProperty(context, properties['formatted_phone_number'], propertyType: 'formatted_phone_number'),
-          if (properties['website'] != null) FeatureDisplayHelpers.buildSearchProperty(context, properties['website'], propertyType: 'website'),
+            FeatureDisplayHelpers.buildSearchProperty(
+                context, properties['formatted_phone_number'],
+                propertyType: 'formatted_phone_number'),
+          if (properties['website'] != null)
+            FeatureDisplayHelpers.buildSearchProperty(
+                context, properties['website'],
+                propertyType: 'website'),
         ],
       );
     });

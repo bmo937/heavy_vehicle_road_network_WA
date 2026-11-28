@@ -41,7 +41,8 @@ class MarkerUtilities {
 
       // Process JSON in isolate if no cache or version changed
       final String jsonString = await rootBundle.loadString(_imageAssetPath);
-      final Map<String, Uint8List> result = await _processJsonInIsolate(jsonString);
+      final Map<String, Uint8List> result =
+          await _processJsonInIsolate(jsonString);
 
       // Store in cache for future use
       _imageCache = result;
@@ -63,21 +64,28 @@ class MarkerUtilities {
       final Map<String, dynamic> jsonData = json.decode(jsonString);
 
       // Get the version from JSON
-      final double jsonVersion = (jsonData['version'] is int) ? (jsonData['version'] as int).toDouble() : jsonData['version'] as double;
+      final double jsonVersion = (jsonData['version'] is int)
+          ? (jsonData['version'] as int).toDouble()
+          : jsonData['version'] as double;
 
       if (_cachedVersion == null) {
         // Load the cached version from Hive
-        final versionBox = Hive.isBoxOpen(HiveBoxes.settings) ? Hive.box(HiveBoxes.settings) : await Hive.openBox(HiveBoxes.settings);
+        final versionBox = Hive.isBoxOpen(HiveBoxes.settings)
+            ? Hive.box(HiveBoxes.settings)
+            : await Hive.openBox(HiveBoxes.settings);
 
         _cachedVersion = versionBox.get(_versionKey) as double?;
       }
 
       // If version changed or no cached version, update and return true to reload
       if (_cachedVersion == null || _cachedVersion != jsonVersion) {
-        debugPrint('Version changed from ${_cachedVersion ?? "none"} to $jsonVersion, reloading images');
+        debugPrint(
+            'Version changed from ${_cachedVersion ?? "none"} to $jsonVersion, reloading images');
 
         // Update the cached version in Hive
-        final versionBox = Hive.isBoxOpen(HiveBoxes.settings) ? Hive.box(HiveBoxes.settings) : await Hive.openBox(HiveBoxes.settings);
+        final versionBox = Hive.isBoxOpen(HiveBoxes.settings)
+            ? Hive.box(HiveBoxes.settings)
+            : await Hive.openBox(HiveBoxes.settings);
 
         await versionBox.put(_versionKey, jsonVersion);
         _cachedVersion = jsonVersion;
@@ -99,7 +107,9 @@ class MarkerUtilities {
 
   /// Clear the image cache from Hive
   static Future<void> _clearCache() async {
-    final box = Hive.isBoxOpen(_hiveBoxName) ? Hive.box<Uint8List>(_hiveBoxName) : await Hive.openBox<Uint8List>(_hiveBoxName);
+    final box = Hive.isBoxOpen(_hiveBoxName)
+        ? Hive.box<Uint8List>(_hiveBoxName)
+        : await Hive.openBox<Uint8List>(_hiveBoxName);
 
     await box.clear();
     _imageCache = null;
@@ -109,7 +119,9 @@ class MarkerUtilities {
   /// Load images from Hive
   static Future<Map<String, Uint8List>?> _loadFromHive() async {
     try {
-      final box = Hive.isBoxOpen(_hiveBoxName) ? Hive.box<Uint8List>(_hiveBoxName) : await Hive.openBox<Uint8List>(_hiveBoxName);
+      final box = Hive.isBoxOpen(_hiveBoxName)
+          ? Hive.box<Uint8List>(_hiveBoxName)
+          : await Hive.openBox<Uint8List>(_hiveBoxName);
 
       if (box.isEmpty) {
         return null;
@@ -134,7 +146,9 @@ class MarkerUtilities {
   /// Save images to Hive
   static Future<void> _saveToHive(Map<String, Uint8List> images) async {
     try {
-      final box = Hive.isBoxOpen(_hiveBoxName) ? Hive.box<Uint8List>(_hiveBoxName) : await Hive.openBox<Uint8List>(_hiveBoxName);
+      final box = Hive.isBoxOpen(_hiveBoxName)
+          ? Hive.box<Uint8List>(_hiveBoxName)
+          : await Hive.openBox<Uint8List>(_hiveBoxName);
 
       await box.clear(); // Clear any existing data
 
@@ -148,9 +162,11 @@ class MarkerUtilities {
     }
   }
 
-  static Future<Map<String, Uint8List>> _processJsonInIsolate(String jsonString) async {
+  static Future<Map<String, Uint8List>> _processJsonInIsolate(
+      String jsonString) async {
     final receivePort = ReceivePort();
-    await Isolate.spawn(_parseJsonInIsolate, [receivePort.sendPort, jsonString]);
+    await Isolate.spawn(
+        _parseJsonInIsolate, [receivePort.sendPort, jsonString]);
 
     // Wait for the result from the isolate
     final Map<String, Uint8List> result = await receivePort.first;
@@ -165,7 +181,8 @@ class MarkerUtilities {
 
     try {
       final Map<String, dynamic> jsonData = json.decode(jsonString);
-      final Map<String, dynamic>? imageData = jsonData['image_assets'] as Map<String, dynamic>?;
+      final Map<String, dynamic>? imageData =
+          jsonData['image_assets'] as Map<String, dynamic>?;
 
       if (imageData == null) {
         sendPort.send(<String, Uint8List>{});
@@ -177,7 +194,10 @@ class MarkerUtilities {
       // Process each image in the JSON
       imageData.forEach((key, value) {
         try {
-          if (value is Map && value.containsKey('image') && value['image'] is Map && value['image'].containsKey('data')) {
+          if (value is Map &&
+              value.containsKey('image') &&
+              value['image'] is Map &&
+              value['image'].containsKey('data')) {
             final String base64Data = value['image']['data'] as String;
             final Uint8List imageBytes = base64Decode(base64Data);
             result[key] = imageBytes;
@@ -214,7 +234,8 @@ class MarkerUtilities {
       debugPrint('\n=== Image Availability Check ===');
       for (final id in imageIds) {
         final available = imageData.containsKey(id);
-        debugPrint('${available ? "✓" : "✗"} Image "$id": ${available ? "Available" : "NOT FOUND"}');
+        debugPrint(
+            '${available ? "✓" : "✗"} Image "$id": ${available ? "Available" : "NOT FOUND"}');
       }
       debugPrint('=== End of Check ===\n');
     } catch (e) {
@@ -225,7 +246,8 @@ class MarkerUtilities {
   /// Adds the marker images to the current style (a style reload drops them).
   /// Decoded bytes come from the in-memory/Hive cache, so repeated calls only
   /// re-register images with MapLibre. Returns true only if every image was added.
-  static Future<bool> addImagesToMap(MapLibreMapController mapController) async {
+  static Future<bool> addImagesToMap(
+      MapLibreMapController mapController) async {
     try {
       final imageData = await loadImageAssets();
       if (imageData.isEmpty) {
@@ -243,7 +265,8 @@ class MarkerUtilities {
         }
       }
 
-      debugPrint('Successfully added $successCount/${imageData.length} marker images to map');
+      debugPrint(
+          'Successfully added $successCount/${imageData.length} marker images to map');
       return successCount == imageData.length;
     } catch (e) {
       debugPrint('Error in addImagesToMap: $e');

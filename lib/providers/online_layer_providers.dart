@@ -4,7 +4,8 @@ import 'package:roads_map/models/menu_assets.riverpod.dart';
 import 'map_bounds.dart';
 
 /// Provider to track currently active online layer
-final activeOnlineLayerProvider = StateNotifierProvider<ActiveOnlineLayerNotifier, GroupMember?>((ref) {
+final activeOnlineLayerProvider =
+    StateNotifierProvider<ActiveOnlineLayerNotifier, GroupMember?>((ref) {
   return ActiveOnlineLayerNotifier();
 });
 
@@ -17,7 +18,8 @@ class ActiveOnlineLayerNotifier extends StateNotifier<GroupMember?> {
 }
 
 /// Provider to track loading state
-final onlineLayerLoadingProvider = StateNotifierProvider<OnlineLayerLoadingNotifier, bool>((ref) {
+final onlineLayerLoadingProvider =
+    StateNotifierProvider<OnlineLayerLoadingNotifier, bool>((ref) {
   return OnlineLayerLoadingNotifier();
 });
 
@@ -30,7 +32,8 @@ class OnlineLayerLoadingNotifier extends StateNotifier<bool> {
 }
 
 /// Provider to store last map bounds
-final lastMapBoundsProvider = StateNotifierProvider<LastMapBoundsNotifier, MapBounds?>((ref) {
+final lastMapBoundsProvider =
+    StateNotifierProvider<LastMapBoundsNotifier, MapBounds?>((ref) {
   return LastMapBoundsNotifier();
 });
 

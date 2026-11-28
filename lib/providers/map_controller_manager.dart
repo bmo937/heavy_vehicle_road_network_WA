@@ -17,10 +17,15 @@ class MapControllerManager {
   // Getters
   bool get styleLoaded => styleIsLoaded;
   MapLibreMapController? get mapController => _mapController;
-  CameraPosition get initialCameraPosition => MapUtilities.initialCameraPosition;
+  CameraPosition get initialCameraPosition =>
+      MapUtilities.initialCameraPosition;
 
   /// Initialize the map controller when map is created
-  Future<void> onMapCreated(MapLibreMapController controller, WidgetRef ref, Function(dynamic, Point<double>, LatLng, String) onFeatureInteraction) async {
+  Future<void> onMapCreated(
+      MapLibreMapController controller,
+      WidgetRef ref,
+      Function(dynamic, Point<double>, LatLng, String)
+          onFeatureInteraction) async {
     debugPrint('\nMapControllerManager: onMapCreated called');
     _detachFeatureTapListener();
     _mapController = controller;
@@ -89,7 +94,8 @@ class MapControllerManager {
     if (_mapController == null) return;
 
     final zoomLevel = zoom ?? _mapController!.cameraPosition!.zoom;
-    await _mapController!.animateCamera(CameraUpdate.newCameraPosition(CameraPosition(
+    await _mapController!
+        .animateCamera(CameraUpdate.newCameraPosition(CameraPosition(
       target: coordinates,
       zoom: zoomLevel,
     )));
@@ -97,4 +103,5 @@ class MapControllerManager {
 }
 
 // Provider for the map controller
-final mapControllerProvider = StateProvider<MapLibreMapController?>((ref) => null);
+final mapControllerProvider =
+    StateProvider<MapLibreMapController?>((ref) => null);

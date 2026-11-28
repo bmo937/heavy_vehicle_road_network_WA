@@ -10,14 +10,16 @@ import '../feature_display_helpers.dart';
 /// Road with conditions display builder
 class RoadWithConditionsDisplayBuilder {
   /// Build road with conditions display
-  static Widget buildRoadWithConditionsDisplay(BuildContext context, TappedFeature feature, String title) {
+  static Widget buildRoadWithConditionsDisplay(
+      BuildContext context, TappedFeature feature, String title) {
     final Map<String, dynamic> properties = feature.properties;
     final TextTheme textTheme = Theme.of(context).textTheme;
     final colorScheme = Theme.of(context).colorScheme;
 
     return Consumer(builder: (context, ref, child) {
       final customDivider = ref.watch(dividerProvider);
-      debugPrint('Building RoadWithConditionsDisplayBuilder with properties: ${properties['CONDITION']}');
+      debugPrint(
+          'Building RoadWithConditionsDisplayBuilder with properties: ${properties['CONDITION']}');
       return Column(
         crossAxisAlignment: CrossAxisAlignment.center,
         children: [
@@ -26,7 +28,8 @@ class RoadWithConditionsDisplayBuilder {
             padding: const EdgeInsets.all(16),
             child: Column(
               children: [
-                FeatureDisplayHelpers.buildSubTitle(context, properties['ROAD_NAME']),
+                FeatureDisplayHelpers.buildSubTitle(
+                    context, properties['ROAD_NAME']),
                 /*  Text(
                   properties['ROAD_NAME'],
                   style: textTheme.titleMedium?.copyWith(
@@ -65,13 +68,19 @@ class RoadWithConditionsDisplayBuilder {
 
           // Intersection Information
           if (properties['FROM_INTERSECTION'] != null || properties['TO_INTERSECTION'] != null) Text('Intersection Points', style: textTheme.bodyMedium), */
-          if (properties['FROM_INTERSECTION'] != null) FeatureDisplayHelpers.buildProperty(context, 'From Intersection', properties['FROM_INTERSECTION']),
-          if (properties['TO_INTERSECTION'] != null) FeatureDisplayHelpers.buildProperty(context, 'To Intersection', properties['TO_INTERSECTION']),
+          if (properties['FROM_INTERSECTION'] != null)
+            FeatureDisplayHelpers.buildProperty(
+                context, 'From Intersection', properties['FROM_INTERSECTION']),
+          if (properties['TO_INTERSECTION'] != null)
+            FeatureDisplayHelpers.buildProperty(
+                context, 'To Intersection', properties['TO_INTERSECTION']),
 
-          if (properties['CONDITION'] != null || properties['COMMENTS'] != null) customDivider,
+          if (properties['CONDITION'] != null || properties['COMMENTS'] != null)
+            customDivider,
 
           // Conditions and Comments
-          if (properties['CONDITION'] != null || properties['COMMENTS'] != null) Text('Current Conditions', style: textTheme.bodyMedium),
+          if (properties['CONDITION'] != null || properties['COMMENTS'] != null)
+            Text('Current Conditions', style: textTheme.bodyMedium),
           if (properties['CONDITION'] != null)
             Padding(
               padding: const EdgeInsets.all(8.0),
@@ -84,9 +93,11 @@ class RoadWithConditionsDisplayBuilder {
                   child: Padding(
                     padding: const EdgeInsets.all(24),
                     child: Text(
-                      TextUtils.stripHtmlWithStructure(properties['CONDITION'].toString()),
+                      TextUtils.stripHtmlWithStructure(
+                          properties['CONDITION'].toString()),
                       textAlign: TextAlign.center,
-                      style: textTheme.bodyMedium?.copyWith(color: colorScheme.onError),
+                      style: textTheme.bodyMedium
+                          ?.copyWith(color: colorScheme.onError),
                     ),
                   ),
                 ),

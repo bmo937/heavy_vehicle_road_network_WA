@@ -51,7 +51,8 @@ Future<GeoJsonFetchOutcome> fetchLayerGeoJson(
   int? expected;
   var pages = 0;
 
-  Map<String, dynamic> collection() => {'type': 'FeatureCollection', 'features': features};
+  Map<String, dynamic> collection() =>
+      {'type': 'FeatureCollection', 'features': features};
   GeoJsonFetchOutcome outcome() => GeoJsonFetchOutcome(
         collection: collection(),
         complete: reasons.isEmpty,
@@ -84,7 +85,8 @@ Future<GeoJsonFetchOutcome> fetchLayerGeoJson(
     var lastFlag = false;
     while (true) {
       if (pages >= maxPages) {
-        reasons.add('maxPages ($maxPages) reached before the service reported the end');
+        reasons.add(
+            'maxPages ($maxPages) reached before the service reported the end');
         break;
       }
       final page = await fetchJson(
@@ -116,10 +118,12 @@ Future<GeoJsonFetchOutcome> fetchLayerGeoJson(
 
     if (reasons.isEmpty) {
       if (lastFlag) {
-        reasons.add('service still reported exceededTransferLimit on the final page');
+        reasons.add(
+            'service still reported exceededTransferLimit on the final page');
       }
       if (features.length != count) {
-        reasons.add('retrieved ${features.length} features but service reports $count');
+        reasons.add(
+            'retrieved ${features.length} features but service reports $count');
       }
     }
   } on ProbeException catch (e) {

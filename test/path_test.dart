@@ -14,9 +14,12 @@ void main() {
     });
 
     test('POI constants are defined correctly', () {
-      expect(LayerNamingUtility.POI_HVS_INSPECTION, equals('hvs_inspection_bays'));
-      expect(LayerNamingUtility.POI_ROAD_TRAIN_ASSEMBLY, equals('road_train_assembly_area'));
-      expect(LayerNamingUtility.POI_HEAVY_VEHICLE_REST, equals('heavy_vehicle_rest_area'));
+      expect(
+          LayerNamingUtility.POI_HVS_INSPECTION, equals('hvs_inspection_bays'));
+      expect(LayerNamingUtility.POI_ROAD_TRAIN_ASSEMBLY,
+          equals('road_train_assembly_area'));
+      expect(LayerNamingUtility.POI_HEAVY_VEHICLE_REST,
+          equals('heavy_vehicle_rest_area'));
     });
 
     test('getAllPoiLayerIds returns complete list', () {
@@ -24,7 +27,8 @@ void main() {
 
       expect(allPoiLayers, isNotEmpty);
       expect(allPoiLayers, contains('layer-poi-hvs_inspection_bays-symbol'));
-      expect(allPoiLayers, contains('layer-poi-road_train_assembly_area-symbol'));
+      expect(
+          allPoiLayers, contains('layer-poi-road_train_assembly_area-symbol'));
     });
 
     test('getAllPoiSourceIds returns complete list', () {
@@ -38,8 +42,10 @@ void main() {
       final allQueryableLayers = LayerNamingUtility.getAllQueryableLayerIds();
 
       expect(allQueryableLayers, isNotEmpty);
-      expect(allQueryableLayers, contains('layer-poi-hvs_inspection_bays-symbol'));
-      expect(allQueryableLayers, contains('layer-poi-road_train_assembly_area-symbol'));
+      expect(
+          allQueryableLayers, contains('layer-poi-hvs_inspection_bays-symbol'));
+      expect(allQueryableLayers,
+          contains('layer-poi-road_train_assembly_area-symbol'));
     });
   });
 }

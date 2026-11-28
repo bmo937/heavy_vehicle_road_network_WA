@@ -8,7 +8,8 @@ import '../feature_display_helpers.dart';
 /// Road train assembly display builder
 class RoadTrainAssemblyDisplayBuilder {
   /// Build road train assembly display
-  static Widget buildRoadTrainAssemblyDisplay(BuildContext context, TappedFeature feature, String title) {
+  static Widget buildRoadTrainAssemblyDisplay(
+      BuildContext context, TappedFeature feature, String title) {
     final Map<String, dynamic> properties = feature.properties;
     final TextTheme textTheme = Theme.of(context).textTheme;
     final colorScheme = Theme.of(context).colorScheme;
@@ -48,26 +49,45 @@ class RoadTrainAssemblyDisplayBuilder {
           const SizedBox(height: 16),
 
           // Assembly Area Name and Identification
-          if (properties['RA_NAME'] != null) FeatureDisplayHelpers.buildSubTitle(context, properties['RA_NAME']),
-          if (properties['RA_NO'] != null) FeatureDisplayHelpers.buildProperty(context, 'Assembly Area Number', properties['RA_NO']),
+          if (properties['RA_NAME'] != null)
+            FeatureDisplayHelpers.buildSubTitle(context, properties['RA_NAME']),
+          if (properties['RA_NO'] != null)
+            FeatureDisplayHelpers.buildProperty(
+                context, 'Assembly Area Number', properties['RA_NO']),
 
           customDivider,
 
           // Location Information
           Text('Location Information', style: textTheme.bodyMedium),
-          if (properties['ROAD_NAME'] != null) FeatureDisplayHelpers.buildProperty(context, 'Road', properties['ROAD_NAME']),
-          if (properties['COMMON_USAGE_NAME'] != null) FeatureDisplayHelpers.buildProperty(context, 'Common Name', properties['COMMON_USAGE_NAME']),
-          if (properties['LG_NAME'] != null) FeatureDisplayHelpers.buildProperty(context, 'Local Government', properties['LG_NAME']),
-          if (properties['START_SLK'] != null) FeatureDisplayHelpers.buildProperty(context, 'Start SLK', properties['START_SLK'].toString()),
-          if (properties['END_SLK'] != null) FeatureDisplayHelpers.buildProperty(context, 'End SLK', properties['END_SLK'].toString()),
-          if (properties['CWY'] != null) FeatureDisplayHelpers.buildProperty(context, 'Carriageway', properties['CWY']),
+          if (properties['ROAD_NAME'] != null)
+            FeatureDisplayHelpers.buildProperty(
+                context, 'Road', properties['ROAD_NAME']),
+          if (properties['COMMON_USAGE_NAME'] != null)
+            FeatureDisplayHelpers.buildProperty(
+                context, 'Common Name', properties['COMMON_USAGE_NAME']),
+          if (properties['LG_NAME'] != null)
+            FeatureDisplayHelpers.buildProperty(
+                context, 'Local Government', properties['LG_NAME']),
+          if (properties['START_SLK'] != null)
+            FeatureDisplayHelpers.buildProperty(
+                context, 'Start SLK', properties['START_SLK'].toString()),
+          if (properties['END_SLK'] != null)
+            FeatureDisplayHelpers.buildProperty(
+                context, 'End SLK', properties['END_SLK'].toString()),
+          if (properties['CWY'] != null)
+            FeatureDisplayHelpers.buildProperty(
+                context, 'Carriageway', properties['CWY']),
 
           customDivider,
 
           // Infrastructure Type Information
           Text('Infrastructure Information', style: textTheme.bodyMedium),
-          if (properties['IIT_TYPE'] != null) FeatureDisplayHelpers.buildProperty(context, 'Infrastructure Type', properties['IIT_TYPE']),
-          if (properties['IIT_DESC'] != null) FeatureDisplayHelpers.buildProperty(context, 'Description', properties['IIT_DESC']),
+          if (properties['IIT_TYPE'] != null)
+            FeatureDisplayHelpers.buildProperty(
+                context, 'Infrastructure Type', properties['IIT_TYPE']),
+          if (properties['IIT_DESC'] != null)
+            FeatureDisplayHelpers.buildProperty(
+                context, 'Description', properties['IIT_DESC']),
 
           customDivider,
 
@@ -79,24 +99,47 @@ class RoadTrainAssemblyDisplayBuilder {
             spacing: 8,
             runSpacing: 8,
             children: [
-              if (properties['BIN'] == 'Yes') FeatureDisplayHelpers.buildFacilityChip(context, 'Bins', true),
-              if (properties['IIT_TABLE'] == 'Yes') FeatureDisplayHelpers.buildFacilityChip(context, 'Tables', true),
-              if (properties['BBQ'] == 'Yes') FeatureDisplayHelpers.buildFacilityChip(context, 'BBQ', true),
-              if (properties['TOILET'] == 'Yes') FeatureDisplayHelpers.buildFacilityChip(context, 'Toilets', true),
-              if (properties['WATER'] == 'Yes') FeatureDisplayHelpers.buildFacilityChip(context, 'Water', true),
-              if (properties['TELEPHONE'] == 'Yes') FeatureDisplayHelpers.buildFacilityChip(context, 'Telephone', true),
-              if (properties['SHELTER'] == 'Yes') FeatureDisplayHelpers.buildFacilityChip(context, 'Shelter', true),
-              if (properties['DISABLED'] == 'Yes') FeatureDisplayHelpers.buildFacilityChip(context, 'Disabled Access', true),
+              if (properties['BIN'] == 'Yes')
+                FeatureDisplayHelpers.buildFacilityChip(context, 'Bins', true),
+              if (properties['IIT_TABLE'] == 'Yes')
+                FeatureDisplayHelpers.buildFacilityChip(
+                    context, 'Tables', true),
+              if (properties['BBQ'] == 'Yes')
+                FeatureDisplayHelpers.buildFacilityChip(context, 'BBQ', true),
+              if (properties['TOILET'] == 'Yes')
+                FeatureDisplayHelpers.buildFacilityChip(
+                    context, 'Toilets', true),
+              if (properties['WATER'] == 'Yes')
+                FeatureDisplayHelpers.buildFacilityChip(context, 'Water', true),
+              if (properties['TELEPHONE'] == 'Yes')
+                FeatureDisplayHelpers.buildFacilityChip(
+                    context, 'Telephone', true),
+              if (properties['SHELTER'] == 'Yes')
+                FeatureDisplayHelpers.buildFacilityChip(
+                    context, 'Shelter', true),
+              if (properties['DISABLED'] == 'Yes')
+                FeatureDisplayHelpers.buildFacilityChip(
+                    context, 'Disabled Access', true),
             ],
           ),
 
-          if (properties['SIGN_PRESENT'] != null || properties['PHONE_SIGNAL'] != null) customDivider,
+          if (properties['SIGN_PRESENT'] != null ||
+              properties['PHONE_SIGNAL'] != null)
+            customDivider,
 
           // Additional Information
-          if (properties['SIGN_PRESENT'] != null || properties['PHONE_SIGNAL'] != null) Text('Additional Information', style: textTheme.bodyMedium),
-          if (properties['SIGN_PRESENT'] == 'Yes') FeatureDisplayHelpers.buildProperty(context, 'Signage Present', 'Yes'),
-          if (properties['PHONE_SIGNAL'] != null) FeatureDisplayHelpers.buildProperty(context, 'Phone Signal', properties['PHONE_SIGNAL']),
-          if (properties['NETWORK_TYPE'] != null) FeatureDisplayHelpers.buildProperty(context, 'Network Type', properties['NETWORK_TYPE']),
+          if (properties['SIGN_PRESENT'] != null ||
+              properties['PHONE_SIGNAL'] != null)
+            Text('Additional Information', style: textTheme.bodyMedium),
+          if (properties['SIGN_PRESENT'] == 'Yes')
+            FeatureDisplayHelpers.buildProperty(
+                context, 'Signage Present', 'Yes'),
+          if (properties['PHONE_SIGNAL'] != null)
+            FeatureDisplayHelpers.buildProperty(
+                context, 'Phone Signal', properties['PHONE_SIGNAL']),
+          if (properties['NETWORK_TYPE'] != null)
+            FeatureDisplayHelpers.buildProperty(
+                context, 'Network Type', properties['NETWORK_TYPE']),
 
           // Important Notice
           const SizedBox(height: 16),

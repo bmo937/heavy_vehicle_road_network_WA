@@ -64,10 +64,14 @@ class TextUtils {
     text = text.replaceAll('&nbsp;', ' ');
 
     // Clean up excessive whitespace while preserving intentional line breaks
-    text = text.replaceAll(RegExp(r'[ \t]+'), ' '); // Multiple spaces/tabs to single space
-    text = text.replaceAll(RegExp(r'\n[ \t]+'), '\n'); // Remove spaces/tabs after newlines
-    text = text.replaceAll(RegExp(r'[ \t]+\n'), '\n'); // Remove spaces/tabs before newlines
-    text = text.replaceAll(RegExp(r'\n{3,}'), '\n\n'); // Multiple newlines to double newline
+    text = text.replaceAll(
+        RegExp(r'[ \t]+'), ' '); // Multiple spaces/tabs to single space
+    text = text.replaceAll(
+        RegExp(r'\n[ \t]+'), '\n'); // Remove spaces/tabs after newlines
+    text = text.replaceAll(
+        RegExp(r'[ \t]+\n'), '\n'); // Remove spaces/tabs before newlines
+    text = text.replaceAll(
+        RegExp(r'\n{3,}'), '\n\n'); // Multiple newlines to double newline
     text = text.trim();
 
     // Remove trailing comma if present

@@ -18,7 +18,8 @@ class GooglePlacesService extends _$GooglePlacesService {
   static const double perthLat = -31.9505;
   static const double perthLng = 115.8605;
 
-  Future<List<Map<String, dynamic>>> getAutocompletePredictions(String query) async {
+  Future<List<Map<String, dynamic>>> getAutocompletePredictions(
+      String query) async {
     try {
       final response = await _dio.get('/autocomplete/json', queryParameters: {
         'input': query,
@@ -31,12 +32,15 @@ class GooglePlacesService extends _$GooglePlacesService {
       });
 
       if (response.statusCode == 200) {
-        final predictions = List<Map<String, dynamic>>.from(response.data['predictions']);
+        final predictions =
+            List<Map<String, dynamic>>.from(response.data['predictions']);
 
         // Sort predictions by distance from Perth
         predictions.sort((a, b) {
-          final distanceA = _estimateDistanceFromDescription(a['description'] ?? '');
-          final distanceB = _estimateDistanceFromDescription(b['description'] ?? '');
+          final distanceA =
+              _estimateDistanceFromDescription(a['description'] ?? '');
+          final distanceB =
+              _estimateDistanceFromDescription(b['description'] ?? '');
           return distanceA.compareTo(distanceB);
         });
 
@@ -62,7 +66,8 @@ class GooglePlacesService extends _$GooglePlacesService {
     final double deltaLat = (lat2 - lat1) * (pi / 180);
     final double deltaLng = (lng2 - lng1) * (pi / 180);
 
-    final double a = sin(deltaLat / 2) * sin(deltaLat / 2) + cos(lat1Rad) * cos(lat2Rad) * sin(deltaLng / 2) * sin(deltaLng / 2);
+    final double a = sin(deltaLat / 2) * sin(deltaLat / 2) +
+        cos(lat1Rad) * cos(lat2Rad) * sin(deltaLng / 2) * sin(deltaLng / 2);
     final double c = 2 * asin(sqrt(a));
 
     return earthRadius * c;
@@ -74,10 +79,15 @@ class GooglePlacesService extends _$GooglePlacesService {
     // Simple heuristic: locations mentioning Perth or nearby suburbs get lower distance
     final lowerDesc = description.toLowerCase();
     if (lowerDesc.contains('perth')) return 0;
-    if (lowerDesc.contains('fremantle') || lowerDesc.contains('joondalup') || lowerDesc.contains('rockingham') || lowerDesc.contains('midland')) {
+    if (lowerDesc.contains('fremantle') ||
+        lowerDesc.contains('joondalup') ||
+        lowerDesc.contains('rockingham') ||
+        lowerDesc.contains('midland')) {
       return 25;
     }
-    if (lowerDesc.contains('mandurah') || lowerDesc.contains('armadale') || lowerDesc.contains('wanneroo')) {
+    if (lowerDesc.contains('mandurah') ||
+        lowerDesc.contains('armadale') ||
+        lowerDesc.contains('wanneroo')) {
       return 50;
     }
     if (lowerDesc.contains('bunbury') || lowerDesc.contains('geraldton')) {
@@ -105,7 +115,8 @@ class GooglePlacesService extends _$GooglePlacesService {
         final responseData = response.data;
 
         // Check if response has the expected structure
-        if (responseData is Map<String, dynamic> && responseData.containsKey('result')) {
+        if (responseData is Map<String, dynamic> &&
+            responseData.containsKey('result')) {
           final result = responseData['result'];
 
           // Ensure result is a Map, not a List
@@ -154,7 +165,8 @@ class GooglePlacesService extends _$GooglePlacesService {
         debugPrint('Receive Timeout: ${error.message}');
         break;
       case DioExceptionType.badResponse:
-        debugPrint('Server Response Error: ${error.response?.statusCode} ${error.response?.statusMessage}');
+        debugPrint(
+            'Server Response Error: ${error.response?.statusCode} ${error.response?.statusMessage}');
         break;
       case DioExceptionType.cancel:
         debugPrint('Request Cancelled: ${error.message}');

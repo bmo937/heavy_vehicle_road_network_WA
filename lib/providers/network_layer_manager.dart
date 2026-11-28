@@ -27,10 +27,12 @@ Future<bool> loadNetworkLayerData({
   debugPrint('📍 Member ID: ${member.id}');
   debugPrint('📍 Has SubLayers: ${member.subLayers?.isNotEmpty ?? false}');
   debugPrint('📍 Has URL: ${member.url?.isNotEmpty ?? false}');
-  debugPrint('📍 Bounds: ${visibleBounds.southwest} to ${visibleBounds.northeast}');
+  debugPrint(
+      '📍 Bounds: ${visibleBounds.southwest} to ${visibleBounds.northeast}');
 
   // Convert current bounds to our MapBounds class
-  final currentBounds = MapBounds(southwest: visibleBounds.southwest, northeast: visibleBounds.northeast);
+  final currentBounds = MapBounds(
+      southwest: visibleBounds.southwest, northeast: visibleBounds.northeast);
 
   // Check if we need to fetch new data
   final shouldFetchNew = lastBoundsNotifier.shouldFetchNewData(currentBounds);
@@ -42,14 +44,16 @@ Future<bool> loadNetworkLayerData({
 
   // One ticket per visible-network refresh; supersedes any earlier refresh.
   final ticket = refreshCoordinator.begin();
-  debugPrint('🔄 Network refresh #${ticket.generation} started: ${member.name}');
+  debugPrint(
+      '🔄 Network refresh #${ticket.generation} started: ${member.name}');
   try {
     // Keep the currently rendered layer until a new fetch is needed.
     debugPrint('🗑️ Removing existing network layers...');
     await SourceManagementUtility.cleanupNetworkLayers(mapController);
     debugPrint('✅ Existing layers removed');
     if (!ticket.isCurrent) {
-      debugPrint('⏭️ Network refresh #${ticket.generation} superseded; discarding');
+      debugPrint(
+          '⏭️ Network refresh #${ticket.generation} superseded; discarding');
       return false;
     }
 
@@ -122,23 +126,27 @@ Future<bool> _loadSingleLayerFromMember({
   String featureTypeString = 'single'; // Default fallback
   if (member.featureType != null) {
     featureTypeString = member.featureType.toString().split('.').last;
-    debugPrint('🏷️ GroupMember featureType conversion: ${member.featureType} -> $featureTypeString');
+    debugPrint(
+        '🏷️ GroupMember featureType conversion: ${member.featureType} -> $featureTypeString');
   }
 
   final sourceId = LayerNamingUtility.getNetworkSourceId(featureTypeString);
   final layerId = LayerNamingUtility.getNetworkLayerId(featureTypeString);
-  debugPrint('🏷️ GroupMember naming result: sourceId=$sourceId, layerId=$layerId');
+  debugPrint(
+      '🏷️ GroupMember naming result: sourceId=$sourceId, layerId=$layerId');
 
   try {
     // Fetch data if we have a URL
     if (member.url != null && member.url!.isNotEmpty) {
-      final boundsString = '${visibleBounds.southwest.longitude},${visibleBounds.southwest.latitude},${visibleBounds.northeast.longitude},${visibleBounds.northeast.latitude}';
+      final boundsString =
+          '${visibleBounds.southwest.longitude},${visibleBounds.southwest.latitude},${visibleBounds.northeast.longitude},${visibleBounds.northeast.latitude}';
       final url = constructUrlWithBounds(member.url!, boundsString);
 
       final dio = buildAppDio();
       final response = await dio.get(url, cancelToken: ticket.cancelToken);
       if (!ticket.isCurrent) {
-        debugPrint('⏭️ Discarding stale result (refresh #${ticket.generation}): $sourceId');
+        debugPrint(
+            '⏭️ Discarding stale result (refresh #${ticket.generation}): $sourceId');
         return false;
       }
 
@@ -193,7 +201,8 @@ Future<bool> _loadSingleLayerFromMember({
             belowLayerId: 'Road labels',
           );
         }
-        return ticket.isCurrent && (await mapController.getLayerIds()).contains(layerId);
+        return ticket.isCurrent &&
+            (await mapController.getLayerIds()).contains(layerId);
       }
       return false;
     } else {
@@ -202,7 +211,8 @@ Future<bool> _loadSingleLayerFromMember({
     }
   } catch (e) {
     if (NetworkRefreshCoordinator.isExpectedCancellation(e)) {
-      debugPrint('⏹️ Request cancelled (refresh #${ticket.generation}): $sourceId');
+      debugPrint(
+          '⏹️ Request cancelled (refresh #${ticket.generation}): $sourceId');
       return false;
     }
     debugPrint('💥 Error loading single layer from member: $e');
@@ -228,16 +238,19 @@ Future<bool> _loadSingleLayer({
 
   // Use new featureType-based naming convention
   final featureTypeString = subLayer.featureType.toString().split('.').last;
-  debugPrint('    🏷️ SubLayer featureType conversion: ${subLayer.featureType} -> $featureTypeString');
+  debugPrint(
+      '    🏷️ SubLayer featureType conversion: ${subLayer.featureType} -> $featureTypeString');
   final sourceId = LayerNamingUtility.getNetworkSourceId(featureTypeString);
   final layerId = LayerNamingUtility.getNetworkLayerId(featureTypeString);
-  debugPrint('    🏷️ SubLayer naming result: sourceId=$sourceId, layerId=$layerId');
+  debugPrint(
+      '    🏷️ SubLayer naming result: sourceId=$sourceId, layerId=$layerId');
 
   try {
     debugPrint('    📡 Preparing to fetch data...');
 
     // Format: minLng,minLat,maxLng,maxLat
-    final boundsString = '${visibleBounds.southwest.longitude},${visibleBounds.southwest.latitude},${visibleBounds.northeast.longitude},${visibleBounds.northeast.latitude}';
+    final boundsString =
+        '${visibleBounds.southwest.longitude},${visibleBounds.southwest.latitude},${visibleBounds.northeast.longitude},${visibleBounds.northeast.latitude}';
     debugPrint('    📍 Bounds string: $boundsString');
 
     // Use the URL from menu_assets.json if available
@@ -249,7 +262,8 @@ Future<bool> _loadSingleLayer({
 
     // If we still don't have a valid URL, generate one
     if (url.isEmpty) {
-      url = 'https://gisservices.mainroads.wa.gov.au/arcgis/rest/services/OpenData/HVS_Networks_2_DataPortal/MapServer/$subLayerId'
+      url =
+          'https://gisservices.mainroads.wa.gov.au/arcgis/rest/services/OpenData/HVS_Networks_2_DataPortal/MapServer/$subLayerId'
           '/query?where=1%3D1&geometry=$boundsString&geometryType=esriGeometryEnvelope&inSR=4326&spatialRel=esriSpatialRelIntersects&outFields=*&returnGeometry=true&geometryPrecision=6&outSR=4326'
           '&f=geojson';
       debugPrint('    🔗 Generated fallback URL: $url');
@@ -260,7 +274,8 @@ Future<bool> _loadSingleLayer({
     final dio = buildAppDio();
     final response = await dio.get(url, cancelToken: ticket.cancelToken);
     if (!ticket.isCurrent) {
-      debugPrint('    ⏭️ Discarding stale result (refresh #${ticket.generation}): $sourceId');
+      debugPrint(
+          '    ⏭️ Discarding stale result (refresh #${ticket.generation}): $sourceId');
       return false;
     }
 
@@ -287,9 +302,11 @@ Future<bool> _loadSingleLayer({
     // Get existing sources and layers
     final sourceIds = await mapController.getSourceIds();
     final layerIds = await mapController.getLayerIds();
-    debugPrint('    🗂️ Map has ${sourceIds.length} sources and ${layerIds.length} layers');
+    debugPrint(
+        '    🗂️ Map has ${sourceIds.length} sources and ${layerIds.length} layers');
     if (!ticket.isCurrent) {
-      debugPrint('    ⏭️ Refresh #${ticket.generation} went stale before map update: $sourceId');
+      debugPrint(
+          '    ⏭️ Refresh #${ticket.generation} went stale before map update: $sourceId');
       return false;
     }
 
@@ -300,7 +317,8 @@ Future<bool> _loadSingleLayer({
       jsonData,
     ); // Add appropriate layer based on feature type and geometry type
     if (!layerIds.contains(layerId)) {
-      debugPrint('    ➕ Adding new layer: $layerId (geometry: ${subLayer.geometryType})');
+      debugPrint(
+          '    ➕ Adding new layer: $layerId (geometry: ${subLayer.geometryType})');
       if (subLayer.geometryType == GeometryType.point) {
         final symbolProperties = SymbolLayerProperties(
           iconImage: getIconImage(subLayer.name),
@@ -347,10 +365,12 @@ Future<bool> _loadSingleLayer({
       debugPrint('    ⚠️ Layer already exists: $layerId');
     }
     debugPrint('    === END LOADING SUBLAYER: ${subLayer.name} ===\n');
-    return ticket.isCurrent && (await mapController.getLayerIds()).contains(layerId);
+    return ticket.isCurrent &&
+        (await mapController.getLayerIds()).contains(layerId);
   } catch (e) {
     if (NetworkRefreshCoordinator.isExpectedCancellation(e)) {
-      debugPrint('    ⏹️ Request cancelled (refresh #${ticket.generation}): $sourceId');
+      debugPrint(
+          '    ⏹️ Request cancelled (refresh #${ticket.generation}): $sourceId');
       return false;
     }
     debugPrint('    💥 Error loading sublayer: $e');
@@ -372,7 +392,8 @@ Future<void> updateNetworkLayerWithNewBounds({
   debugPrint('\n=== Checking if network layer bounds update needed ===');
 
   // Convert current bounds to our MapBounds class
-  final currentBounds = MapBounds(southwest: visibleBounds.southwest, northeast: visibleBounds.northeast);
+  final currentBounds = MapBounds(
+      southwest: visibleBounds.southwest, northeast: visibleBounds.northeast);
 
   // Check if we need to fetch new data
   final shouldFetchNew = lastBoundsNotifier.shouldFetchNewData(currentBounds);
@@ -383,16 +404,19 @@ Future<void> updateNetworkLayerWithNewBounds({
   }
 
   debugPrint('Updating bounds for layer: ${member.name}');
-  debugPrint('Bounds: ${visibleBounds.southwest} to ${visibleBounds.northeast}');
+  debugPrint(
+      'Bounds: ${visibleBounds.southwest} to ${visibleBounds.northeast}');
 
   // Check if another loading operation is in progress
   if (isLoading) {
-    debugPrint('⚠️ Another loading operation in progress, skipping bounds update');
+    debugPrint(
+        '⚠️ Another loading operation in progress, skipping bounds update');
     return;
   }
 
   final ticket = refreshCoordinator.begin();
-  debugPrint('🔄 Network bounds refresh #${ticket.generation} started: ${member.name}');
+  debugPrint(
+      '🔄 Network bounds refresh #${ticket.generation} started: ${member.name}');
   loadingNotifier.setLoading(true);
 
   // Update the last bounds now that we're fetching new data
@@ -405,11 +429,14 @@ Future<void> updateNetworkLayerWithNewBounds({
       for (final subLayer in member.subLayers!) {
         if (!ticket.isCurrent) break;
         // Use new featureType-based naming
-        final featureTypeString = subLayer.featureType.toString().split('.').last;
-        final sourceId = LayerNamingUtility.getNetworkSourceId(featureTypeString);
+        final featureTypeString =
+            subLayer.featureType.toString().split('.').last;
+        final sourceId =
+            LayerNamingUtility.getNetworkSourceId(featureTypeString);
 
         // Format bounds string for query parameters
-        final boundsString = '${visibleBounds.southwest.longitude},${visibleBounds.southwest.latitude},${visibleBounds.northeast.longitude},${visibleBounds.northeast.latitude}';
+        final boundsString =
+            '${visibleBounds.southwest.longitude},${visibleBounds.southwest.latitude},${visibleBounds.northeast.longitude},${visibleBounds.northeast.latitude}';
 
         // Prepare URL with bounds using helper method
         String url = constructUrlWithBounds(subLayer.url, boundsString);
@@ -422,9 +449,11 @@ Future<void> updateNetworkLayerWithNewBounds({
 
             // Fetch updated data
             final dio = buildAppDio();
-            final response = await dio.get(url, cancelToken: ticket.cancelToken);
+            final response =
+                await dio.get(url, cancelToken: ticket.cancelToken);
             if (!ticket.isCurrent) {
-              debugPrint('⏭️ Discarding stale result (refresh #${ticket.generation}): $sourceId');
+              debugPrint(
+                  '⏭️ Discarding stale result (refresh #${ticket.generation}): $sourceId');
               break;
             }
 
@@ -450,7 +479,8 @@ Future<void> updateNetworkLayerWithNewBounds({
           }
         } catch (e) {
           if (NetworkRefreshCoordinator.isExpectedCancellation(e)) {
-            debugPrint('⏹️ Request cancelled (refresh #${ticket.generation}): $sourceId');
+            debugPrint(
+                '⏹️ Request cancelled (refresh #${ticket.generation}): $sourceId');
             break;
           }
           debugPrint('❌ Error updating sublayer ${subLayer.name}: $e');
@@ -459,11 +489,13 @@ Future<void> updateNetworkLayerWithNewBounds({
       }
     } else if (member.url != null && member.url!.isNotEmpty) {
       // Single layer case - use featureType-based naming with fallback to 'single'
-      final featureTypeString = member.featureType?.toString().split('.').last ?? 'single';
+      final featureTypeString =
+          member.featureType?.toString().split('.').last ?? 'single';
       final sourceId = LayerNamingUtility.getNetworkSourceId(featureTypeString);
 
       // Format bounds string for query parameters
-      final boundsString = '${visibleBounds.southwest.longitude},${visibleBounds.southwest.latitude},${visibleBounds.northeast.longitude},${visibleBounds.northeast.latitude}';
+      final boundsString =
+          '${visibleBounds.southwest.longitude},${visibleBounds.southwest.latitude},${visibleBounds.northeast.longitude},${visibleBounds.northeast.latitude}';
 
       // Prepare URL with bounds using helper method
       String url = constructUrlWithBounds(member.url!, boundsString);
@@ -478,7 +510,8 @@ Future<void> updateNetworkLayerWithNewBounds({
           final dio = buildAppDio();
           final response = await dio.get(url, cancelToken: ticket.cancelToken);
           if (!ticket.isCurrent) {
-            debugPrint('⏭️ Discarding stale result (refresh #${ticket.generation}): $sourceId');
+            debugPrint(
+                '⏭️ Discarding stale result (refresh #${ticket.generation}): $sourceId');
             return;
           }
 
@@ -504,7 +537,8 @@ Future<void> updateNetworkLayerWithNewBounds({
         }
       } catch (e) {
         if (NetworkRefreshCoordinator.isExpectedCancellation(e)) {
-          debugPrint('⏹️ Request cancelled (refresh #${ticket.generation}): $sourceId');
+          debugPrint(
+              '⏹️ Request cancelled (refresh #${ticket.generation}): $sourceId');
           return;
         }
         debugPrint('❌ Error updating single layer ${member.name}: $e');
@@ -534,8 +568,10 @@ Future<void> removeNetworkLayer({
     if (member.subLayers != null && member.subLayers!.isNotEmpty) {
       for (final subLayer in member.subLayers!) {
         // Use new featureType-based naming
-        final featureTypeString = subLayer.featureType.toString().split('.').last;
-        final sourceId = LayerNamingUtility.getNetworkSourceId(featureTypeString);
+        final featureTypeString =
+            subLayer.featureType.toString().split('.').last;
+        final sourceId =
+            LayerNamingUtility.getNetworkSourceId(featureTypeString);
         final layerId = LayerNamingUtility.getNetworkLayerId(featureTypeString);
 
         // Use safe removal to prevent race conditions

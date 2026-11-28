@@ -25,20 +25,25 @@ Future<void> main(List<String> args) async {
 
   stdout.writeln('Fetching layer $topologyLayerId with geometry ...');
   final fetch = await fetchLayerGeoJson(buildProbeDio());
-  stdout.writeln('  ${fetch.retrieved} features, ${fetch.pages} page(s), complete=${fetch.complete}');
+  stdout.writeln(
+      '  ${fetch.retrieved} features, ${fetch.pages} page(s), complete=${fetch.complete}');
 
-  final summary = buildTopologySummary(fetch, generatedAt: DateTime.now().toUtc().toIso8601String());
+  final summary = buildTopologySummary(fetch,
+      generatedAt: DateTime.now().toUtc().toIso8601String());
   File(jsonPath)
     ..parent.createSync(recursive: true)
-    ..writeAsStringSync('${const JsonEncoder.withIndent('  ').convert(summary)}\n');
-  final report = enrichTopologyReportWithEndpointSegmentProximity(renderTopologyReport(summary), summary);
+    ..writeAsStringSync(
+        '${const JsonEncoder.withIndent('  ').convert(summary)}\n');
+  final report = enrichTopologyReportWithEndpointSegmentProximity(
+      renderTopologyReport(summary), summary);
   File(reportPath)
     ..parent.createSync(recursive: true)
     ..writeAsStringSync(report);
   stdout.writeln('Wrote $reportPath and $jsonPath');
 
   if (summary['status'] != 'COMPLETE') {
-    stderr.writeln('Run INCOMPLETE: ${(summary['incompleteReasons'] as List).join('; ')}');
+    stderr.writeln(
+        'Run INCOMPLETE: ${(summary['incompleteReasons'] as List).join('; ')}');
     exit(2);
   }
 }

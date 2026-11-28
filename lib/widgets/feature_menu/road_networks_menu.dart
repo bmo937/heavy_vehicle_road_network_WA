@@ -20,7 +20,8 @@ import 'package:roads_map/widgets/navigation_widget/navigation_widget.dart';
 
 /// Updated RoadNetworksMenu with filter buttons and improved layer handling
 class RoadNetworksMenu extends ConsumerWidget {
-  const RoadNetworksMenu({super.key, required this.menuAssets, this.showOnlyDownloaded = false});
+  const RoadNetworksMenu(
+      {super.key, required this.menuAssets, this.showOnlyDownloaded = false});
 
   final MenuAssets menuAssets;
   final bool showOnlyDownloaded;
@@ -35,7 +36,9 @@ class RoadNetworksMenu extends ConsumerWidget {
     final selectedFilters = ref.watch(roadNetworkFilterProvider);
 
     // Filter for Road Network layers
-    final roadNetworkLayers = menuAssets.layers.where((layer) => layer.listMenu == ListMenu.roadNetworks).toList();
+    final roadNetworkLayers = menuAssets.layers
+        .where((layer) => layer.listMenu == ListMenu.roadNetworks)
+        .toList();
 
     // Group networks by their category for organization
     final networksByCategory = _groupNetworksByCategory(roadNetworkLayers);
@@ -66,7 +69,8 @@ class RoadNetworksMenu extends ConsumerWidget {
               Expanded(
                 child: roadNetworkLayers.isEmpty
                     ? const Center(child: Text('No road networks available'))
-                    : _buildNetworksList(context, ref, networksByCategory, selectedFilters, selectedNetwork),
+                    : _buildNetworksList(context, ref, networksByCategory,
+                        selectedFilters, selectedNetwork),
               ),
             ],
           );
@@ -85,7 +89,8 @@ class RoadNetworksMenu extends ConsumerWidget {
               children: [
                 // Filter buttons at the top
                 Padding(
-                  padding: const EdgeInsets.symmetric(vertical: 2, horizontal: 2),
+                  padding:
+                      const EdgeInsets.symmetric(vertical: 2, horizontal: 2),
                   child: RoadNetworkFilterButtons(),
                 ),
                 const Divider(height: 1, thickness: 1),
@@ -96,7 +101,9 @@ class RoadNetworksMenu extends ConsumerWidget {
                     child: Text('No road networks available'),
                   ),
                 // Each category section
-                for (final entry in networksByCategory.entries) _buildCategorySection(context, ref, entry.key, entry.value, selectedFilters, selectedNetwork),
+                for (final entry in networksByCategory.entries)
+                  _buildCategorySection(context, ref, entry.key, entry.value,
+                      selectedFilters, selectedNetwork),
               ],
             ),
           );
@@ -129,7 +136,12 @@ class RoadNetworksMenu extends ConsumerWidget {
   }
 
   // Build a scrollable list of networks
-  Widget _buildNetworksList(BuildContext context, WidgetRef ref, Map<String, List<Layer>> networksByCategory, Set<Filter> filters, String? selectedNetwork) {
+  Widget _buildNetworksList(
+      BuildContext context,
+      WidgetRef ref,
+      Map<String, List<Layer>> networksByCategory,
+      Set<Filter> filters,
+      String? selectedNetwork) {
     // If no filters are selected, show everything
     final bool filtersActive = filters.isNotEmpty;
 
@@ -137,19 +149,23 @@ class RoadNetworksMenu extends ConsumerWidget {
       slivers: [
         for (final entry in networksByCategory.entries) ...[
           // First check if any items in this category will be visible with the current filter
-          if (!filtersActive || _anyCategoryItemsVisible(entry.value, filters)) ...[
+          if (!filtersActive ||
+              _anyCategoryItemsVisible(entry.value, filters)) ...[
             // Category title
             SliverToBoxAdapter(
               child: Padding(
-                padding: const EdgeInsets.symmetric(horizontal: 16.0, vertical: 8.0),
-                child: Text(entry.key, style: Theme.of(context).textTheme.titleMedium),
+                padding:
+                    const EdgeInsets.symmetric(horizontal: 16.0, vertical: 8.0),
+                child: Text(entry.key,
+                    style: Theme.of(context).textTheme.titleMedium),
               ),
             ),
             // Networks in this category
             SliverList(
               delegate: SliverChildBuilderDelegate(
                 (context, index) {
-                  return _buildNetworkItem(context, ref, entry.value[index], filters, selectedNetwork);
+                  return _buildNetworkItem(context, ref, entry.value[index],
+                      filters, selectedNetwork);
                 },
                 childCount: entry.value.length,
               ),
@@ -161,7 +177,13 @@ class RoadNetworksMenu extends ConsumerWidget {
   }
 
   // Build a category section
-  Widget _buildCategorySection(BuildContext context, WidgetRef ref, String category, List<Layer> layers, Set<Filter> filters, String? selectedNetwork) {
+  Widget _buildCategorySection(
+      BuildContext context,
+      WidgetRef ref,
+      String category,
+      List<Layer> layers,
+      Set<Filter> filters,
+      String? selectedNetwork) {
     // If filters are active and no items in this category match the filter, return empty container
     if (filters.isNotEmpty && !_anyCategoryItemsVisible(layers, filters)) {
       return const SizedBox.shrink();
@@ -174,13 +196,15 @@ class RoadNetworksMenu extends ConsumerWidget {
           padding: const EdgeInsets.symmetric(horizontal: 16.0, vertical: 8.0),
           child: Text(category, style: Theme.of(context).textTheme.titleMedium),
         ),
-        for (final layer in layers) _buildNetworkItem(context, ref, layer, filters, selectedNetwork),
+        for (final layer in layers)
+          _buildNetworkItem(context, ref, layer, filters, selectedNetwork),
       ],
     );
   }
 
   // Build a network item with its group members
-  Widget _buildNetworkItem(BuildContext context, WidgetRef ref, Layer layer, Set<Filter> filters, String? selectedNetwork) {
+  Widget _buildNetworkItem(BuildContext context, WidgetRef ref, Layer layer,
+      Set<Filter> filters, String? selectedNetwork) {
     // Skip if this layer has no group members
     if (layer.groupMembers == null || layer.groupMembers!.isEmpty) {
       return const SizedBox.shrink();
@@ -205,16 +229,20 @@ class RoadNetworksMenu extends ConsumerWidget {
       children: [
         if (layer.groupLabel != null)
           Padding(
-            padding: const EdgeInsets.symmetric(horizontal: 16.0, vertical: 4.0),
-            child: Text(layer.groupLabel!, style: Theme.of(context).textTheme.titleSmall),
+            padding:
+                const EdgeInsets.symmetric(horizontal: 16.0, vertical: 4.0),
+            child: Text(layer.groupLabel!,
+                style: Theme.of(context).textTheme.titleSmall),
           ),
-        for (final member in filteredMembers) _buildNetworkRadioTile(context, ref, member, selectedNetwork),
+        for (final member in filteredMembers)
+          _buildNetworkRadioTile(context, ref, member, selectedNetwork),
       ],
     );
   }
 
   // Build a radio tile for a network
-  Widget _buildNetworkRadioTile(BuildContext context, WidgetRef ref, GroupMember member, String? selectedNetwork) {
+  Widget _buildNetworkRadioTile(BuildContext context, WidgetRef ref,
+      GroupMember member, String? selectedNetwork) {
     final boxController = ref.watch(boxControllerProvider);
     return Card(
       elevation: 0,
@@ -235,7 +263,8 @@ class RoadNetworksMenu extends ConsumerWidget {
   }
 
   // Handle network selection
-  void _selectNetwork(BuildContext context, WidgetRef ref, GroupMember network, String value) {
+  void _selectNetwork(
+      BuildContext context, WidgetRef ref, GroupMember network, String value) {
     final controller = ref.read(boxControllerProvider);
     debugPrint('\n🎯 === Network Selection Started ===');
     debugPrint('🏗️ Selected network: ${network.name} (value: $value)');
@@ -245,7 +274,9 @@ class RoadNetworksMenu extends ConsumerWidget {
     ref.read(networkLayerSelectionProvider.notifier).selectLayer(value);
 
     debugPrint('🔄 Updating roadNetworkSelectionNotifierProvider...');
-    ref.read(roadNetworkSelectionNotifierProvider.notifier).selectNetwork(value);
+    ref
+        .read(roadNetworkSelectionNotifierProvider.notifier)
+        .selectNetwork(value);
 
     // Save to Hive
     debugPrint('💾 Saving to Hive...');

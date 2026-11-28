@@ -10,7 +10,8 @@ class _ManualAdapter implements HttpClientAdapter {
   final Map<String, Completer<ResponseBody>> pending = {};
 
   @override
-  Future<ResponseBody> fetch(RequestOptions options, Stream<Uint8List>? requestStream, Future<void>? cancelFuture) {
+  Future<ResponseBody> fetch(RequestOptions options,
+      Stream<Uint8List>? requestStream, Future<void>? cancelFuture) {
     final c = Completer<ResponseBody>();
     pending[options.path] = c;
     return c.future;
@@ -25,10 +26,12 @@ ResponseBody _ok(String body) => ResponseBody.fromString(body, 200, headers: {
     });
 
 /// Mirrors the production pattern: fetch, check freshness, then apply.
-Future<void> _refresh(Dio dio, NetworkRefreshCoordinator coordinator, String path, List<String> applied) async {
+Future<void> _refresh(Dio dio, NetworkRefreshCoordinator coordinator,
+    String path, List<String> applied) async {
   final ticket = coordinator.begin();
   try {
-    final response = await dio.get<String>(path, cancelToken: ticket.cancelToken);
+    final response =
+        await dio.get<String>(path, cancelToken: ticket.cancelToken);
     if (!ticket.isCurrent) return;
     applied.add(response.data!);
   } catch (e) {
@@ -80,7 +83,9 @@ void main() {
     final fb = _refresh(dio, coordinator, 'B', applied);
     await Future<void>.delayed(const Duration(milliseconds: 10));
 
-    adapter.pending['B']!.completeError(DioException(requestOptions: RequestOptions(path: 'B'), type: DioExceptionType.connectionTimeout));
+    adapter.pending['B']!.completeError(DioException(
+        requestOptions: RequestOptions(path: 'B'),
+        type: DioExceptionType.connectionTimeout));
     await expectLater(fb, throwsA(isA<DioException>()));
     adapter.pending['A']!.complete(_ok('dataA'));
     await fa;
@@ -99,18 +104,24 @@ void main() {
     expect(b.cancelToken.isCancelled, isFalse);
   });
 
-  test('intentional cancellation is distinguished from real failures', () async {
-    final fa = dio.get<String>('A', cancelToken: coordinator.begin().cancelToken);
+  test('intentional cancellation is distinguished from real failures',
+      () async {
+    final fa =
+        dio.get<String>('A', cancelToken: coordinator.begin().cancelToken);
     final errA = fa.then<Object>((_) => 'no error', onError: (Object e) => e);
     await Future<void>.delayed(const Duration(milliseconds: 10));
     coordinator.begin();
-    adapter.pending['A']!.complete(_ok('late')); // adapters may only notice cancellation on completion
+    adapter.pending['A']!.complete(
+        _ok('late')); // adapters may only notice cancellation on completion
     final cancelled = await errA;
     expect(NetworkRefreshCoordinator.isExpectedCancellation(cancelled), isTrue);
 
-    final timeout = DioException(requestOptions: RequestOptions(path: 'x'), type: DioExceptionType.connectionTimeout);
+    final timeout = DioException(
+        requestOptions: RequestOptions(path: 'x'),
+        type: DioExceptionType.connectionTimeout);
     expect(NetworkRefreshCoordinator.isExpectedCancellation(timeout), isFalse);
-    expect(NetworkRefreshCoordinator.isExpectedCancellation(Exception('boom')), isFalse);
+    expect(NetworkRefreshCoordinator.isExpectedCancellation(Exception('boom')),
+        isFalse);
   });
 
   test('invalidate marks in-flight work stale; dispose cancels it', () {

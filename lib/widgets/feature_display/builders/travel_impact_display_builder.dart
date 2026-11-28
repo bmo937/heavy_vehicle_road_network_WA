@@ -8,7 +8,8 @@ import '../feature_display_helpers.dart';
 /// Travel impact display builder
 class TravelImpactDisplayBuilder {
   /// Build travel impact display
-  static Widget buildTravelImpactDisplay(BuildContext context, TappedFeature feature, String title) {
+  static Widget buildTravelImpactDisplay(
+      BuildContext context, TappedFeature feature, String title) {
     final Map<String, dynamic> properties = feature.properties;
     final TextTheme textTheme = Theme.of(context).textTheme;
     // final colorScheme = Theme.of(context).colorScheme;
@@ -19,14 +20,18 @@ class TravelImpactDisplayBuilder {
 
     if (properties['CommencementDate'] != null) {
       // Convert to int safely from either double or int
-      final timestamp = properties['CommencementDate'] is double ? (properties['CommencementDate'] as double).toInt() : properties['CommencementDate'] as int;
+      final timestamp = properties['CommencementDate'] is double
+          ? (properties['CommencementDate'] as double).toInt()
+          : properties['CommencementDate'] as int;
       final date = DateTime.fromMillisecondsSinceEpoch(timestamp);
       commencementDate = "${date.day}/${date.month}/${date.year}";
     }
 
     if (properties['EndDate'] != null) {
       // Convert to int safely from either double or int
-      final timestamp = properties['EndDate'] is double ? (properties['EndDate'] as double).toInt() : properties['EndDate'] as int;
+      final timestamp = properties['EndDate'] is double
+          ? (properties['EndDate'] as double).toInt()
+          : properties['EndDate'] as int;
       final date = DateTime.fromMillisecondsSinceEpoch(timestamp);
       endDate = "${date.day}/${date.month}/${date.year}";
     }
@@ -71,23 +76,38 @@ class TravelImpactDisplayBuilder {
 
           // Impact Details
           Text('Impact Details', style: textTheme.bodyMedium),
-          if (properties['Description'] != null) FeatureDisplayHelpers.buildProperty(context, 'Description', properties['Description']),
-          if (properties['Type'] != null) FeatureDisplayHelpers.buildProperty(context, 'Type', properties['Type']),
-          if (properties['Severity'] != null) FeatureDisplayHelpers.buildProperty(context, 'Severity', properties['Severity']),
+          if (properties['Description'] != null)
+            FeatureDisplayHelpers.buildProperty(
+                context, 'Description', properties['Description']),
+          if (properties['Type'] != null)
+            FeatureDisplayHelpers.buildProperty(
+                context, 'Type', properties['Type']),
+          if (properties['Severity'] != null)
+            FeatureDisplayHelpers.buildProperty(
+                context, 'Severity', properties['Severity']),
 
           customDivider,
 
           // Duration Information
           Text('Duration', style: textTheme.bodyMedium),
-          FeatureDisplayHelpers.buildProperty(context, 'Start Date', commencementDate),
+          FeatureDisplayHelpers.buildProperty(
+              context, 'Start Date', commencementDate),
           FeatureDisplayHelpers.buildProperty(context, 'End Date', endDate),
 
-          if (properties['Location'] != null || properties['AffectedRoads'] != null) customDivider,
+          if (properties['Location'] != null ||
+              properties['AffectedRoads'] != null)
+            customDivider,
 
           // Location Information
-          if (properties['Location'] != null || properties['AffectedRoads'] != null) Text('Location Information', style: textTheme.bodyMedium),
-          if (properties['Location'] != null) FeatureDisplayHelpers.buildProperty(context, 'Location', properties['Location']),
-          if (properties['AffectedRoads'] != null) FeatureDisplayHelpers.buildProperty(context, 'Affected Roads', properties['AffectedRoads']),
+          if (properties['Location'] != null ||
+              properties['AffectedRoads'] != null)
+            Text('Location Information', style: textTheme.bodyMedium),
+          if (properties['Location'] != null)
+            FeatureDisplayHelpers.buildProperty(
+                context, 'Location', properties['Location']),
+          if (properties['AffectedRoads'] != null)
+            FeatureDisplayHelpers.buildProperty(
+                context, 'Affected Roads', properties['AffectedRoads']),
         ],
       );
     });

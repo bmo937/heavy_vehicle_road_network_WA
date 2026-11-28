@@ -12,7 +12,8 @@ class _FakeAdapter implements HttpClientAdapter {
   _FakeAdapter(this.handler);
 
   @override
-  Future<ResponseBody> fetch(RequestOptions options, Stream<Uint8List>? requestStream, Future<void>? cancelFuture) {
+  Future<ResponseBody> fetch(RequestOptions options,
+      Stream<Uint8List>? requestStream, Future<void>? cancelFuture) {
     last = options;
     return handler(options);
   }
@@ -23,16 +24,20 @@ class _FakeAdapter implements HttpClientAdapter {
 
 Dio _dioWith(_FakeAdapter a) => Dio()..httpClientAdapter = a;
 
-ResponseBody _json(String body, [int status = 200]) => ResponseBody.fromString(body, status, headers: {
+ResponseBody _json(String body, [int status = 200]) =>
+    ResponseBody.fromString(body, status, headers: {
       Headers.contentTypeHeader: ['application/json'],
     });
 
-final _bounds = LatLngBounds(southwest: const LatLng(-32.0, 115.5), northeast: const LatLng(-31.5, 116.0));
+final _bounds = LatLngBounds(
+    southwest: const LatLng(-32.0, 115.5),
+    northeast: const LatLng(-31.5, 116.0));
 
 void main() {
   group('constructUrlWithBounds', () {
     test('builds ArcGIS query with expected parameters', () {
-      final uri = Uri.parse(constructUrlWithBounds('https://example.com/MapServer/3/', '115.5,-32.0,116.0,-31.5'));
+      final uri = Uri.parse(constructUrlWithBounds(
+          'https://example.com/MapServer/3/', '115.5,-32.0,116.0,-31.5'));
       expect(uri.path, '/MapServer/3/query');
       expect(uri.queryParameters, {
         'where': '1=1',
@@ -49,14 +54,17 @@ void main() {
     });
 
     test('replaces geometry in existing query, preserving other params', () {
-      final uri = Uri.parse(constructUrlWithBounds('https://example.com/q?where=1%3D1&geometry=1,2,3,4&f=pgeojson', '9,8,7,6'));
+      final uri = Uri.parse(constructUrlWithBounds(
+          'https://example.com/q?where=1%3D1&geometry=1,2,3,4&f=pgeojson',
+          '9,8,7,6'));
       expect(uri.queryParameters['geometry'], '9,8,7,6');
       expect(uri.queryParameters['f'], 'pgeojson');
       expect(uri.queryParameters['where'], '1=1');
     });
 
     test('adds geometry params to existing query lacking geometry', () {
-      final uri = Uri.parse(constructUrlWithBounds('https://example.com/q?f=geojson', '1,2,3,4'));
+      final uri = Uri.parse(
+          constructUrlWithBounds('https://example.com/q?f=geojson', '1,2,3,4'));
       expect(uri.queryParameters['geometry'], '1,2,3,4');
       expect(uri.queryParameters['geometryType'], 'esriGeometryEnvelope');
       expect(uri.queryParameters['inSR'], '4326');
@@ -70,9 +78,11 @@ void main() {
 
   group('fetchOnlineLayerData', () {
     test('uses minLng,minLat,maxLng,maxLat ordering', () async {
-      final adapter = _FakeAdapter((_) async => _json('{"type":"FeatureCollection","features":[]}'));
+      final adapter = _FakeAdapter(
+          (_) async => _json('{"type":"FeatureCollection","features":[]}'));
       await fetchOnlineLayerData(5, _bounds, dio: _dioWith(adapter));
-      expect(adapter.last!.uri.queryParameters['geometry'], '115.5,-32.0,116.0,-31.5');
+      expect(adapter.last!.uri.queryParameters['geometry'],
+          '115.5,-32.0,116.0,-31.5');
     });
 
     test('returns features on success', () async {
@@ -82,21 +92,28 @@ void main() {
           {'type': 'Feature'}
         ]
       });
-      final result = await fetchOnlineLayerData(5, _bounds, dio: _dioWith(_FakeAdapter((_) async => _json(body))));
+      final result = await fetchOnlineLayerData(5, _bounds,
+          dio: _dioWith(_FakeAdapter((_) async => _json(body))));
       expect(result['features'], hasLength(1));
     });
 
-    test('legitimate empty response is a successful empty collection', () async {
-      final result = await fetchOnlineLayerData(5, _bounds, dio: _dioWith(_FakeAdapter((_) async => _json('{"type":"FeatureCollection","features":[]}'))));
+    test('legitimate empty response is a successful empty collection',
+        () async {
+      final result = await fetchOnlineLayerData(5, _bounds,
+          dio: _dioWith(_FakeAdapter((_) async =>
+              _json('{"type":"FeatureCollection","features":[]}'))));
       expect(result['type'], 'FeatureCollection');
       expect(result['features'], isEmpty);
     });
 
     test('request failure throws rather than returning empty data', () async {
-      final dio = _dioWith(_FakeAdapter((o) async => throw DioException.connectionTimeout(timeout: const Duration(seconds: 1), requestOptions: o)));
+      final dio = _dioWith(_FakeAdapter((o) async =>
+          throw DioException.connectionTimeout(
+              timeout: const Duration(seconds: 1), requestOptions: o)));
       expect(
         fetchOnlineLayerData(5, _bounds, dio: dio),
-        throwsA(isA<NetworkDataException>().having((e) => e.failureType, 'type', DioExceptionType.connectionTimeout)),
+        throwsA(isA<NetworkDataException>().having(
+            (e) => e.failureType, 'type', DioExceptionType.connectionTimeout)),
       );
     });
 
@@ -104,18 +121,23 @@ void main() {
       final dio = _dioWith(_FakeAdapter((_) async => _json('{}', 500)));
       expect(
         fetchOnlineLayerData(5, _bounds, dio: dio),
-        throwsA(isA<NetworkDataException>().having((e) => e.statusCode, 'status', 500)),
+        throwsA(isA<NetworkDataException>()
+            .having((e) => e.statusCode, 'status', 500)),
       );
     });
 
     test('malformed body throws', () async {
-      final dio = _dioWith(_FakeAdapter((_) async => ResponseBody.fromString('not json', 200)));
-      expect(fetchOnlineLayerData(5, _bounds, dio: dio), throwsA(isA<NetworkDataException>()));
+      final dio = _dioWith(
+          _FakeAdapter((_) async => ResponseBody.fromString('not json', 200)));
+      expect(fetchOnlineLayerData(5, _bounds, dio: dio),
+          throwsA(isA<NetworkDataException>()));
     });
 
     test('JSON without features list throws', () async {
-      final dio = _dioWith(_FakeAdapter((_) async => _json('{"error":{"code":400}}')));
-      expect(fetchOnlineLayerData(5, _bounds, dio: dio), throwsA(isA<NetworkDataException>()));
+      final dio =
+          _dioWith(_FakeAdapter((_) async => _json('{"error":{"code":400}}')));
+      expect(fetchOnlineLayerData(5, _bounds, dio: dio),
+          throwsA(isA<NetworkDataException>()));
     });
   });
 }

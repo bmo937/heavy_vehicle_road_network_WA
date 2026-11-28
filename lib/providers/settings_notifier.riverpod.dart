@@ -17,7 +17,8 @@ class SettingsNotifier extends _$SettingsNotifier {
   Future<void> _initializeHive() async {
     try {
       _box = await Hive.openBox(HiveBoxes.settings);
-      final themeModeIndex = _box.get('themeMode', defaultValue: ThemeMode.system.index);
+      final themeModeIndex =
+          _box.get('themeMode', defaultValue: ThemeMode.system.index);
       state = ThemeMode.values[themeModeIndex];
     } catch (e) {
       debugPrint('Error initializing settings Hive: $e');
@@ -64,15 +65,14 @@ class MarkerColorNotifier extends _$MarkerColorNotifier {
   late Box _box;
   void setMarkerColor(Color color) {
     state = color;
-    // ignore: deprecated_member_use
-    _box.put('markerColor', color.value);
+    _box.put('markerColor', color.toARGB32());
   }
 
   Future<void> _initializeHive() async {
     try {
       _box = await Hive.openBox(HiveBoxes.settings);
-      // ignore: deprecated_member_use
-      final colorValue = _box.get('markerColor', defaultValue: Colors.red.value);
+      final colorValue =
+          _box.get('markerColor', defaultValue: Colors.red.toARGB32());
       state = Color(colorValue);
     } catch (e) {
       debugPrint('Error initializing marker color Hive: $e');

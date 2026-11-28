@@ -30,7 +30,8 @@ class EndpointProximity {
         'searchRadiusMetres': searchRadiusMetres,
         'nearestOtherEndpoint': nearestOther,
         'nearestNonIdenticalEndpoint': nearestNonIdentical,
-        'note': 'Diagnostic only. No coordinate was snapped and no tolerance was chosen.',
+        'note':
+            'Diagnostic only. No coordinate was snapped and no tolerance was chosen.',
       };
 }
 
@@ -58,7 +59,8 @@ EndpointProximity analyzeEndpointProximity(
     for (var p = 0; p < parts.length; p++) {
       final g = parts[p];
       if (g.length < 2) {
-        throw ArgumentError('feature ${segments[f].globalId} part $p has fewer than 2 vertices');
+        throw ArgumentError(
+            'feature ${segments[f].globalId} part $p has fewer than 2 vertices');
       }
       for (final c in [g.first, g.last]) {
         eps.add(_Ep(f, c.latitude, c.longitude));
@@ -73,7 +75,8 @@ EndpointProximity analyzeEndpointProximity(
   final cellLng = cellLat / cosLat;
 
   final grid = <(int, int), List<_Ep>>{};
-  (int, int) cellOf(_Ep e) => ((e.lng / cellLng).floor(), (e.lat / cellLat).floor());
+  (int, int) cellOf(_Ep e) =>
+      ((e.lng / cellLng).floor(), (e.lat / cellLat).floor());
   for (final e in eps) {
     (grid[cellOf(e)] ??= []).add(e);
   }

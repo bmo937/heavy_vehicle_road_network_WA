@@ -16,7 +16,8 @@ import 'shared_vertices.dart';
 enum HitKind { proper, touch, overlap }
 
 class SegmentHit {
-  const SegmentHit(this.kind, this.x, this.y, {this.x2, this.y2, this.vertexOfA});
+  const SegmentHit(this.kind, this.x, this.y,
+      {this.x2, this.y2, this.vertexOfA});
   final HitKind kind;
   final double x, y;
 
@@ -30,7 +31,8 @@ class SegmentHit {
 
 int _sign(double v) => v > 0 ? 1 : (v < 0 ? -1 : 0);
 
-double _orient(double px, double py, double qx, double qy, double rx, double ry) =>
+double _orient(
+        double px, double py, double qx, double qy, double rx, double ry) =>
     (qx - px) * (ry - py) - (qy - py) * (rx - px);
 
 bool _inBox(double x, double y, double x1, double y1, double x2, double y2) =>
@@ -42,8 +44,14 @@ bool _inBox(double x, double y, double x1, double y1, double x2, double y2) =>
 /// Exact 2D intersection of segment A (a1-a2) and segment B (b1-b2).
 /// Both segments must have non-zero length. Returns null when disjoint.
 SegmentHit? intersectSegments(
-  double ax1, double ay1, double ax2, double ay2,
-  double bx1, double by1, double bx2, double by2,
+  double ax1,
+  double ay1,
+  double ax2,
+  double ay2,
+  double bx1,
+  double by1,
+  double bx2,
+  double by2,
 ) {
   final o1 = _sign(_orient(ax1, ay1, ax2, ay2, bx1, by1));
   final o2 = _sign(_orient(ax1, ay1, ax2, ay2, bx2, by2));
@@ -64,19 +72,31 @@ SegmentHit? intersectSegments(
     if (lo > hi) return null;
     final pLo = pts.firstWhere((p) => t(p) == lo);
     final pHi = pts.firstWhere((p) => t(p) == hi);
-    if (lo == hi) return SegmentHit(HitKind.touch, pLo.$1, pLo.$2, vertexOfA: pLo == pts[0] || pLo == pts[1]);
+    if (lo == hi) {
+      return SegmentHit(HitKind.touch, pLo.$1, pLo.$2,
+          vertexOfA: pLo == pts[0] || pLo == pts[1]);
+    }
     return SegmentHit(HitKind.overlap, pLo.$1, pLo.$2, x2: pHi.$1, y2: pHi.$2);
   }
 
   if (o1 * o2 < 0 && o3 * o4 < 0) {
     final d = (ax2 - ax1) * (by2 - by1) - (ay2 - ay1) * (bx2 - bx1);
     final t = ((bx1 - ax1) * (by2 - by1) - (by1 - ay1) * (bx2 - bx1)) / d;
-    return SegmentHit(HitKind.proper, ax1 + t * (ax2 - ax1), ay1 + t * (ay2 - ay1));
+    return SegmentHit(
+        HitKind.proper, ax1 + t * (ax2 - ax1), ay1 + t * (ay2 - ay1));
   }
-  if (o1 == 0 && _inBox(bx1, by1, ax1, ay1, ax2, ay2)) return SegmentHit(HitKind.touch, bx1, by1, vertexOfA: false);
-  if (o2 == 0 && _inBox(bx2, by2, ax1, ay1, ax2, ay2)) return SegmentHit(HitKind.touch, bx2, by2, vertexOfA: false);
-  if (o3 == 0 && _inBox(ax1, ay1, bx1, by1, bx2, by2)) return SegmentHit(HitKind.touch, ax1, ay1, vertexOfA: true);
-  if (o4 == 0 && _inBox(ax2, ay2, bx1, by1, bx2, by2)) return SegmentHit(HitKind.touch, ax2, ay2, vertexOfA: true);
+  if (o1 == 0 && _inBox(bx1, by1, ax1, ay1, ax2, ay2)) {
+    return SegmentHit(HitKind.touch, bx1, by1, vertexOfA: false);
+  }
+  if (o2 == 0 && _inBox(bx2, by2, ax1, ay1, ax2, ay2)) {
+    return SegmentHit(HitKind.touch, bx2, by2, vertexOfA: false);
+  }
+  if (o3 == 0 && _inBox(ax1, ay1, bx1, by1, bx2, by2)) {
+    return SegmentHit(HitKind.touch, ax1, ay1, vertexOfA: true);
+  }
+  if (o4 == 0 && _inBox(ax2, ay2, bx1, by1, bx2, by2)) {
+    return SegmentHit(HitKind.touch, ax2, ay2, vertexOfA: true);
+  }
   return null;
 }
 
@@ -123,7 +143,8 @@ class CrossingAnalysis {
   final double cellSizeDegrees;
 
   Map<String, dynamic> toJson() => {
-        'method': 'uniform lat/lng grid -> canonical-cell bbox filter -> exact double-precision segment intersection',
+        'method':
+            'uniform lat/lng grid -> canonical-cell bbox filter -> exact double-precision segment intersection',
         'cellSizeDegrees': cellSizeDegrees,
         'indexedSegments': indexedSegments,
         'skippedZeroLengthSegments': skippedZeroLengthSegments,
@@ -137,7 +158,8 @@ class CrossingAnalysis {
         'byRoadRelation': byRoadRelation,
         'details': details,
         'detailsTruncated': detailsTruncated,
-        'note': 'Crossings are NOT junctions. No junction was created and nothing was snapped.',
+        'note':
+            'Crossings are NOT junctions. No junction was created and nothing was snapped.',
       };
 }
 
@@ -169,7 +191,8 @@ CrossingAnalysis analyzeCrossings(
           skipped++;
           continue;
         }
-        segs.add(_Seg(f, p, i, a.longitude, a.latitude, b.longitude, b.latitude));
+        segs.add(
+            _Seg(f, p, i, a.longitude, a.latitude, b.longitude, b.latitude));
       }
     }
   }
@@ -224,7 +247,12 @@ CrossingAnalysis analyzeCrossings(
       for (var j = i + 1; j < ids.length; j++) {
         var a = segs[ids[i]], b = segs[ids[j]];
         if (a.feature == b.feature) continue;
-        if (a.maxX < b.minX || b.maxX < a.minX || a.maxY < b.minY || b.maxY < a.minY) continue;
+        if (a.maxX < b.minX ||
+            b.maxX < a.minX ||
+            a.maxY < b.minY ||
+            b.maxY < a.minY) {
+          continue;
+        }
         // Test each pair once: only in the cell holding the min corner of the bbox overlap.
         final ox = a.minX > b.minX ? a.minX : b.minX;
         final oy = a.minY > b.minY ? a.minY : b.minY;
@@ -235,7 +263,8 @@ CrossingAnalysis analyzeCrossings(
           a = b;
           b = t;
         }
-        final hit = intersectSegments(a.x1, a.y1, a.x2, a.y2, b.x1, b.y1, b.x2, b.y2);
+        final hit =
+            intersectSegments(a.x1, a.y1, a.x2, a.y2, b.x1, b.y1, b.x2, b.y2);
         if (hit == null) continue;
 
         final fa = a.feature, fb = b.feature;
@@ -256,15 +285,21 @@ CrossingAnalysis analyzeCrossings(
         );
         if (isRepresented) continue;
 
-        final key = '$fa|${a.part}|$fb|${b.part}|${hit.kind.name}|${hit.x}|${hit.y}|${hit.x2}|${hit.y2}';
+        final key =
+            '$fa|${a.part}|$fb|${b.part}|${hit.kind.name}|${hit.x}|${hit.y}|${hit.x2}|${hit.y2}';
         if (!seen.add(key)) continue;
 
-        final roleA = hit.kind == HitKind.overlap ? 'overlap' : role(fa, a.part, a.index, hit.x, hit.y);
-        final roleB = hit.kind == HitKind.overlap ? 'overlap' : role(fb, b.part, b.index, hit.x, hit.y);
+        final roleA = hit.kind == HitKind.overlap
+            ? 'overlap'
+            : role(fa, a.part, a.index, hit.x, hit.y);
+        final roleB = hit.kind == HitKind.overlap
+            ? 'overlap'
+            : role(fb, b.part, b.index, hit.x, hit.y);
         final nearA = nearestVertex(fa, a.part, hit.x, hit.y);
         final nearB = nearestVertex(fb, b.part, hit.x, hit.y);
         final near = nearA < nearB ? nearA : nearB;
-        final nearBucket = near == 0 ? '0 m' : bucketForDistance(near, exact: false).label;
+        final nearBucket =
+            near == 0 ? '0 m' : bucketForDistance(near, exact: false).label;
         final endpointInvolved = roleA == 'endpoint' || roleB == 'endpoint';
         final fA = features[fa], fB = features[fb];
         final relation = '${fA.road == fB.road ? 'same' : 'different'} ROAD, '

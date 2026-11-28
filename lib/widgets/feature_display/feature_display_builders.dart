@@ -17,38 +17,51 @@ import 'builders/travel_impact_display_builder.dart';
 /// Each method delegates to the appropriate individual builder class
 class FeatureDisplayBuilders {
   /// Build traffic service display
-  static Widget buildTrafficServiceDisplay(BuildContext context, TappedFeature feature, String title) {
-    return TrafficServiceDisplayBuilder.buildTrafficServiceDisplay(context, feature, title);
+  static Widget buildTrafficServiceDisplay(
+      BuildContext context, TappedFeature feature, String title) {
+    return TrafficServiceDisplayBuilder.buildTrafficServiceDisplay(
+        context, feature, title);
   }
 
   /// Build traffic incident display
-  static Widget buildTrafficIncidentDisplay(BuildContext context, TappedFeature feature, String title) {
-    return TrafficIncidentDisplayBuilder.buildTrafficIncidentDisplay(context, feature, title);
+  static Widget buildTrafficIncidentDisplay(
+      BuildContext context, TappedFeature feature, String title) {
+    return TrafficIncidentDisplayBuilder.buildTrafficIncidentDisplay(
+        context, feature, title);
   }
 
   /// Build travel impact display
-  static Widget buildTravelImpactDisplay(BuildContext context, TappedFeature feature, String title) {
-    return TravelImpactDisplayBuilder.buildTravelImpactDisplay(context, feature, title);
+  static Widget buildTravelImpactDisplay(
+      BuildContext context, TappedFeature feature, String title) {
+    return TravelImpactDisplayBuilder.buildTravelImpactDisplay(
+        context, feature, title);
   }
 
   /// Build intersection display
-  static Widget buildIntersectionDisplay(BuildContext context, TappedFeature feature, String title) {
-    return IntersectionDisplayBuilder.buildIntersectionDisplay(context, feature, title);
+  static Widget buildIntersectionDisplay(
+      BuildContext context, TappedFeature feature, String title) {
+    return IntersectionDisplayBuilder.buildIntersectionDisplay(
+        context, feature, title);
   }
 
   /// Build generic properties display
-  static Widget buildGenericPropertiesDisplay(BuildContext context, TappedFeature feature, String title) {
-    return GenericPropertiesDisplayBuilder.buildGenericPropertiesDisplay(context, feature, title);
+  static Widget buildGenericPropertiesDisplay(
+      BuildContext context, TappedFeature feature, String title) {
+    return GenericPropertiesDisplayBuilder.buildGenericPropertiesDisplay(
+        context, feature, title);
   }
 
   /// Build bridge display
-  static Widget buildBridgeDisplay(BuildContext context, TappedFeature feature, String title) {
+  static Widget buildBridgeDisplay(
+      BuildContext context, TappedFeature feature, String title) {
     return BridgeDisplayBuilder.buildBridgeDisplay(context, feature, title);
   }
 
   /// Build road with conditions display
-  static Widget buildRoadWithConditionsDisplay(BuildContext context, TappedFeature feature, String title) {
-    return RoadWithConditionsDisplayBuilder.buildRoadWithConditionsDisplay(context, feature, title);
+  static Widget buildRoadWithConditionsDisplay(
+      BuildContext context, TappedFeature feature, String title) {
+    return RoadWithConditionsDisplayBuilder.buildRoadWithConditionsDisplay(
+        context, feature, title);
   }
 
   /* /// Build road without conditions display
@@ -57,17 +70,22 @@ class FeatureDisplayBuilders {
   } */
 
   /// Build rest area display
-  static Widget buildRestAreaDisplay(BuildContext context, TappedFeature feature, String title) {
+  static Widget buildRestAreaDisplay(
+      BuildContext context, TappedFeature feature, String title) {
     return RestAreaDisplayBuilder.buildRestAreaDisplay(context, feature, title);
   }
 
   /// Build road train assembly display
-  static Widget buildRoadTrainAssemblyDisplay(BuildContext context, TappedFeature feature, String title) {
-    return RoadTrainAssemblyDisplayBuilder.buildRoadTrainAssemblyDisplay(context, feature, title);
+  static Widget buildRoadTrainAssemblyDisplay(
+      BuildContext context, TappedFeature feature, String title) {
+    return RoadTrainAssemblyDisplayBuilder.buildRoadTrainAssemblyDisplay(
+        context, feature, title);
   }
 
   /// Build search result display
-  static Widget buildSearchResultDisplay(BuildContext context, TappedFeature feature, String title) {
-    return SearchResultDisplayBuilder.buildSearchResultDisplay(context, feature, title);
+  static Widget buildSearchResultDisplay(
+      BuildContext context, TappedFeature feature, String title) {
+    return SearchResultDisplayBuilder.buildSearchResultDisplay(
+        context, feature, title);
   }
 }

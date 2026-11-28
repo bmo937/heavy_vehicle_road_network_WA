@@ -13,7 +13,8 @@ class MapPage extends HookConsumerWidget {
   @override
   Widget build(BuildContext context, WidgetRef ref) {
     final mapPageProvider = ref.read(mapPageNotifierProvider.notifier);
-    final currentStyleUrl = ref.watch(mapThemeProvider); // Listen for theme changes and trigger map rebuild
+    final currentStyleUrl = ref.watch(
+        mapThemeProvider); // Listen for theme changes and trigger map rebuild
     ref.listen<String>(mapThemeProvider, (previous, next) {
       if (previous != null && previous != next) {
         debugPrint('🎨 MAP THEME CHANGED: $previous -> $next');
@@ -55,7 +56,8 @@ class MapPage extends HookConsumerWidget {
           MapLibreMap(
             key: ValueKey(currentStyleUrl), // Force rebuild when style changes
             styleString: currentStyleUrl,
-            onMapCreated: (controller) => mapPageProvider.onMapCreated(controller, ref, context),
+            onMapCreated: (controller) =>
+                mapPageProvider.onMapCreated(controller, ref, context),
             onStyleLoadedCallback: () async {
               mapPageProvider.onStyleLoaded(context, ref);
             },

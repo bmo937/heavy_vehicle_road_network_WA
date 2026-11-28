@@ -9,12 +9,17 @@ import 'package:roads_map/utils/source_management_utility.dart';
 part 'traffic_services.riverpod.g.dart';
 
 // URL for incidents data source
-String incidentsUrl = "https://services2.arcgis.com/cHGEnmsJ165IBJRM/ArcGIS/rest/services/WebEoc_RoadIncidents/FeatureServer/1/query?where=1%3D1&outFields=*&f=pgeojson";
+String incidentsUrl =
+    "https://services2.arcgis.com/cHGEnmsJ165IBJRM/ArcGIS/rest/services/WebEoc_RoadIncidents/FeatureServer/1/query?where=1%3D1&outFields=*&f=pgeojson";
 
 // Source and CustomLayer IDs using consistent naming utility
 // Incidents (Point)
-final String incidentsSourceId = LayerNamingUtility.getSourceId(LayerNamingUtility.CATEGORY_INCIDENT, 'road_incidents');
-final String incidentsSymbolLayerId = LayerNamingUtility.getLayerId(LayerNamingUtility.CATEGORY_INCIDENT, 'road_incidents', LayerNamingUtility.TYPE_SYMBOL);
+final String incidentsSourceId = LayerNamingUtility.getSourceId(
+    LayerNamingUtility.CATEGORY_INCIDENT, 'road_incidents');
+final String incidentsSymbolLayerId = LayerNamingUtility.getLayerId(
+    LayerNamingUtility.CATEGORY_INCIDENT,
+    'road_incidents',
+    LayerNamingUtility.TYPE_SYMBOL);
 
 // Track visibility state since we can't query it directly
 bool _isIncidentsLayerVisible = false;
@@ -101,12 +106,14 @@ String getTextField(Map<String, dynamic> feature) {
 }
 
 // Helper to create GeoJSON feature collection
-Map<String, dynamic> createGeoJsonFeatureCollection(List<Map<String, dynamic>> features) {
+Map<String, dynamic> createGeoJsonFeatureCollection(
+    List<Map<String, dynamic>> features) {
   return {"type": "FeatureCollection", "features": features};
 }
 
 // Display function for incidents layer
-Future<void> displayIncidentsLayer(MapLibreMapController mapController, Map<String, dynamic> data) async {
+Future<void> displayIncidentsLayer(
+    MapLibreMapController mapController, Map<String, dynamic> data) async {
   // Remove existing layers
   await removeIncidentsLayers(mapController);
   // Process data for incidents
@@ -126,7 +133,10 @@ Future<void> displayIncidentsLayer(MapLibreMapController mapController, Map<Stri
     SymbolLayerProperties(
       iconHaloColor: "#FFFFFF",
       iconHaloWidth: 5.0,
-      iconImage: ['get', 'iconImage'], // Use the iconImage property from the feature
+      iconImage: [
+        'get',
+        'iconImage'
+      ], // Use the iconImage property from the feature
       iconSize: [
         'interpolate',
         ['linear'],
@@ -156,7 +166,8 @@ Future<void> displayIncidentsLayer(MapLibreMapController mapController, Map<Stri
 
   // Reset visibility state when adding layer (hidden by default)
   _isIncidentsLayerVisible = false;
-  debugPrint('- Incidents layer visibility state initialized: $_isIncidentsLayerVisible');
+  debugPrint(
+      '- Incidents layer visibility state initialized: $_isIncidentsLayerVisible');
 }
 
 // Function to remove incidents layer
@@ -181,11 +192,13 @@ Future<void> removeIncidentsLayers(MapLibreMapController mapController) async {
 
   // Reset visibility state when removing layer
   _isIncidentsLayerVisible = false;
-  debugPrint('- Incidents layer visibility state reset: $_isIncidentsLayerVisible');
+  debugPrint(
+      '- Incidents layer visibility state reset: $_isIncidentsLayerVisible');
 }
 
 // Function to toggle visibility
-Future<void> setIncidentsLayerVisibility(MapLibreMapController mapController, bool isVisible) async {
+Future<void> setIncidentsLayerVisibility(
+    MapLibreMapController mapController, bool isVisible) async {
   final layerIds = await mapController.getLayerIds();
   debugPrint('Setting incidents layer visibility: $isVisible');
 
@@ -198,11 +211,13 @@ Future<void> setIncidentsLayerVisibility(MapLibreMapController mapController, bo
 
   // Update the tracked state
   _isIncidentsLayerVisible = isVisible;
-  debugPrint('- Incidents layer visibility state updated: $_isIncidentsLayerVisible');
+  debugPrint(
+      '- Incidents layer visibility state updated: $_isIncidentsLayerVisible');
 }
 
 // Helper method to check if incidents layer is currently visible
-Future<bool> isIncidentsLayerVisible(MapLibreMapController mapController) async {
+Future<bool> isIncidentsLayerVisible(
+    MapLibreMapController mapController) async {
   final layerIds = await mapController.getLayerIds();
 
   // First verify the layer actually exists
@@ -227,7 +242,8 @@ Future<bool> isIncidentsLayerLoaded(MapLibreMapController mapController) async {
 }
 
 // Function to load incidents data
-Future<void> loadIncidentsLayer(MapLibreMapController mapController, WidgetRef ref) async {
+Future<void> loadIncidentsLayer(
+    MapLibreMapController mapController, WidgetRef ref) async {
   debugPrint('=== Loading incidents layer ===');
 
   try {
@@ -241,12 +257,14 @@ Future<void> loadIncidentsLayer(MapLibreMapController mapController, WidgetRef r
 }
 
 // Function to toggle incidents layer
-Future<void> toggleIncidentsLayer(MapLibreMapController mapController, WidgetRef ref) async {
+Future<void> toggleIncidentsLayer(
+    MapLibreMapController mapController, WidgetRef ref) async {
   debugPrint('=== Toggling incidents layer ===');
 
   // Toggle the state - flip the current visibility
   final newVisibility = !_isIncidentsLayerVisible;
-  debugPrint('- Setting incidents layer to: ${newVisibility ? 'visible' : 'hidden'}');
+  debugPrint(
+      '- Setting incidents layer to: ${newVisibility ? 'visible' : 'hidden'}');
 
   try {
     // If showing for the first time, ensure layer is loaded

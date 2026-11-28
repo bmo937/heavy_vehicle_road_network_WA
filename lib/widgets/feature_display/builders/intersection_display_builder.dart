@@ -8,14 +8,16 @@ import 'package:roads_map/widgets/feature_display/feature_display_helpers.dart';
 /// Intersection display builder
 class IntersectionDisplayBuilder {
   /// Build intersection display
-  static Widget buildIntersectionDisplay(BuildContext context, TappedFeature feature, String title) {
+  static Widget buildIntersectionDisplay(
+      BuildContext context, TappedFeature feature, String title) {
     final Map<String, dynamic> properties = feature.properties;
     final TextTheme textTheme = Theme.of(context).textTheme;
     final colorScheme = Theme.of(context).colorScheme;
     return Consumer(builder: (context, ref, child) {
       final customDivider = ref.watch(dividerProvider);
       return SizedBox(
-        height: MediaQuery.of(context).size.height * 0.6, // Constrain height to 60% of screen
+        height: MediaQuery.of(context).size.height *
+            0.6, // Constrain height to 60% of screen
         child: Column(
           crossAxisAlignment: CrossAxisAlignment.center,
           children: [
@@ -24,7 +26,8 @@ class IntersectionDisplayBuilder {
               padding: const EdgeInsets.all(16),
               child: Column(
                 children: [
-                  FeatureDisplayHelpers.buildSubTitle(context, properties['NODE_DESCR'] ?? properties['NAME']),
+                  FeatureDisplayHelpers.buildSubTitle(
+                      context, properties['NODE_DESCR'] ?? properties['NAME']),
                   Text(
                     title,
                     style: textTheme.titleSmall?.copyWith(
@@ -35,10 +38,13 @@ class IntersectionDisplayBuilder {
               ),
             ),
             const SizedBox(height: 8),
-            if (properties['NETWORK'] != null || properties['CONDITION'] != null) customDivider,
+            if (properties['NETWORK'] != null ||
+                properties['CONDITION'] != null)
+              customDivider,
 
             // Scrollable Content Section
-            if (properties['NETWORK'] != null || properties['CONDITION'] != null)
+            if (properties['NETWORK'] != null ||
+                properties['CONDITION'] != null)
               Expanded(
                 child: SingleChildScrollView(
                   padding: const EdgeInsets.symmetric(horizontal: 16.0),
@@ -62,7 +68,8 @@ class IntersectionDisplayBuilder {
                                 child: Text(
                                   properties['CONDITION'].toString(),
                                   textAlign: TextAlign.center,
-                                  style: textTheme.bodyMedium?.copyWith(color: colorScheme.onError),
+                                  style: textTheme.bodyMedium
+                                      ?.copyWith(color: colorScheme.onError),
                                 ),
                               ),
                             ),

@@ -5,7 +5,8 @@ import '../../tool/main_roads_topology_probe/report.dart';
 import '../../tool/main_roads_topology_probe/report_enrichment.dart';
 import '../../tool/main_roads_topology_probe/summary.dart';
 
-MainRoadsNetworkSegment _segment(String id, List<SourceCoordinate> geometry) => MainRoadsNetworkSegment(
+MainRoadsNetworkSegment _segment(String id, List<SourceCoordinate> geometry) =>
+    MainRoadsNetworkSegment(
       globalId: id,
       objectId: null,
       road: 'R1',
@@ -22,7 +23,8 @@ MainRoadsNetworkSegment _segment(String id, List<SourceCoordinate> geometry) => 
     );
 
 void main() {
-  test('generated Markdown includes endpoint-to-segment proximity analysis', () {
+  test('generated Markdown includes endpoint-to-segment proximity analysis',
+      () {
     final analysis = analyzeSegments([
       _segment('target', const [
         SourceCoordinate(longitude: 115.0, latitude: -32.0),
@@ -38,8 +40,17 @@ void main() {
       'generatedAt': 'now',
       'status': 'COMPLETE',
       'incompleteReasons': <String>[],
-      'source': {'service': 'test', 'layerId': 78, 'layerName': 'test', 'query': 'test'},
-      'retrieval': {'pages': 1, 'retrievedFeatures': 2, 'serviceReportedCount': 2},
+      'source': {
+        'service': 'test',
+        'layerId': 78,
+        'layerName': 'test',
+        'query': 'test'
+      },
+      'retrieval': {
+        'pages': 1,
+        'retrievedFeatures': 2,
+        'serviceReportedCount': 2
+      },
       'recordCount': 2,
       'scope': 'test',
       'analysis': analysis,
@@ -49,10 +60,14 @@ void main() {
       renderTopologyReport(summary),
       summary,
     );
-    final proximity = analysis['endpointSegmentProximity'] as Map<String, dynamic>;
+    final proximity =
+        analysis['endpointSegmentProximity'] as Map<String, dynamic>;
 
     expect(report, contains('Endpoint-to-segment proximity'));
-    expect(report, contains('Eligible endpoints without an exact different-feature endpoint partner'));
+    expect(
+        report,
+        contains(
+            'Eligible endpoints without an exact different-feature endpoint partner'));
     expect(
       report,
       contains(
@@ -62,6 +77,7 @@ void main() {
     expect(report, contains('Nearest finite-segment distance'));
     expect(report, contains('Nearest segment-interior distance'));
     expect(report, contains('Nearest target location'));
-    expect(report, isNot(contains('endpoint-to-segment proximity (not measured)')));
+    expect(report,
+        isNot(contains('endpoint-to-segment proximity (not measured)')));
   });
 }

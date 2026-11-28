@@ -5,7 +5,8 @@ import 'package:flutter/foundation.dart';
 import 'package:maplibre_gl/maplibre_gl.dart';
 import 'package:roads_map/services/dio_provider.dart';
 
-const String _hvsNetworksBaseUrl = 'https://gisservices.mainroads.wa.gov.au/arcgis/rest/services/OpenData/HVS_Networks_2_DataPortal/MapServer';
+const String _hvsNetworksBaseUrl =
+    'https://gisservices.mainroads.wa.gov.au/arcgis/rest/services/OpenData/HVS_Networks_2_DataPortal/MapServer';
 
 /// Thrown when a layer request fails or returns an unusable response.
 /// Distinct from a successful response containing zero features.
@@ -16,7 +17,8 @@ class NetworkDataException implements Exception {
   final int? statusCode;
   final DioExceptionType? failureType;
 
-  const NetworkDataException(this.service, this.message, {this.statusCode, this.failureType});
+  const NetworkDataException(this.service, this.message,
+      {this.statusCode, this.failureType});
 
   @override
   String toString() => 'NetworkDataException($service): $message'
@@ -29,26 +31,33 @@ class NetworkDataException implements Exception {
 /// Returns a FeatureCollection (possibly with an empty `features` list when the
 /// request genuinely succeeded with no data). Throws [NetworkDataException] on
 /// any request or parsing failure; failures are never reported as empty data.
-Future<Map<String, dynamic>> fetchOnlineLayerData(int subLayerId, LatLngBounds visibleBounds, {Dio? dio}) async {
+Future<Map<String, dynamic>> fetchOnlineLayerData(
+    int subLayerId, LatLngBounds visibleBounds,
+    {Dio? dio}) async {
   final client = dio ?? buildAppDio();
   final southwest = visibleBounds.southwest;
   final northeast = visibleBounds.northeast;
 
   // Format: minLng,minLat,maxLng,maxLat
-  final boundsString = '${southwest.longitude},${southwest.latitude},${northeast.longitude},${northeast.latitude}';
+  final boundsString =
+      '${southwest.longitude},${southwest.latitude},${northeast.longitude},${northeast.latitude}';
   final service = 'MainRoadsNetwork/$subLayerId';
-  final url = constructUrlWithBounds('$_hvsNetworksBaseUrl/$subLayerId', boundsString);
+  final url =
+      constructUrlWithBounds('$_hvsNetworksBaseUrl/$subLayerId', boundsString);
 
   final Response response;
   try {
     response = await client.get(url);
   } on DioException catch (e) {
-    debugPrint('Network error [$service]: ${e.type.name} status=${e.response?.statusCode}');
-    throw NetworkDataException(service, 'Request failed', statusCode: e.response?.statusCode, failureType: e.type);
+    debugPrint(
+        'Network error [$service]: ${e.type.name} status=${e.response?.statusCode}');
+    throw NetworkDataException(service, 'Request failed',
+        statusCode: e.response?.statusCode, failureType: e.type);
   }
 
   if (response.statusCode != 200) {
-    throw NetworkDataException(service, 'Unexpected status', statusCode: response.statusCode);
+    throw NetworkDataException(service, 'Unexpected status',
+        statusCode: response.statusCode);
   }
 
   try {
@@ -60,7 +69,8 @@ Future<Map<String, dynamic>> fetchOnlineLayerData(int subLayerId, LatLngBounds v
     return Map<String, dynamic>.from(data);
   } on FormatException catch (e) {
     debugPrint('Malformed response [$service]: ${e.message}');
-    throw NetworkDataException(service, 'Malformed response: ${e.message}', statusCode: response.statusCode);
+    throw NetworkDataException(service, 'Malformed response: ${e.message}',
+        statusCode: response.statusCode);
   }
 }
 
@@ -70,7 +80,9 @@ String constructUrlWithBounds(String baseUrl, String boundsString) {
   if (baseUrl.isEmpty) return '';
 
   // Normalize the base URL - remove trailing slash if present
-  final normalizedUrl = baseUrl.endsWith('/') ? baseUrl.substring(0, baseUrl.length - 1) : baseUrl;
+  final normalizedUrl = baseUrl.endsWith('/')
+      ? baseUrl.substring(0, baseUrl.length - 1)
+      : baseUrl;
   final uri = Uri.parse(normalizedUrl);
 
   if (uri.hasQuery) {

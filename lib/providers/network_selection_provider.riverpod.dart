@@ -45,7 +45,8 @@ class PoiLayerSelection extends _$PoiLayerSelection {
         final legacyBox = Hive.box(HiveBoxes.pointsOfInterest);
         for (final key in legacyBox.keys) {
           if (key is String && key.toString().endsWith('_layer_visibility')) {
-            final layerName = key.toString().replaceAll('_layer_visibility', '');
+            final layerName =
+                key.toString().replaceAll('_layer_visibility', '');
             map[layerName] = legacyBox.get(key, defaultValue: false);
           }
         }
@@ -70,7 +71,8 @@ class PoiLayerSelection extends _$PoiLayerSelection {
 class NetworkLayerSelection extends _$NetworkLayerSelection {
   /// Set the selected network layer
   Future<void> selectLayer(String? layerName) async {
-    debugPrint('\n🔄 NetworkLayerSelection.selectLayer called with: $layerName');
+    debugPrint(
+        '\n🔄 NetworkLayerSelection.selectLayer called with: $layerName');
     debugPrint('📦 Previous state: $state');
 
     final box = Hive.box(HiveBoxes.selectedLayer); // Ensure this box is opened

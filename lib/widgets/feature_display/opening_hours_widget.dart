@@ -108,7 +108,8 @@ class _OpeningHoursWidgetState extends State<OpeningHoursWidget> {
                           Text(
                             parts[1],
                             style: textTheme.bodySmall?.copyWith(
-                              color: colorScheme.onSurface.withValues(alpha: 0.7),
+                              color:
+                                  colorScheme.onSurface.withValues(alpha: 0.7),
                             ),
                           ),
                         ],
@@ -124,11 +125,13 @@ class _OpeningHoursWidgetState extends State<OpeningHoursWidget> {
     );
   }
 
-  String _getNextOpenCloseInfo(bool isOpenNow, List<Map<String, dynamic>> periods) {
+  String _getNextOpenCloseInfo(
+      bool isOpenNow, List<Map<String, dynamic>> periods) {
     if (periods.isEmpty) return '';
 
     final now = DateTime.now();
-    final currentDay = now.weekday % 7; // Convert to Google's day format (0 = Sunday)
+    final currentDay =
+        now.weekday % 7; // Convert to Google's day format (0 = Sunday)
     final currentTime = now.hour * 100 + now.minute; // Convert to HHMM format
 
     try {
@@ -136,7 +139,9 @@ class _OpeningHoursWidgetState extends State<OpeningHoursWidget> {
         // Find when it closes today or next available close time
         for (int i = 0; i < 7; i++) {
           final checkDay = (currentDay + i) % 7;
-          final dayPeriods = periods.where((period) => period['open']?['day'] == checkDay).toList();
+          final dayPeriods = periods
+              .where((period) => period['open']?['day'] == checkDay)
+              .toList();
 
           for (final period in dayPeriods) {
             final openTimeStr = period['open']?['time']?.toString() ?? '';
@@ -162,7 +167,9 @@ class _OpeningHoursWidgetState extends State<OpeningHoursWidget> {
         // Find next opening time
         for (int i = 0; i < 7; i++) {
           final checkDay = (currentDay + i) % 7;
-          final dayPeriods = periods.where((period) => period['open']?['day'] == checkDay).toList();
+          final dayPeriods = periods
+              .where((period) => period['open']?['day'] == checkDay)
+              .toList();
 
           for (final period in dayPeriods) {
             final openTimeStr = period['open']?['time']?.toString() ?? '';
@@ -195,14 +202,22 @@ class _OpeningHoursWidgetState extends State<OpeningHoursWidget> {
       final int minutes = timeInt % 100;
 
       if (hours == 0) {
-        return minutes == 0 ? '12 AM' : '12:${minutes.toString().padLeft(2, '0')} AM';
+        return minutes == 0
+            ? '12 AM'
+            : '12:${minutes.toString().padLeft(2, '0')} AM';
       } else if (hours < 12) {
-        return minutes == 0 ? '$hours AM' : '$hours:${minutes.toString().padLeft(2, '0')} AM';
+        return minutes == 0
+            ? '$hours AM'
+            : '$hours:${minutes.toString().padLeft(2, '0')} AM';
       } else if (hours == 12) {
-        return minutes == 0 ? '12 PM' : '12:${minutes.toString().padLeft(2, '0')} PM';
+        return minutes == 0
+            ? '12 PM'
+            : '12:${minutes.toString().padLeft(2, '0')} PM';
       } else {
         final displayHour = hours - 12;
-        return minutes == 0 ? '$displayHour PM' : '$displayHour:${minutes.toString().padLeft(2, '0')} PM';
+        return minutes == 0
+            ? '$displayHour PM'
+            : '$displayHour:${minutes.toString().padLeft(2, '0')} PM';
       }
     } catch (e) {
       return time;

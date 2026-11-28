@@ -6,7 +6,8 @@ class ConfigurationException implements Exception {
   const ConfigurationException(this.key);
 
   @override
-  String toString() => 'ConfigurationException: required configuration "$key" is missing or empty. Check your .env file.';
+  String toString() =>
+      'ConfigurationException: required configuration "$key" is missing or empty. Check your .env file.';
 }
 
 /// Validated application configuration, loaded once at startup.
@@ -33,7 +34,8 @@ class AppConfig {
   static AppConfig get instance {
     final config = _instance;
     if (config == null) {
-      throw StateError('AppConfig.initialize must be called before AppConfig.instance is used.');
+      throw StateError(
+          'AppConfig.initialize must be called before AppConfig.instance is used.');
     }
     return config;
   }

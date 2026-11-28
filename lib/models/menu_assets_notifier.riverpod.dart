@@ -47,7 +47,8 @@ class MenuAssetsNotifier extends _$MenuAssetsNotifier {
   Future<MenuAssets> getMenuAssetsData() async {
     // DEVELOPMENT: Check if force rebuild is enabled
     if (_forceRebuildMenuAssets) {
-      debugPrint('🔄 FORCE REBUILD: Loading menu assets from file (toggle enabled)');
+      debugPrint(
+          '🔄 FORCE REBUILD: Loading menu assets from file (toggle enabled)');
       // Clear memory cache
       _cachedMenuAssets = null;
       // Clear Hive cache by removing stored data
@@ -75,18 +76,24 @@ class MenuAssetsNotifier extends _$MenuAssetsNotifier {
       final storedVersion = box.get(versionKey);
       final jsonDataString = box.get(layersKey);
 
-      debugPrint('Hive data check: lastUpdate=${lastUpdate != null}, storedVersion=$storedVersion, jsonData=${jsonDataString != null}');
+      debugPrint(
+          'Hive data check: lastUpdate=${lastUpdate != null}, storedVersion=$storedVersion, jsonData=${jsonDataString != null}');
 
       // Check if we have stored data and it's not too old
       bool hasValidStoredData = jsonDataString != null && storedVersion != null;
-      bool dataIsFresh = lastUpdate != null && DateTime.now().difference(DateTime.parse(lastUpdate.toString())).inDays < 1;
+      bool dataIsFresh = lastUpdate != null &&
+          DateTime.now()
+                  .difference(DateTime.parse(lastUpdate.toString()))
+                  .inDays <
+              1;
 
       // If we have valid cached data and it's fresh, use it
       if (hasValidStoredData && dataIsFresh) {
         debugPrint('Using fresh cached data (less than 1 day old)');
         try {
           // Parse JSON in isolate for better performance
-          final menuAssets = await _parseJsonInBackground(jsonDataString.toString());
+          final menuAssets =
+              await _parseJsonInBackground(jsonDataString.toString());
 
           // Cache in memory
           _cachedMenuAssets = menuAssets;
@@ -117,7 +124,8 @@ class MenuAssetsNotifier extends _$MenuAssetsNotifier {
 
     try {
       // Spawn the isolate with a static function reference
-      isolate = await Isolate.spawn(_isolateParseJson, [jsonString, receivePort.sendPort]);
+      isolate = await Isolate.spawn(
+          _isolateParseJson, [jsonString, receivePort.sendPort]);
 
       // Wait for the result
       final result = await receivePort.first;
@@ -207,7 +215,8 @@ class MenuAssetsNotifier extends _$MenuAssetsNotifier {
       await box.put(versionKey, menuAssets.menuVersion);
       await box.put(lastUpdateKey, DateTime.now().toIso8601String());
 
-      debugPrint('Successfully loaded menu assets with version: ${menuAssets.menuVersion}');
+      debugPrint(
+          'Successfully loaded menu assets with version: ${menuAssets.menuVersion}');
       return menuAssets;
     } catch (e) {
       debugPrint('Error loading menu assets from file: ${e.toString()}');
@@ -223,7 +232,8 @@ class MenuAssetsNotifier extends _$MenuAssetsNotifier {
       return _cachedMenuAssets!;
     }
 
-    debugPrint('Building MenuAssetsNotifier, loading menu assets in background');
+    debugPrint(
+        'Building MenuAssetsNotifier, loading menu assets in background');
     return await getMenuAssetsData();
   }
 }

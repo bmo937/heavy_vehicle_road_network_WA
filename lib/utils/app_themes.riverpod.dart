@@ -89,11 +89,18 @@ class AppThemes {
       margin: EdgeInsets.symmetric(vertical: 4, horizontal: 8),
     ),
     textTheme: TextTheme(
-      titleMedium: TextStyle(color: Colors.white70, fontSize: 20, fontWeight: FontWeight.bold),
-      titleSmall: TextStyle(color: Colors.white54, fontSize: 16, fontWeight: FontWeight.bold),
-      bodyLarge: TextStyle(color: Colors.teal.shade50, fontSize: 18, fontWeight: FontWeight.bold),
-      bodyMedium: TextStyle(color: Colors.white70, fontSize: 16, fontWeight: FontWeight.bold),
-      bodySmall: TextStyle(color: Colors.white54, fontSize: 14, fontWeight: FontWeight.bold),
+      titleMedium: TextStyle(
+          color: Colors.white70, fontSize: 20, fontWeight: FontWeight.bold),
+      titleSmall: TextStyle(
+          color: Colors.white54, fontSize: 16, fontWeight: FontWeight.bold),
+      bodyLarge: TextStyle(
+          color: Colors.teal.shade50,
+          fontSize: 18,
+          fontWeight: FontWeight.bold),
+      bodyMedium: TextStyle(
+          color: Colors.white70, fontSize: 16, fontWeight: FontWeight.bold),
+      bodySmall: TextStyle(
+          color: Colors.white54, fontSize: 14, fontWeight: FontWeight.bold),
     ),
     snackBarTheme: SnackBarThemeData(
       elevation: 20,
@@ -199,11 +206,16 @@ class AppThemes {
       margin: EdgeInsets.symmetric(vertical: 4, horizontal: 8),
     ),
     textTheme: TextTheme(
-      titleMedium: TextStyle(color: Colors.black, fontSize: 20, fontWeight: FontWeight.bold),
-      titleSmall: TextStyle(color: Colors.black, fontSize: 16, fontWeight: FontWeight.bold),
-      bodyLarge: TextStyle(color: Colors.black, fontSize: 18, fontWeight: FontWeight.bold),
-      bodyMedium: TextStyle(color: Colors.black, fontSize: 16, fontWeight: FontWeight.bold),
-      bodySmall: TextStyle(color: Colors.black, fontSize: 14, fontWeight: FontWeight.bold),
+      titleMedium: TextStyle(
+          color: Colors.black, fontSize: 20, fontWeight: FontWeight.bold),
+      titleSmall: TextStyle(
+          color: Colors.black, fontSize: 16, fontWeight: FontWeight.bold),
+      bodyLarge: TextStyle(
+          color: Colors.black, fontSize: 18, fontWeight: FontWeight.bold),
+      bodyMedium: TextStyle(
+          color: Colors.black, fontSize: 16, fontWeight: FontWeight.bold),
+      bodySmall: TextStyle(
+          color: Colors.black, fontSize: 14, fontWeight: FontWeight.bold),
     ),
     snackBarTheme: SnackBarThemeData(
       elevation: 20,

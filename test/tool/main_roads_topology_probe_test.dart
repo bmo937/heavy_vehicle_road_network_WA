@@ -18,7 +18,8 @@ import '../../tool/main_roads_topology_probe/summary.dart';
 // (~100 m) around (115, -32), so "1,2" below means (115.001, -31.998).
 const _lng0 = 115.0, _lat0 = -32.0;
 
-MainRoadsNetworkSegment seg(String id, List<List<num>> pts, {String road = 'R1', int route = 1}) =>
+MainRoadsNetworkSegment seg(String id, List<List<num>> pts,
+        {String road = 'R1', int route = 1}) =>
     MainRoadsNetworkSegment(
       globalId: id,
       objectId: null,
@@ -32,10 +33,15 @@ MainRoadsNetworkSegment seg(String id, List<List<num>> pts, {String road = 'R1',
       networkType: null,
       networkCategory: null,
       maxNetwork: 1,
-      geometry: [for (final p in pts) SourceCoordinate(longitude: _lng0 + p[0] * 0.001, latitude: _lat0 + p[1] * 0.001)],
+      geometry: [
+        for (final p in pts)
+          SourceCoordinate(
+              longitude: _lng0 + p[0] * 0.001, latitude: _lat0 + p[1] * 0.001)
+      ],
     );
 
-MainRoadsNetworkSegment multiSeg(String id, List<List<List<num>>> parts, {String road = 'R1', int route = 1}) =>
+MainRoadsNetworkSegment multiSeg(String id, List<List<List<num>>> parts,
+        {String road = 'R1', int route = 1}) =>
     MainRoadsNetworkSegment(
       globalId: id,
       objectId: null,
@@ -51,14 +57,23 @@ MainRoadsNetworkSegment multiSeg(String id, List<List<List<num>>> parts, {String
       maxNetwork: 1,
       parts: [
         for (final pts in parts)
-          [for (final p in pts) SourceCoordinate(longitude: _lng0 + p[0] * 0.001, latitude: _lat0 + p[1] * 0.001)],
+          [
+            for (final p in pts)
+              SourceCoordinate(
+                  longitude: _lng0 + p[0] * 0.001,
+                  latitude: _lat0 + p[1] * 0.001)
+          ],
       ],
     );
 
-SharedVertexAnalysis shared(List<MainRoadsNetworkSegment> s) => analyzeSharedVertices(CoordinateIndex.build(s));
-CrossingAnalysis crossings(List<MainRoadsNetworkSegment> s) => analyzeCrossings(CoordinateIndex.build(s));
+SharedVertexAnalysis shared(List<MainRoadsNetworkSegment> s) =>
+    analyzeSharedVertices(CoordinateIndex.build(s));
+CrossingAnalysis crossings(List<MainRoadsNetworkSegment> s) =>
+    analyzeCrossings(CoordinateIndex.build(s));
 
-Map<String, dynamic> geoFeature(String id, Object? coords, {int objectId = 1}) => {
+Map<String, dynamic> geoFeature(String id, Object? coords,
+        {int objectId = 1}) =>
+    {
       'type': 'Feature',
       'properties': {
         'GlobalID': id,
@@ -84,7 +99,8 @@ class _Adapter implements HttpClientAdapter {
   final ResponseBody Function(RequestOptions) handler;
   final List<Uri> requests = [];
   @override
-  Future<ResponseBody> fetch(RequestOptions o, Stream<Uint8List>? s, Future<void>? c) async {
+  Future<ResponseBody> fetch(
+      RequestOptions o, Stream<Uint8List>? s, Future<void>? c) async {
     requests.add(o.uri);
     return handler(o);
   }
@@ -93,8 +109,10 @@ class _Adapter implements HttpClientAdapter {
   void close({bool force = false}) {}
 }
 
-ResponseBody _json(Object o) => ResponseBody.fromString(jsonEncode(o), 200,
-    headers: {Headers.contentTypeHeader: ['application/json']});
+ResponseBody _json(Object o) =>
+    ResponseBody.fromString(jsonEncode(o), 200, headers: {
+      Headers.contentTypeHeader: ['application/json']
+    });
 
 /// Fake layer service with [total] features, [pageCap] per page and a flag policy.
 Dio _service({
@@ -106,27 +124,44 @@ Dio _service({
 }) {
   final adapter = _Adapter((o) {
     final q = o.uri.queryParameters;
-    if (q['returnCountOnly'] == 'true') return _json({'count': serviceCount >= 0 ? serviceCount : total});
+    if (q['returnCountOnly'] == 'true') {
+      return _json({'count': serviceCount >= 0 ? serviceCount : total});
+    }
     if (q['f'] == 'json') return _json({'maxRecordCount': pageCap});
     final offset = int.parse(q['resultOffset']!);
-    if (failOnSecondPage && offset > 0) return ResponseBody.fromString('boom', 500);
+    if (failOnSecondPage && offset > 0) {
+      return ResponseBody.fromString('boom', 500);
+    }
     final end = (offset + pageCap).clamp(0, total);
     return _json({
       'type': 'FeatureCollection',
-      'features': [for (var i = offset; i < end; i++) geoFeature('g$i', goodCoords(i), objectId: i)],
+      'features': [
+        for (var i = offset; i < end; i++)
+          geoFeature('g$i', goodCoords(i), objectId: i)
+      ],
       if (end < total || flagLastPage) 'exceededTransferLimit': true,
     });
   });
-  return Dio(BaseOptions(responseType: ResponseType.plain))..httpClientAdapter = adapter;
+  return Dio(BaseOptions(responseType: ResponseType.plain))
+    ..httpClientAdapter = adapter;
 }
 
 void main() {
   group('shared vertices', () {
     test('exact shared endpoints and unshared endpoints', () {
       final r = shared([
-        seg('a', [[0, 0], [1, 0]]),
-        seg('b', [[1, 0], [2, 0]]),
-        seg('c', [[5, 5], [6, 5]]),
+        seg('a', [
+          [0, 0],
+          [1, 0]
+        ]),
+        seg('b', [
+          [1, 0],
+          [2, 0]
+        ]),
+        seg('c', [
+          [5, 5],
+          [6, 5]
+        ]),
       ]);
       expect(r.features, 3);
       expect(r.totalVertices, 6);
@@ -140,17 +175,33 @@ void main() {
 
     test('three-way endpoint group', () {
       final r = shared([
-        seg('a', [[0, 0], [1, 0]]),
-        seg('b', [[1, 0], [2, 0]]),
-        seg('c', [[1, 0], [1, 1]]),
+        seg('a', [
+          [0, 0],
+          [1, 0]
+        ]),
+        seg('b', [
+          [1, 0],
+          [2, 0]
+        ]),
+        seg('c', [
+          [1, 0],
+          [1, 1]
+        ]),
       ]);
       expect(r.endpointGroupsWithThreeOrMoreEndpoints, 1);
     });
 
     test('endpoint matching another line\'s internal vertex', () {
       final r = shared([
-        seg('a', [[0, 0], [1, 0], [2, 0]]),
-        seg('b', [[1, 0], [1, 1]]),
+        seg('a', [
+          [0, 0],
+          [1, 0],
+          [2, 0]
+        ]),
+        seg('b', [
+          [1, 0],
+          [1, 1]
+        ]),
       ]);
       expect(r.endpointsOnOtherFeatureInternalVertex, 1);
       expect(r.endpointInternalVertexGroups, 1);
@@ -160,8 +211,16 @@ void main() {
 
     test('internal vertices shared by different features', () {
       final r = shared([
-        seg('a', [[0, 0], [1, 0], [2, 0]]),
-        seg('b', [[1, -1], [1, 0], [1, 1]]),
+        seg('a', [
+          [0, 0],
+          [1, 0],
+          [2, 0]
+        ]),
+        seg('b', [
+          [1, -1],
+          [1, 0],
+          [1, 1]
+        ]),
       ]);
       expect(r.internalInternalGroups, 1);
       expect(r.internalVertexAppearancesSharedWithOtherFeature, 2);
@@ -171,14 +230,70 @@ void main() {
 
     test('continuity categories A-D at exact shared endpoints', () {
       final r = shared([
-        seg('a', [[0, 0], [1, 0]], road: 'R1', route: 1),
-        seg('b', [[1, 0], [2, 0]], road: 'R1', route: 1), // A with a
-        seg('c', [[10, 0], [11, 0]], road: 'R1', route: 1),
-        seg('d', [[11, 0], [12, 0]], road: 'R1', route: 2), // B
-        seg('e', [[20, 0], [21, 0]], road: 'R1', route: 1),
-        seg('f', [[21, 0], [22, 0]], road: 'R2', route: 1), // C
-        seg('g', [[30, 0], [31, 0]], road: 'R1', route: 1),
-        seg('h', [[31, 0], [32, 0]], road: 'R2', route: 2), // D
+        seg(
+            'a',
+            [
+              [0, 0],
+              [1, 0]
+            ],
+            road: 'R1',
+            route: 1),
+        seg(
+            'b',
+            [
+              [1, 0],
+              [2, 0]
+            ],
+            road: 'R1',
+            route: 1), // A with a
+        seg(
+            'c',
+            [
+              [10, 0],
+              [11, 0]
+            ],
+            road: 'R1',
+            route: 1),
+        seg(
+            'd',
+            [
+              [11, 0],
+              [12, 0]
+            ],
+            road: 'R1',
+            route: 2), // B
+        seg(
+            'e',
+            [
+              [20, 0],
+              [21, 0]
+            ],
+            road: 'R1',
+            route: 1),
+        seg(
+            'f',
+            [
+              [21, 0],
+              [22, 0]
+            ],
+            road: 'R2',
+            route: 1), // C
+        seg(
+            'g',
+            [
+              [30, 0],
+              [31, 0]
+            ],
+            road: 'R1',
+            route: 1),
+        seg(
+            'h',
+            [
+              [31, 0],
+              [32, 0]
+            ],
+            road: 'R2',
+            route: 2), // D
       ]);
       expect(r.continuityPairs, {
         'A: same ROAD + same ROUTE_NE_ID': 1,
@@ -217,8 +332,11 @@ void main() {
   group('endpoint proximity', () {
     test('counts exact, near and far endpoints per bucket', () {
       // lat offset 0.00001 deg ~= 1.11 m; 0.00005 ~= 5.56 m.
-      SourceCoordinate c(double lng, double lat) => SourceCoordinate(longitude: lng, latitude: lat);
-      MainRoadsNetworkSegment s(String id, SourceCoordinate a, SourceCoordinate b) => MainRoadsNetworkSegment(
+      SourceCoordinate c(double lng, double lat) =>
+          SourceCoordinate(longitude: lng, latitude: lat);
+      MainRoadsNetworkSegment s(
+              String id, SourceCoordinate a, SourceCoordinate b) =>
+          MainRoadsNetworkSegment(
             globalId: id,
             objectId: null,
             road: 'R',
@@ -245,22 +363,33 @@ void main() {
       expect(r.nearestOther['>1 to 2 m'], 2); // c-start and d-start
       expect(r.nearestOther['>5 to 10 m'], 2); // c-end and e-start
       expect(r.nearestOther['>10 m'], 4);
-      expect(r.nearestOther.values.fold<int>(0, (a, b) => a + b), r.endpointCount);
+      expect(
+          r.nearestOther.values.fold<int>(0, (a, b) => a + b), r.endpointCount);
     });
 
     test('same-feature endpoints are not each other\'s neighbours', () {
       final r = analyzeEndpointProximity([
-        seg('a', [[0, 0], [0.0001, 0]]), // ~0.01 m long: both ends only near each other
+        seg('a', [
+          [0, 0],
+          [0.0001, 0]
+        ]), // ~0.01 m long: both ends only near each other
       ]);
       expect(r.nearestOther['>10 m'], 2);
     });
   });
 
   group('crossings', () {
-    test('simple crossing without a shared vertex is reported, not a junction', () {
+    test('simple crossing without a shared vertex is reported, not a junction',
+        () {
       final r = crossings([
-        seg('a', [[0, 0], [2, 2]]),
-        seg('b', [[0, 2], [2, 0]]),
+        seg('a', [
+          [0, 0],
+          [2, 2]
+        ]),
+        seg('b', [
+          [0, 2],
+          [2, 0]
+        ]),
       ]);
       expect(r.crossings, 1);
       expect(r.byKind, {'proper': 1});
@@ -272,16 +401,30 @@ void main() {
 
     test('crossing at an existing shared vertex is not unrepresented', () {
       final r = crossings([
-        seg('a', [[0, 0], [1, 1], [2, 2]]),
-        seg('b', [[0, 2], [1, 1], [2, 0]]),
+        seg('a', [
+          [0, 0],
+          [1, 1],
+          [2, 2]
+        ]),
+        seg('b', [
+          [0, 2],
+          [1, 1],
+          [2, 0]
+        ]),
       ]);
       expect(r.crossings, 0);
     });
 
     test('endpoint sitting on another segment interior is a touch', () {
       final r = crossings([
-        seg('a', [[0, 0], [2, 0]]),
-        seg('b', [[1, 0], [1, 1]]),
+        seg('a', [
+          [0, 0],
+          [2, 0]
+        ]),
+        seg('b', [
+          [1, 0],
+          [1, 1]
+        ]),
       ]);
       expect(r.byKind, {'touch': 1});
       expect(r.crossingsInvolvingEndpoint, 1);
@@ -292,29 +435,57 @@ void main() {
     });
 
     test('parallel and disjoint lines do not cross', () {
-      expect(crossings([
-        seg('a', [[0, 0], [2, 0]]),
-        seg('b', [[0, 1], [2, 1]]),
-        seg('c', [[5, 0], [6, 1]]),
-      ]).crossings, 0);
+      expect(
+          crossings([
+            seg('a', [
+              [0, 0],
+              [2, 0]
+            ]),
+            seg('b', [
+              [0, 1],
+              [2, 1]
+            ]),
+            seg('c', [
+              [5, 0],
+              [6, 1]
+            ]),
+          ]).crossings,
+          0);
     });
 
-    test('collinear overlap is reported unless both ends are shared vertices', () {
+    test('collinear overlap is reported unless both ends are shared vertices',
+        () {
       final partial = crossings([
-        seg('a', [[0, 0], [2, 0]]),
-        seg('b', [[1, 0], [3, 0]]),
+        seg('a', [
+          [0, 0],
+          [2, 0]
+        ]),
+        seg('b', [
+          [1, 0],
+          [3, 0]
+        ]),
       ]);
       expect(partial.byKind, {'overlap': 1});
       final identical = crossings([
-        seg('a', [[0, 0], [2, 0]]),
-        seg('b', [[0, 0], [2, 0]]),
+        seg('a', [
+          [0, 0],
+          [2, 0]
+        ]),
+        seg('b', [
+          [0, 0],
+          [2, 0]
+        ]),
       ]);
       expect(identical.crossings, 0);
     });
 
     test('grid filter prunes distant segments', () {
       final r = crossings([
-        for (var i = 0; i < 30; i++) seg('f$i', [[i * 100.0, 0], [i * 100.0 + 1, 1]]),
+        for (var i = 0; i < 30; i++)
+          seg('f$i', [
+            [i * 100.0, 0],
+            [i * 100.0 + 1, 1]
+          ]),
       ]);
       expect(r.crossings, 0);
       expect(r.candidatePairs, lessThan(r.naiveSegmentPairs));
@@ -331,28 +502,68 @@ void main() {
   group('geometry quality', () {
     test('identical duplicate geometry', () {
       final r = analyzeGeometryQuality([
-        seg('a', [[0, 0], [1, 1]], road: 'R1', route: 1),
-        seg('b', [[0, 0], [1, 1]], road: 'R1', route: 2),
+        seg(
+            'a',
+            [
+              [0, 0],
+              [1, 1]
+            ],
+            road: 'R1',
+            route: 1),
+        seg(
+            'b',
+            [
+              [0, 0],
+              [1, 1]
+            ],
+            road: 'R1',
+            route: 2),
       ]);
       expect(r.exactDuplicatePairs, 1);
       expect(r.reversedDuplicatePairs, 0);
-      expect(r.duplicatePairsByRelation, {'exact: same ROAD, different ROUTE_NE_ID': 1});
+      expect(r.duplicatePairsByRelation,
+          {'exact: same ROAD, different ROUTE_NE_ID': 1});
     });
 
     test('reversed duplicate geometry', () {
       final r = analyzeGeometryQuality([
-        seg('a', [[0, 0], [1, 1], [2, 0]], road: 'R1', route: 1),
-        seg('b', [[2, 0], [1, 1], [0, 0]], road: 'R2', route: 1),
+        seg(
+            'a',
+            [
+              [0, 0],
+              [1, 1],
+              [2, 0]
+            ],
+            road: 'R1',
+            route: 1),
+        seg(
+            'b',
+            [
+              [2, 0],
+              [1, 1],
+              [0, 0]
+            ],
+            road: 'R2',
+            route: 1),
       ]);
       expect(r.reversedDuplicatePairs, 1);
       expect(r.exactDuplicatePairs, 0);
-      expect(r.duplicatePairsByRelation, {'reversed: different ROAD, same ROUTE_NE_ID': 1});
+      expect(r.duplicatePairsByRelation,
+          {'reversed: different ROAD, same ROUTE_NE_ID': 1});
     });
 
     test('zero-length consecutive vertices in an otherwise valid line', () {
       final r = analyzeGeometryQuality([
-        seg('a', [[0, 0], [1, 0], [1, 0], [2, 0]]),
-        seg('ok', [[5, 0], [6, 0]]),
+        seg('a', [
+          [0, 0],
+          [1, 0],
+          [1, 0],
+          [2, 0]
+        ]),
+        seg('ok', [
+          [5, 0],
+          [6, 0]
+        ]),
       ]);
       expect(r.zeroLengthPairs, 1);
       expect(r.featuresWithZeroLengthPairs, 1);
@@ -393,8 +604,15 @@ void main() {
     test('every part is indexed and has its own endpoints', () {
       final r = shared([
         multiSeg('m', [
-          [[0, 0], [1, 0]],
-          [[5, 0], [6, 0], [7, 0]],
+          [
+            [0, 0],
+            [1, 0]
+          ],
+          [
+            [5, 0],
+            [6, 0],
+            [7, 0]
+          ],
         ]),
       ]);
       expect(r.features, 1);
@@ -405,11 +623,18 @@ void main() {
       expect(r.internalVertexAppearances, 1);
     });
 
-    test('parts of one feature are not other features, even where they touch', () {
+    test('parts of one feature are not other features, even where they touch',
+        () {
       final r = shared([
         multiSeg('m', [
-          [[0, 0], [1, 0]],
-          [[1, 0], [2, 0]], // starts where the first part ends
+          [
+            [0, 0],
+            [1, 0]
+          ],
+          [
+            [1, 0],
+            [2, 0]
+          ], // starts where the first part ends
         ]),
       ]);
       expect(r.endpointsCoincidingWithOtherFeatureEndpoint, 0);
@@ -420,10 +645,19 @@ void main() {
     test('a part endpoint meeting another feature is exact connectivity', () {
       final r = shared([
         multiSeg('m', [
-          [[0, 0], [1, 0]],
-          [[5, 0], [6, 0]],
+          [
+            [0, 0],
+            [1, 0]
+          ],
+          [
+            [5, 0],
+            [6, 0]
+          ],
         ]),
-        seg('n', [[6, 0], [6, 1]]),
+        seg('n', [
+          [6, 0],
+          [6, 1]
+        ]),
       ]);
       expect(r.endpointsCoincidingWithOtherFeatureEndpoint, 2);
       expect(r.sharedGroupDetails.single['globalIds'], ['m', 'n']);
@@ -432,75 +666,143 @@ void main() {
     test('closed-loop counts are per part', () {
       final r = shared([
         multiSeg('m', [
-          [[0, 0], [1, 0], [0, 0]],
-          [[5, 0], [6, 0], [5, 0]],
+          [
+            [0, 0],
+            [1, 0],
+            [0, 0]
+          ],
+          [
+            [5, 0],
+            [6, 0],
+            [5, 0]
+          ],
         ]),
-        seg('n', [[9, 0], [9, 1]]),
+        seg('n', [
+          [9, 0],
+          [9, 1]
+        ]),
       ]);
       expect(r.closedLoopParts, 2);
       expect(r.closedLoopFeatures, 1);
     });
 
-    test('no edge is implied between parts: endpoints of one feature are not neighbours', () {
+    test(
+        'no edge is implied between parts: endpoints of one feature are not neighbours',
+        () {
       final r = analyzeEndpointProximity([
         multiSeg('m', [
-          [[0, 0], [1, 0]],
-          [[1, 0], [2, 0]],
+          [
+            [0, 0],
+            [1, 0]
+          ],
+          [
+            [1, 0],
+            [2, 0]
+          ],
         ]),
       ]);
       expect(r.endpointCount, 4);
       expect(r.nearestOther['>10 m'], 4);
     });
 
-    test('crossing reports the part that crosses and ignores same-feature parts', () {
+    test(
+        'crossing reports the part that crosses and ignores same-feature parts',
+        () {
       final r = crossings([
         multiSeg('m', [
-          [[0, 5], [2, 5]],
-          [[0, 0], [2, 2]],
-          [[0, 2], [2, 0]], // crosses the previous part of the SAME feature
+          [
+            [0, 5],
+            [2, 5]
+          ],
+          [
+            [0, 0],
+            [2, 2]
+          ],
+          [
+            [0, 2],
+            [2, 0]
+          ], // crosses the previous part of the SAME feature
         ]),
-        seg('n', [[1.5, -1], [1.5, 3]]),
+        seg('n', [
+          [1.5, -1],
+          [1.5, 3]
+        ]),
       ]);
       expect(r.indexedSegments, 4);
       // n crosses parts 1 and 2 of m; m's parts crossing each other at (1,1) are not reported.
       expect(r.crossings, 2);
       expect(r.details.map((d) => d['partIndexA']).toSet(), {1, 2});
-      expect(r.details.every((d) => d['globalIdA'] == 'm' && d['globalIdB'] == 'n'), isTrue);
+      expect(
+          r.details
+              .every((d) => d['globalIdA'] == 'm' && d['globalIdB'] == 'n'),
+          isTrue);
     });
 
     test('nearest-vertex distances use only the intersecting parts', () {
       final r = crossings([
         multiSeg('m', [
-          [[0, 0], [2, 2]],
-          [[1.002, 1], [1.003, 1]],
+          [
+            [0, 0],
+            [2, 2]
+          ],
+          [
+            [1.002, 1],
+            [1.003, 1]
+          ],
         ]),
-        seg('n', [[1, 0], [1, 2]]),
+        seg('n', [
+          [1, 0],
+          [1, 2]
+        ]),
       ]);
 
       expect(r.crossings, 1);
       expect(r.details.single['nearestOwnVertexMetresA'], greaterThan(100));
     });
 
-    test('represented crossings require vertices on the intersecting parts', () {
+    test('represented crossings require vertices on the intersecting parts',
+        () {
       final r = crossings([
         multiSeg('m', [
-          [[0, 0], [2, 2]],
-          [[0, 2], [1, 1], [2, 0]],
+          [
+            [0, 0],
+            [2, 2]
+          ],
+          [
+            [0, 2],
+            [1, 1],
+            [2, 0]
+          ],
         ]),
-        seg('n', [[1, 0], [1, 1], [1, 2]]),
+        seg('n', [
+          [1, 0],
+          [1, 1],
+          [1, 2]
+        ]),
       ]);
 
       expect(r.crossings, 1);
       expect(r.details.single['partIndexA'], 0);
     });
 
-    test('no segment is created between the end of one part and the start of the next', () {
+    test(
+        'no segment is created between the end of one part and the start of the next',
+        () {
       final r = crossings([
         multiSeg('m', [
-          [[0, 0], [1, 0]],
-          [[3, 0], [4, 0]],
+          [
+            [0, 0],
+            [1, 0]
+          ],
+          [
+            [3, 0],
+            [4, 0]
+          ],
         ]),
-        seg('n', [[2, -1], [2, 1]]), // would cross a bridging 1,0 -> 3,0 edge
+        seg('n', [
+          [2, -1],
+          [2, 1]
+        ]), // would cross a bridging 1,0 -> 3,0 edge
       ]);
       expect(r.indexedSegments, 3);
       expect(r.crossings, 0);
@@ -509,13 +811,29 @@ void main() {
     test('geometry quality processes every part and keeps GlobalID', () {
       final r = analyzeGeometryQuality([
         multiSeg('m', [
-          [[0, 0], [1, 0], [1, 0]],
-          [[5, 0], [6, 0]],
+          [
+            [0, 0],
+            [1, 0],
+            [1, 0]
+          ],
+          [
+            [5, 0],
+            [6, 0]
+          ],
         ]),
-        seg('dup', [[6, 0], [5, 0]]),
+        seg('dup', [
+          [6, 0],
+          [5, 0]
+        ]),
         multiSeg('deg', [
-          [[9, 9], [9, 9]],
-          [[8, 8], [8, 8]],
+          [
+            [9, 9],
+            [9, 9]
+          ],
+          [
+            [8, 8],
+            [8, 8]
+          ],
         ]),
       ]);
       expect(r.zeroLengthPairs, 3);
@@ -529,7 +847,9 @@ void main() {
     });
 
     test('end-to-end summary over MultiLineString features', () {
-      Map<String, dynamic> multiFeature(String id, List<List<List<double>>> lines) => {
+      Map<String, dynamic> multiFeature(
+              String id, List<List<List<double>>> lines) =>
+          {
             ...geoFeature(id, null),
             'geometry': {'type': 'MultiLineString', 'coordinates': lines},
           };
@@ -538,10 +858,22 @@ void main() {
           'type': 'FeatureCollection',
           'features': [
             multiFeature('m', [
-              [[115.0, -32.0], [115.001, -32.0]],
-              [[115.01, -32.0], [115.011, -32.0]],
+              [
+                [115.0, -32.0],
+                [115.001, -32.0]
+              ],
+              [
+                [115.01, -32.0],
+                [115.011, -32.0]
+              ],
             ]),
-            geoFeature('n', [[115.001, -32.0], [115.001, -31.999]], objectId: 2),
+            geoFeature(
+                'n',
+                [
+                  [115.001, -32.0],
+                  [115.001, -31.999]
+                ],
+                objectId: 2),
           ],
         },
         complete: true,
@@ -562,8 +894,10 @@ void main() {
   });
 
   group('retrieval and parsing', () {
-    test('complete pagination yields COMPLETE with every page merged', () async {
-      final f = await fetchLayerGeoJson(_service(total: 5), delay: Duration.zero);
+    test('complete pagination yields COMPLETE with every page merged',
+        () async {
+      final f =
+          await fetchLayerGeoJson(_service(total: 5), delay: Duration.zero);
       expect(f.complete, isTrue);
       expect(f.retrieved, 5);
       expect(f.pages, 3);
@@ -575,7 +909,8 @@ void main() {
     });
 
     test('maxPages reached is INCOMPLETE and produces no analysis', () async {
-      final f = await fetchLayerGeoJson(_service(total: 10), maxPages: 2, delay: Duration.zero);
+      final f = await fetchLayerGeoJson(_service(total: 10),
+          maxPages: 2, delay: Duration.zero);
       expect(f.complete, isFalse);
       final s = buildTopologySummary(f, generatedAt: 'now');
       expect(s['status'], 'INCOMPLETE');
@@ -584,20 +919,27 @@ void main() {
     });
 
     test('failed page is INCOMPLETE', () async {
-      final f = await fetchLayerGeoJson(_service(total: 6, failOnSecondPage: true), delay: Duration.zero);
+      final f = await fetchLayerGeoJson(
+          _service(total: 6, failOnSecondPage: true),
+          delay: Duration.zero);
       expect(f.complete, isFalse);
       expect(f.incompleteReasons, isNotEmpty);
-      expect(buildTopologySummary(f, generatedAt: 'now')['status'], 'INCOMPLETE');
+      expect(
+          buildTopologySummary(f, generatedAt: 'now')['status'], 'INCOMPLETE');
     });
 
     test('count mismatch with the service total is INCOMPLETE', () async {
-      final f = await fetchLayerGeoJson(_service(total: 4, serviceCount: 9), delay: Duration.zero);
+      final f = await fetchLayerGeoJson(_service(total: 4, serviceCount: 9),
+          delay: Duration.zero);
       expect(f.complete, isFalse);
       expect(f.incompleteReasons.join(), contains('service reports 9'));
     });
 
-    test('service still flagging exceededTransferLimit is INCOMPLETE when count matches', () async {
-      final f = await fetchLayerGeoJson(_service(total: 4, flagLastPage: true), delay: Duration.zero);
+    test(
+        'service still flagging exceededTransferLimit is INCOMPLETE when count matches',
+        () async {
+      final f = await fetchLayerGeoJson(_service(total: 4, flagLastPage: true),
+          delay: Duration.zero);
       expect(f.complete, isFalse);
       expect(f.incompleteReasons.join(), contains('exceededTransferLimit'));
     });
@@ -608,7 +950,9 @@ void main() {
           'type': 'FeatureCollection',
           'features': [
             geoFeature('g1', goodCoords(0)),
-            geoFeature('g2', [[115.0, -32.0]]), // one vertex only
+            geoFeature('g2', [
+              [115.0, -32.0]
+            ]), // one vertex only
           ],
         },
         complete: true,
@@ -618,7 +962,8 @@ void main() {
       );
       final s = buildTopologySummary(outcome, generatedAt: 'now');
       expect(s['status'], 'INCOMPLETE');
-      expect((s['incompleteReasons'] as List).join(), contains('parser rejected'));
+      expect(
+          (s['incompleteReasons'] as List).join(), contains('parser rejected'));
       expect(s.containsKey('analysis'), isFalse);
     });
 
@@ -626,18 +971,28 @@ void main() {
       final outcome = GeoJsonFetchOutcome(
         collection: {
           'type': 'FeatureCollection',
-          'features': [geoFeature('dup', goodCoords(0)), geoFeature('dup', goodCoords(1))],
+          'features': [
+            geoFeature('dup', goodCoords(0)),
+            geoFeature('dup', goodCoords(1))
+          ],
         },
         complete: true,
         pages: 2,
         expectedCount: 2,
         incompleteReasons: const [],
       );
-      expect(buildTopologySummary(outcome, generatedAt: 'now')['status'], 'INCOMPLETE');
+      expect(buildTopologySummary(outcome, generatedAt: 'now')['status'],
+          'INCOMPLETE');
     });
 
     test('analysis rejects degenerate input instead of ignoring it', () {
-      expect(() => CoordinateIndex.build([seg('x', [[0, 0]])]), throwsArgumentError);
+      expect(
+          () => CoordinateIndex.build([
+                seg('x', [
+                  [0, 0]
+                ])
+              ]),
+          throwsArgumentError);
     });
   });
 }

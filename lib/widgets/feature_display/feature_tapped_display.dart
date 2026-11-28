@@ -22,7 +22,10 @@ class FeatureTappedDisplay extends ConsumerWidget {
           Text(
             'Tap on a feature to view details',
             style: Theme.of(context).textTheme.titleMedium?.copyWith(
-                  color: Theme.of(context).colorScheme.onSurface.withValues(alpha: 0.7),
+                  color: Theme.of(context)
+                      .colorScheme
+                      .onSurface
+                      .withValues(alpha: 0.7),
                 ),
           ),
         ],
@@ -31,49 +34,60 @@ class FeatureTappedDisplay extends ConsumerWidget {
   }
 
   // Build the appropriate feature details widget based on feature type
-  Widget _buildFeatureDetails(BuildContext context, WidgetRef ref, TappedFeature feature, String featureType, String title) {
+  Widget _buildFeatureDetails(BuildContext context, WidgetRef ref,
+      TappedFeature feature, String featureType, String title) {
     debugPrint('DEBUG: Building feature details for type: $featureType');
 
     switch (featureType) {
       case 'traffic_service':
         debugPrint('DEBUG: Building traffic service display');
-        return FeatureDisplayBuilders.buildTrafficServiceDisplay(context, feature, title);
+        return FeatureDisplayBuilders.buildTrafficServiceDisplay(
+            context, feature, title);
       case 'traffic_incident':
         debugPrint('DEBUG: Building traffic incident display');
-        return FeatureDisplayBuilders.buildTrafficIncidentDisplay(context, feature, title);
+        return FeatureDisplayBuilders.buildTrafficIncidentDisplay(
+            context, feature, title);
       case 'travel_impact':
         debugPrint('DEBUG: Building travel impact display');
-        return FeatureDisplayBuilders.buildTravelImpactDisplay(context, feature, title);
+        return FeatureDisplayBuilders.buildTravelImpactDisplay(
+            context, feature, title);
       case 'intersection':
         debugPrint('DEBUG: Building intersection display');
-        return FeatureDisplayBuilders.buildIntersectionDisplay(context, feature, title);
+        return FeatureDisplayBuilders.buildIntersectionDisplay(
+            context, feature, title);
       /* case 'drive_under_structure':
         debugPrint('DEBUG: Building drive under structure display');
         return FeatureDisplayBuilders.buildDriveUnderStructureDisplay(context, feature, title); */
       case 'bridge':
         debugPrint('DEBUG: Building bridge display');
-        return FeatureDisplayBuilders.buildBridgeDisplay(context, feature, title);
+        return FeatureDisplayBuilders.buildBridgeDisplay(
+            context, feature, title);
       case 'road_with_conditions':
         debugPrint('DEBUG: Building road with conditions display');
-        return FeatureDisplayBuilders.buildRoadWithConditionsDisplay(context, feature, title);
+        return FeatureDisplayBuilders.buildRoadWithConditionsDisplay(
+            context, feature, title);
       /*  case 'road_without_conditions':
         debugPrint('DEBUG: Building road without conditions display');
         return FeatureDisplayBuilders.buildRoadWithoutConditionsDisplay(context, feature, title); */
       case 'rest_area':
         debugPrint('DEBUG: Building rest area display');
-        return FeatureDisplayBuilders.buildRestAreaDisplay(context, feature, title);
+        return FeatureDisplayBuilders.buildRestAreaDisplay(
+            context, feature, title);
       case 'road_train_assembly':
         debugPrint('DEBUG: Building road train assembly display');
-        return FeatureDisplayBuilders.buildRoadTrainAssemblyDisplay(context, feature, title);
+        return FeatureDisplayBuilders.buildRoadTrainAssemblyDisplay(
+            context, feature, title);
       /* case 'drive_over_structure':
         debugPrint('DEBUG: Building drive over structure display');
         return FeatureDisplayBuilders.buildDriveOverStructureDisplay(context, feature, title); */
       case 'search_result':
         debugPrint('DEBUG: Building search result display');
-        return FeatureDisplayBuilders.buildSearchResultDisplay(context, feature, title);
+        return FeatureDisplayBuilders.buildSearchResultDisplay(
+            context, feature, title);
       default:
         debugPrint('DEBUG: Building generic properties display');
-        return FeatureDisplayBuilders.buildGenericPropertiesDisplay(context, feature, title);
+        return FeatureDisplayBuilders.buildGenericPropertiesDisplay(
+            context, feature, title);
     }
   }
 
@@ -92,7 +106,8 @@ class FeatureTappedDisplay extends ConsumerWidget {
     }
 
     // Get feature type and determine title
-    String featureType = FeatureTypeDetector.determineFeatureType(tappedFeature);
+    String featureType =
+        FeatureTypeDetector.determineFeatureType(tappedFeature);
     debugPrint('Feature type determined: $featureType');
 
     String title = '';

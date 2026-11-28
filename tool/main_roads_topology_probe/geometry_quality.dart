@@ -66,7 +66,8 @@ class GeometryQuality {
       };
 }
 
-String _seqKey(Iterable<SourceCoordinate> cs) => cs.map((c) => '${c.longitude},${c.latitude}').join(';');
+String _seqKey(Iterable<SourceCoordinate> cs) =>
+    cs.map((c) => '${c.longitude},${c.latitude}').join(';');
 
 /// Detects identical / reversed duplicate coordinate sequences, zero-length
 /// consecutive vertex pairs and tiny segments. Pure; does not alter geometry.
@@ -93,18 +94,26 @@ GeometryQuality analyzeGeometryQuality(
     var allIdentical = true;
     for (var p = 0; p < s.parts.length; p++) {
       final g = s.parts[p];
-      if (g.length < 2) throw ArgumentError('feature ${s.globalId} part $p has fewer than 2 vertices');
+      if (g.length < 2) {
+        throw ArgumentError(
+            'feature ${s.globalId} part $p has fewer than 2 vertices');
+      }
 
       final fwd = _seqKey(g);
       final rev = _seqKey(g.reversed);
       final forwardIsCanonical = fwd.compareTo(rev) <= 0;
-      (groups[forwardIsCanonical ? fwd : rev] ??= []).add((f, forwardIsCanonical || fwd == rev));
+      (groups[forwardIsCanonical ? fwd : rev] ??= [])
+          .add((f, forwardIsCanonical || fwd == rev));
 
       for (var i = 0; i + 1 < g.length; i++) {
         final a = g[i], b = g[i + 1];
-        final identical = a.latitude == b.latitude && a.longitude == b.longitude;
-        final len = identical ? 0.0 : haversineMetres(a.latitude, a.longitude, b.latitude, b.longitude);
-        lengthBuckets.update(bucketForDistance(len, exact: identical).label, (v) => v + 1);
+        final identical =
+            a.latitude == b.latitude && a.longitude == b.longitude;
+        final len = identical
+            ? 0.0
+            : haversineMetres(a.latitude, a.longitude, b.latitude, b.longitude);
+        lengthBuckets.update(
+            bucketForDistance(len, exact: identical).label, (v) => v + 1);
         if (identical) {
           zero++;
           if (zeroDetails.length < detailLimit) {
@@ -119,11 +128,17 @@ GeometryQuality analyzeGeometryQuality(
         } else if (len <= tinySegmentMetres) {
           tinyHere++;
           if (tinyDetails.length < detailLimit) {
-            tinyDetails.add({'globalId': s.globalId, 'partIndex': p, 'segmentIndex': i, 'lengthMetres': len});
+            tinyDetails.add({
+              'globalId': s.globalId,
+              'partIndex': p,
+              'segmentIndex': i,
+              'lengthMetres': len
+            });
           }
         }
       }
-      if (!g.every((c) => c.latitude == g.first.latitude && c.longitude == g.first.longitude)) {
+      if (!g.every((c) =>
+          c.latitude == g.first.latitude && c.longitude == g.first.longitude)) {
         allIdentical = false;
       }
     }

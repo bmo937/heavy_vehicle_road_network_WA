@@ -12,21 +12,26 @@ import 'package:roads_map/utils/layer_naming_utilities.dart';
 import 'package:roads_map/utils/marker_utilities.riverpod.dart';
 
 class PointsOfInterestMenu extends ConsumerWidget {
-  const PointsOfInterestMenu({super.key, required this.menuAssets, this.showOnlyDownloaded = false});
+  const PointsOfInterestMenu(
+      {super.key, required this.menuAssets, this.showOnlyDownloaded = false});
 
   final MenuAssets menuAssets;
   final bool showOnlyDownloaded;
   @override
   Widget build(BuildContext context, WidgetRef ref) {
     // Filter for Points of Interest layers
-    final poiLayers = menuAssets.layers.where((layer) => layer.listMenu == ListMenu.pointsOfInterest).toList();
+    final poiLayers = menuAssets.layers
+        .where((layer) => layer.listMenu == ListMenu.pointsOfInterest)
+        .toList();
 
     return LayoutBuilder(builder: (context, constraints) {
       if (constraints.maxHeight.isFinite) {
         return Column(
           children: [
             Expanded(
-              child: poiLayers.isEmpty ? const Center(child: Text('No points of interest available')) : _buildPoiList(context, ref, poiLayers),
+              child: poiLayers.isEmpty
+                  ? const Center(child: Text('No points of interest available'))
+                  : _buildPoiList(context, ref, poiLayers),
             ),
           ],
         );
@@ -49,14 +54,17 @@ class PointsOfInterestMenu extends ConsumerWidget {
   }
 
   // Build the list of POI layers
-  Widget _buildPoiList(BuildContext context, WidgetRef ref, List<Layer> layers) {
+  Widget _buildPoiList(
+      BuildContext context, WidgetRef ref, List<Layer> layers) {
     return CustomScrollView(
       slivers: [
         for (final layer in layers) ...[
           SliverToBoxAdapter(
             child: Padding(
-              padding: const EdgeInsets.symmetric(horizontal: 16.0, vertical: 4.0),
-              child: Text(layer.groupLabel ?? layer.name, style: Theme.of(context).textTheme.titleSmall),
+              padding:
+                  const EdgeInsets.symmetric(horizontal: 16.0, vertical: 4.0),
+              child: Text(layer.groupLabel ?? layer.name,
+                  style: Theme.of(context).textTheme.titleSmall),
             ),
           ),
           SliverList(
@@ -65,7 +73,8 @@ class PointsOfInterestMenu extends ConsumerWidget {
                 if (layer.groupMembers == null || layer.groupMembers!.isEmpty) {
                   return null;
                 }
-                return _buildPoiSwitch(context, ref, layer.groupMembers![index]);
+                return _buildPoiSwitch(
+                    context, ref, layer.groupMembers![index]);
               },
               childCount: layer.groupMembers?.length ?? 0,
             ),
@@ -82,15 +91,19 @@ class PointsOfInterestMenu extends ConsumerWidget {
       children: [
         Padding(
           padding: const EdgeInsets.symmetric(horizontal: 16.0, vertical: 8.0),
-          child: Text(layer.groupLabel ?? layer.name, style: Theme.of(context).textTheme.titleMedium),
+          child: Text(layer.groupLabel ?? layer.name,
+              style: Theme.of(context).textTheme.titleMedium),
         ),
-        if (layer.groupMembers != null) ...layer.groupMembers!.map((member) => _buildPoiSwitch(context, ref, member)),
+        if (layer.groupMembers != null)
+          ...layer.groupMembers!
+              .map((member) => _buildPoiSwitch(context, ref, member)),
       ],
     );
   }
 
   // Build switch list tile for POI items
-  Widget _buildPoiSwitch(BuildContext context, WidgetRef ref, GroupMember member) {
+  Widget _buildPoiSwitch(
+      BuildContext context, WidgetRef ref, GroupMember member) {
     // Use key-specific watch to ensure reactivity
     final selections = ref.watch(pointsOfInterestSelectionNotifierProvider);
     final isSelected = selections[member.name] ?? false;
@@ -147,7 +160,8 @@ class PointsOfInterestMenu extends ConsumerWidget {
                 else {
                   imageBytes = MarkerUtilities.getImageById(imageKey);
                   if (imageBytes != null) {
-                    debugPrint('Found image via MarkerUtilities.getImageById()');
+                    debugPrint(
+                        'Found image via MarkerUtilities.getImageById()');
                   } else {
                     debugPrint('Image not found with key: $imageKey');
                   }
@@ -162,7 +176,8 @@ class PointsOfInterestMenu extends ConsumerWidget {
                   );
                 } else {
                   // Log which fallback icon is being used
-                  debugPrint('Using fallback icon for: ${member.name} (key: $imageKey)');
+                  debugPrint(
+                      'Using fallback icon for: ${member.name} (key: $imageKey)');
                   return Icon(
                     Icons.broken_image,
                     size: 36,
@@ -192,14 +207,21 @@ class PointsOfInterestMenu extends ConsumerWidget {
     );
   } // Toggle point of interest and save to Hive
 
-  Future<void> _togglePointOfInterest(WidgetRef ref, GroupMember member, bool value) async {
+  Future<void> _togglePointOfInterest(
+      WidgetRef ref, GroupMember member, bool value) async {
     // Open both Hive boxes for maximum compatibility
     final pointsOfInterestBox = await Hive.openBox(pointsOfInterestBoxName);
-    final selectedPoiLayerBox = Hive.isBoxOpen(HiveBoxes.selectedPoiLayer) ? Hive.box(HiveBoxes.selectedPoiLayer) : await Hive.openBox(HiveBoxes.selectedPoiLayer);
+    final selectedPoiLayerBox = Hive.isBoxOpen(HiveBoxes.selectedPoiLayer)
+        ? Hive.box(HiveBoxes.selectedPoiLayer)
+        : await Hive.openBox(HiveBoxes.selectedPoiLayer);
 
     // Update both provider states for consistent layer selection
-    await ref.read(pointsOfInterestSelectionNotifierProvider.notifier).toggleLayer(member.name, value);
-    await ref.read(poiLayerSelectionProvider.notifier).toggleLayer(member.name, value);
+    await ref
+        .read(pointsOfInterestSelectionNotifierProvider.notifier)
+        .toggleLayer(member.name, value);
+    await ref
+        .read(poiLayerSelectionProvider.notifier)
+        .toggleLayer(member.name, value);
 
     // Save to both Hive boxes to ensure consistency
     await pointsOfInterestBox.put('${member.name}_$visibilityKey', value);
@@ -217,13 +239,16 @@ class PointsOfInterestMenu extends ConsumerWidget {
     final anyLayerVisible = allLayers.values.any((isVisible) => isVisible);
 
     if (ref.read(pointsOfInterestMasterToggleProvider) != anyLayerVisible) {
-      ref.read(pointsOfInterestMasterToggleProvider.notifier).toggle(anyLayerVisible);
+      ref
+          .read(pointsOfInterestMasterToggleProvider.notifier)
+          .toggle(anyLayerVisible);
     }
 
     // Apply changes to map if possible
     final mapPageNotifier = ref.read(mapPageNotifierProvider.notifier);
     if (mapPageNotifier.mapController != null) {
-      final controller = mapPageNotifier.mapController!; // Handle special case for RAV and OSOM Impact layers which need
+      final controller = mapPageNotifier
+          .mapController!; // Handle special case for RAV and OSOM Impact layers which need
       // polyline rendering with markers at the start of each line
       if (member.name == "Rav Impacts" || member.name == "OSOM Impacts") {
         return;
@@ -254,5 +279,4 @@ class PointsOfInterestMenu extends ConsumerWidget {
       debugPrint('Map controller not available yet');
     }
   }
-
 }

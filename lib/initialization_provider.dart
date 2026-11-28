@@ -37,7 +37,8 @@ final initializationProvider = FutureProvider<void>((ref) async {
 
   final menuAssets = await ref.read(menuAssetsNotifierProvider.future);
   if (kDebugMode) {
-    debugPrint('MenuAssets loaded: ${menuAssets.mapName} (v${menuAssets.menuVersion})');
+    debugPrint(
+        'MenuAssets loaded: ${menuAssets.mapName} (v${menuAssets.menuVersion})');
   }
   if (kDebugMode) {
     debugPrint('MenuAssets Notifier initialized successfully');

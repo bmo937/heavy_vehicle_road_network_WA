@@ -4,4 +4,5 @@ import 'package:flutter_riverpod/flutter_riverpod.dart';
 final showFeatureDetailsProvider = StateProvider<bool>((ref) => false);
 
 /// Provider for image feature identification results
-final identifiedImageFeaturesProvider = StateProvider<Map<String, dynamic>?>((ref) => null);
+final identifiedImageFeaturesProvider =
+    StateProvider<Map<String, dynamic>?>((ref) => null);

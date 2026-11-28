@@ -14,7 +14,9 @@ class MapFeatureHandler {
   /// Check if a layer should be skipped for feature tapping
   bool _shouldSkipLayer(String layerId) {
     // Skip without conditions layer
-    return layerId == LayerNamingUtility.WITHOUT_CONDITIONS_LAYER || layerId.toLowerCase().contains('withoutconditions') || layerId.toLowerCase().contains('without_conditions');
+    return layerId == LayerNamingUtility.WITHOUT_CONDITIONS_LAYER ||
+        layerId.toLowerCase().contains('withoutconditions') ||
+        layerId.toLowerCase().contains('without_conditions');
   }
 
   /// Handle feature taps on map
@@ -27,10 +29,12 @@ class MapFeatureHandler {
     MapLibreMapController? mapController,
   ) async {
     if (mapController == null) return;
-    debugPrint('Feature tapped: ID=$id, Coordinates=$coordinates, Layer=$layerId');
+    debugPrint(
+        'Feature tapped: ID=$id, Coordinates=$coordinates, Layer=$layerId');
 
     // Handle the feature tap and check if it was processed
-    final wasProcessed = await handleFeatureTap(null, id, point, coordinates, layerId, ref, mapController);
+    final wasProcessed = await handleFeatureTap(
+        null, id, point, coordinates, layerId, ref, mapController);
 
     // Only open the box if a feature was actually processed
     if (wasProcessed) {
@@ -53,7 +57,8 @@ class MapFeatureHandler {
     WidgetRef ref,
     MapLibreMapController mapController,
   ) async {
-    debugPrint('Map feature tapped at ${coordinates.latitude}, ${coordinates.longitude}');
+    debugPrint(
+        'Map feature tapped at ${coordinates.latitude}, ${coordinates.longitude}');
     debugPrint('Original layer ID: $originalLayerId, Feature ID: $id');
 
     // Check if the originally tapped layer should be skipped
@@ -81,11 +86,13 @@ class MapFeatureHandler {
       debugPrint('Available layers: ${mapLayerIds.join(", ")}');
 
       // Get standardized layer patterns to query using our utility class
-      final layersToQuery = LayerNamingUtility.getAllQueryableLayerIds().cast<String>();
+      final layersToQuery =
+          LayerNamingUtility.getAllQueryableLayerIds().cast<String>();
       debugPrint('Querying standardized layers: ${layersToQuery.join(", ")}');
 
       // Track all found features
-      List<Map<String, dynamic>> featuresWithLayers = []; // First, try to query the originally tapped layer specifically
+      List<Map<String, dynamic>> featuresWithLayers =
+          []; // First, try to query the originally tapped layer specifically
       if (originalLayerId.isNotEmpty && mapLayerIds.contains(originalLayerId)) {
         // Skip without conditions layer
         if (_shouldSkipLayer(originalLayerId)) {
@@ -93,7 +100,8 @@ class MapFeatureHandler {
         } else {
           debugPrint('Querying originally tapped layer: $originalLayerId');
           try {
-            var originalFeatures = await mapController.queryRenderedFeaturesInRect(
+            var originalFeatures =
+                await mapController.queryRenderedFeaturesInRect(
               bbox,
               [originalLayerId],
               null,
@@ -101,20 +109,24 @@ class MapFeatureHandler {
 
             for (var feature in originalFeatures) {
               feature['layerId'] = originalLayerId;
-              debugPrint('Found feature in originally tapped layer $originalLayerId with ID: ${feature['id']}');
+              debugPrint(
+                  'Found feature in originally tapped layer $originalLayerId with ID: ${feature['id']}');
               featuresWithLayers.add(feature);
             }
           } catch (e) {
-            debugPrint('Error querying originally tapped layer $originalLayerId: $e');
+            debugPrint(
+                'Error querying originally tapped layer $originalLayerId: $e');
           }
         }
       }
 
       // If we found features from the originally tapped layer, use those preferentially
       if (featuresWithLayers.isNotEmpty) {
-        debugPrint('Using features from originally tapped layer: $originalLayerId');
+        debugPrint(
+            'Using features from originally tapped layer: $originalLayerId');
       } else {
-        debugPrint('No features found in originally tapped layer, querying all layers...'); // Second, check for any exact layer ID matches from all layers
+        debugPrint(
+            'No features found in originally tapped layer, querying all layers...'); // Second, check for any exact layer ID matches from all layers
         for (var layerId in mapLayerIds) {
           // Skip without conditions layer
           if (_shouldSkipLayer(layerId)) {
@@ -132,7 +144,8 @@ class MapFeatureHandler {
             for (var feature in features) {
               // Add layerId to each feature for identification
               feature['layerId'] = layerId;
-              debugPrint('Found feature in layer $layerId with ID: ${feature['id']}');
+              debugPrint(
+                  'Found feature in layer $layerId with ID: ${feature['id']}');
               featuresWithLayers.add(feature);
             }
           } catch (e) {
@@ -160,7 +173,10 @@ class MapFeatureHandler {
             final regex = RegExp(regexPattern);
 
             // Find matching layer IDs - add explicit cast to String
-            matchingLayers = mapLayerIds.where((id) => regex.hasMatch(id)).cast<String>().toList();
+            matchingLayers = mapLayerIds
+                .where((id) => regex.hasMatch(id))
+                .cast<String>()
+                .toList();
           } else {
             // Direct match
             if (mapLayerIds.contains(patternId)) {
@@ -183,7 +199,8 @@ class MapFeatureHandler {
 
               for (var feature in features) {
                 feature['layerId'] = layerId;
-                debugPrint('Found feature in layer $layerId with ID: ${feature['id']}');
+                debugPrint(
+                    'Found feature in layer $layerId with ID: ${feature['id']}');
                 featuresWithLayers.add(feature);
               }
             } catch (e) {
@@ -238,7 +255,8 @@ class MapFeatureHandler {
       final feature = featuresWithLayers.first;
 
       // Log the selected feature after sorting
-      debugPrint('Selected feature after prioritization: Layer=${feature['layerId']}, ID=${feature['id']}');
+      debugPrint(
+          'Selected feature after prioritization: Layer=${feature['layerId']}, ID=${feature['id']}');
 
       // Print out the full feature for debugging
       debugPrint('Feature data: ${feature.toString()}');
@@ -255,7 +273,8 @@ class MapFeatureHandler {
       }
 
       // Extract properties (with null safety)
-      final properties = feature['properties'] as Map<String, dynamic>? ?? <String, dynamic>{};
+      final properties =
+          feature['properties'] as Map<String, dynamic>? ?? <String, dynamic>{};
 
       // Create TappedFeature object
       final tappedFeature = TappedFeature(
@@ -277,9 +296,11 @@ class MapFeatureHandler {
 
       // Switch to feature details tab
       ref.read(selectedIndexProvider.notifier).state = 3;
-      debugPrint('Set selectedIndex=3 and showFeatureDetails=true'); // Animate camera to feature location
+      debugPrint(
+          'Set selectedIndex=3 and showFeatureDetails=true'); // Animate camera to feature location
       final zoomLevel = mapController.cameraPosition!.zoom;
-      await mapController.animateCamera(CameraUpdate.newCameraPosition(CameraPosition(
+      await mapController
+          .animateCamera(CameraUpdate.newCameraPosition(CameraPosition(
         target: coordinates,
         zoom: zoomLevel,
       )));

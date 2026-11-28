@@ -42,9 +42,11 @@ class MapCameraHandler {
     // Check if style was recently loaded (within 2 seconds) to prevent double-loading
     if (_lastStyleLoadTime != null) {
       final currentTime = DateTime.now();
-      final timeSinceStyleLoad = currentTime.difference(_lastStyleLoadTime!).inMilliseconds;
+      final timeSinceStyleLoad =
+          currentTime.difference(_lastStyleLoadTime!).inMilliseconds;
       if (timeSinceStyleLoad < 2000) {
-        debugPrint('⚠️ Ignoring camera idle - style was loaded ${timeSinceStyleLoad}ms ago, preventing double-load');
+        debugPrint(
+            '⚠️ Ignoring camera idle - style was loaded ${timeSinceStyleLoad}ms ago, preventing double-load');
         return;
       }
     }
@@ -55,11 +57,14 @@ class MapCameraHandler {
     // Check if a layer is currently being loaded - prevent race conditions
     final isLayerLoading = ref.read(onlineLayerLoadingProvider);
     if (isLayerLoading) {
-      debugPrint('⚠️ Layer is currently loading, skipping camera idle update to prevent race condition');
+      debugPrint(
+          '⚠️ Layer is currently loading, skipping camera idle update to prevent race condition');
 
       // Set a timer to retry after the layer loading completes
-      _cameraIdleDebounceTimer =
-          Timer(Duration(milliseconds: MapUtilities.updateDelayMilliseconds * 2), () => onCameraIdle(context, mapController, ref, styleIsLoaded, updateVisibleLayers));
+      _cameraIdleDebounceTimer = Timer(
+          Duration(milliseconds: MapUtilities.updateDelayMilliseconds * 2),
+          () => onCameraIdle(
+              context, mapController, ref, styleIsLoaded, updateVisibleLayers));
       return;
     }
 
@@ -67,12 +72,16 @@ class MapCameraHandler {
     final now = DateTime.now();
     final timeSinceLastUpdate = now.difference(_lastUpdateTime).inMilliseconds;
 
-    if (_isHandlingCameraIdle || timeSinceLastUpdate < MapUtilities.updateDelayMilliseconds) {
-      debugPrint('Debouncing camera idle event (last update ${timeSinceLastUpdate}ms ago)');
+    if (_isHandlingCameraIdle ||
+        timeSinceLastUpdate < MapUtilities.updateDelayMilliseconds) {
+      debugPrint(
+          'Debouncing camera idle event (last update ${timeSinceLastUpdate}ms ago)');
 
       // Set a timer to process after the debounce period
-      _cameraIdleDebounceTimer =
-          Timer(Duration(milliseconds: MapUtilities.updateDelayMilliseconds), () => onCameraIdle(context, mapController, ref, styleIsLoaded, updateVisibleLayers));
+      _cameraIdleDebounceTimer = Timer(
+          Duration(milliseconds: MapUtilities.updateDelayMilliseconds),
+          () => onCameraIdle(
+              context, mapController, ref, styleIsLoaded, updateVisibleLayers));
       return;
     }
 
@@ -83,7 +92,8 @@ class MapCameraHandler {
     try {
       // Get current visible bounds
       final visibleBounds = await mapController.getVisibleRegion();
-      debugPrint('Visible bounds: ${visibleBounds.southwest} to ${visibleBounds.northeast}');
+      debugPrint(
+          'Visible bounds: ${visibleBounds.southwest} to ${visibleBounds.northeast}');
 
       // Get active online layer if any
       final activeLayer = ref.read(activeOnlineLayerProvider);
@@ -93,7 +103,8 @@ class MapCameraHandler {
         // Double-check that loading state hasn't changed while we were getting bounds
         final isStillLoading = ref.read(onlineLayerLoadingProvider);
         if (isStillLoading) {
-          debugPrint('⚠️ Layer loading detected during bounds check, aborting camera idle update');
+          debugPrint(
+              '⚠️ Layer loading detected during bounds check, aborting camera idle update');
           return;
         }
 

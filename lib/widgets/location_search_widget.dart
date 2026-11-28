@@ -19,7 +19,8 @@ class LocationSearchWidget extends ConsumerStatefulWidget {
   });
 
   @override
-  ConsumerState<LocationSearchWidget> createState() => _LocationSearchWidgetState();
+  ConsumerState<LocationSearchWidget> createState() =>
+      _LocationSearchWidgetState();
 }
 
 class _LocationSearchWidgetState extends ConsumerState<LocationSearchWidget> {
@@ -41,7 +42,8 @@ class _LocationSearchWidgetState extends ConsumerState<LocationSearchWidget> {
   @override
   void initState() {
     super.initState();
-    _placesService = ref.read(googlePlacesServiceProvider(AppConfig.instance.googleApiKey));
+    _placesService =
+        ref.read(googlePlacesServiceProvider(AppConfig.instance.googleApiKey));
     _searchService = LocationSearchService(ref, _placesService);
     _searchController.addListener(_onSearchChanged);
 
@@ -128,14 +130,17 @@ class _LocationSearchWidgetState extends ConsumerState<LocationSearchWidget> {
                                 icon: const Icon(Icons.clear),
                                 onPressed: () {
                                   _searchController.clear();
-                                  ref.read(searchResultsProvider.notifier).state = [];
+                                  ref
+                                      .read(searchResultsProvider.notifier)
+                                      .state = [];
                                 },
                               )
                             : null,
                     border: OutlineInputBorder(
                       borderRadius: BorderRadius.circular(12),
                     ),
-                    contentPadding: const EdgeInsets.symmetric(horizontal: 16, vertical: 12),
+                    contentPadding: const EdgeInsets.symmetric(
+                        horizontal: 16, vertical: 12),
                   ),
                 ),
               )
@@ -211,7 +216,8 @@ class _LocationSearchWidgetState extends ConsumerState<LocationSearchWidget> {
                       subtitle: Column(
                         crossAxisAlignment: CrossAxisAlignment.start,
                         children: [
-                          if (result.secondaryText != null) Text(result.secondaryText!),
+                          if (result.secondaryText != null)
+                            Text(result.secondaryText!),
                           if (result.distanceFromPerth != null)
                             Text(
                               '${result.distanceFromPerth!.toStringAsFixed(1)} km from Perth',

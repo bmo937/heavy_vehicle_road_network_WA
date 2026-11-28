@@ -8,8 +8,11 @@ import 'opening_hours_widget.dart';
 /// Helper methods for building UI components in feature displays
 class FeatureDisplayHelpers {
   /// Helper to build a property row
-  static Widget buildProperty(BuildContext context, String name, dynamic value) {
-    if (value == null || value.toString().isEmpty) return const SizedBox.shrink();
+  static Widget buildProperty(
+      BuildContext context, String name, dynamic value) {
+    if (value == null || value.toString().isEmpty) {
+      return const SizedBox.shrink();
+    }
     final colorScheme = Theme.of(context).colorScheme;
     return Padding(
       padding: const EdgeInsets.symmetric(vertical: 4.0),
@@ -39,8 +42,11 @@ class FeatureDisplayHelpers {
     );
   }
 
-  static Widget buildSearchProperty(BuildContext context, dynamic value, {String? propertyType}) {
-    if (value == null || value.toString().isEmpty) return const SizedBox.shrink(); // Special handling for opening hours
+  static Widget buildSearchProperty(BuildContext context, dynamic value,
+      {String? propertyType}) {
+    if (value == null || value.toString().isEmpty) {
+      return const SizedBox.shrink(); // Special handling for opening hours
+    }
     if (propertyType == 'opening_hours') {
       // Debug: Print the type and value
       debugPrint('Opening hours value type: ${value.runtimeType}');
@@ -54,10 +60,12 @@ class FeatureDisplayHelpers {
       } else if (value is Map) {
         debugPrint('Using Map conversion path');
         // Convert Map to Map<String, dynamic>
-        final Map<String, dynamic> convertedMap = Map<String, dynamic>.from(value);
+        final Map<String, dynamic> convertedMap =
+            Map<String, dynamic>.from(value);
         openingHoursWidget = OpeningHoursWidget(openingHours: convertedMap);
       } else if (value is String) {
-        debugPrint('Opening hours data is a String, attempting to parse as JSON');
+        debugPrint(
+            'Opening hours data is a String, attempting to parse as JSON');
         try {
           // Parse the string as JSON
           final dynamic parsed = jsonDecode(value);
@@ -65,8 +73,10 @@ class FeatureDisplayHelpers {
             debugPrint('Successfully parsed opening hours JSON');
             openingHoursWidget = OpeningHoursWidget(openingHours: parsed);
           } else if (parsed is Map) {
-            debugPrint('Successfully parsed opening hours JSON (converting Map)');
-            final Map<String, dynamic> convertedMap = Map<String, dynamic>.from(parsed);
+            debugPrint(
+                'Successfully parsed opening hours JSON (converting Map)');
+            final Map<String, dynamic> convertedMap =
+                Map<String, dynamic>.from(parsed);
             openingHoursWidget = OpeningHoursWidget(openingHours: convertedMap);
           } else {
             debugPrint('Parsed JSON is not a Map: ${parsed.runtimeType}');
@@ -77,10 +87,12 @@ class FeatureDisplayHelpers {
           // Try to manually parse the string format
           try {
             debugPrint('Attempting manual parsing of opening hours string');
-            final Map<String, dynamic> manuallyParsed = _parseOpeningHoursString(value);
+            final Map<String, dynamic> manuallyParsed =
+                _parseOpeningHoursString(value);
             if (manuallyParsed.isNotEmpty) {
               debugPrint('Successfully manually parsed opening hours');
-              openingHoursWidget = OpeningHoursWidget(openingHours: manuallyParsed);
+              openingHoursWidget =
+                  OpeningHoursWidget(openingHours: manuallyParsed);
             } else {
               debugPrint('Manual parsing returned empty result');
               return const SizedBox.shrink();
@@ -91,7 +103,8 @@ class FeatureDisplayHelpers {
           }
         }
       } else {
-        debugPrint('Opening hours data is not a Map or String, type: ${value.runtimeType}');
+        debugPrint(
+            'Opening hours data is not a Map or String, type: ${value.runtimeType}');
         return const SizedBox.shrink();
       }
 
@@ -232,7 +245,9 @@ class FeatureDisplayHelpers {
 
   /// Helper to build a subtitle
   static Widget buildSubTitle(BuildContext context, dynamic value) {
-    if (value == null || value.toString().isEmpty) return const SizedBox.shrink();
+    if (value == null || value.toString().isEmpty) {
+      return const SizedBox.shrink();
+    }
     final colorScheme = Theme.of(context).colorScheme;
     return Padding(
       padding: const EdgeInsets.symmetric(vertical: 8.0),
@@ -247,7 +262,8 @@ class FeatureDisplayHelpers {
   }
 
   /// Helper widget to display facility availability as a chip
-  static Widget buildFacilityChip(BuildContext context, String name, bool available) {
+  static Widget buildFacilityChip(
+      BuildContext context, String name, bool available) {
     final colorScheme = Theme.of(context).colorScheme;
 
     // Use theme-appropriate colors
@@ -291,7 +307,12 @@ class FeatureDisplayHelpers {
   /// Helper method to get appropriate icon name
   static String getIncidentIconName(String closureType, String incidentType) {
     // Convert closure type to snake_case for asset naming
-    final String closureTypeFormatted = closureType.toLowerCase().replaceAll(' ', '_').replaceAll('/', '_').replaceAll('(', '').replaceAll(')', '');
+    final String closureTypeFormatted = closureType
+        .toLowerCase()
+        .replaceAll(' ', '_')
+        .replaceAll('/', '_')
+        .replaceAll('(', '')
+        .replaceAll(')', '');
 
     // If both are provided, combine them
     if (closureType.isNotEmpty && incidentType.isNotEmpty) {
@@ -304,12 +325,17 @@ class FeatureDisplayHelpers {
   }
 
   /// Helper method to build consistent feature headers
-  static Widget buildFeatureHeader(BuildContext context, String title, IconData icon, {Color? backgroundColor}) {
+  static Widget buildFeatureHeader(
+      BuildContext context, String title, IconData icon,
+      {Color? backgroundColor}) {
     final colorScheme = Theme.of(context).colorScheme;
     final textTheme = Theme.of(context).textTheme;
     final bgColor = backgroundColor ?? colorScheme.primaryContainer;
-    final onBgColor =
-        backgroundColor != null ? (backgroundColor == colorScheme.errorContainer ? colorScheme.onErrorContainer : colorScheme.onPrimaryContainer) : colorScheme.onPrimaryContainer;
+    final onBgColor = backgroundColor != null
+        ? (backgroundColor == colorScheme.errorContainer
+            ? colorScheme.onErrorContainer
+            : colorScheme.onPrimaryContainer)
+        : colorScheme.onPrimaryContainer;
 
     return Container(
       padding: const EdgeInsets.all(16),
@@ -352,13 +378,15 @@ class FeatureDisplayHelpers {
       Map<String, dynamic> result = {};
 
       // Extract open_now
-      final openNowMatch = RegExp(r'open_now:\s*(true|false)').firstMatch(cleaned);
+      final openNowMatch =
+          RegExp(r'open_now:\s*(true|false)').firstMatch(cleaned);
       if (openNowMatch != null) {
         result['open_now'] = openNowMatch.group(1) == 'true';
       }
 
       // Extract periods array
-      final periodsMatch = RegExp(r'periods:\s*\[(.*?)\](?=,\s*weekday_text)').firstMatch(cleaned);
+      final periodsMatch = RegExp(r'periods:\s*\[(.*?)\](?=,\s*weekday_text)')
+          .firstMatch(cleaned);
       if (periodsMatch != null) {
         List<Map<String, dynamic>> periods = [];
         final periodsStr = periodsMatch.group(1) ?? '';
@@ -370,15 +398,20 @@ class FeatureDisplayHelpers {
           Map<String, dynamic> period = {};
 
           // Extract close and open
-          final closeMatch = RegExp(r'close:\s*\{([^}]+)\}').firstMatch(periodStr);
-          final openMatch = RegExp(r'open:\s*\{([^}]+)\}').firstMatch(periodStr);
+          final closeMatch =
+              RegExp(r'close:\s*\{([^}]+)\}').firstMatch(periodStr);
+          final openMatch =
+              RegExp(r'open:\s*\{([^}]+)\}').firstMatch(periodStr);
 
           if (closeMatch != null) {
             final closeStr = closeMatch.group(1) ?? '';
             final dayMatch = RegExp(r'day:\s*(\d+)').firstMatch(closeStr);
             final timeMatch = RegExp(r'time:\s*(\d+)').firstMatch(closeStr);
             if (dayMatch != null && timeMatch != null) {
-              period['close'] = {'day': int.parse(dayMatch.group(1)!), 'time': int.parse(timeMatch.group(1)!)};
+              period['close'] = {
+                'day': int.parse(dayMatch.group(1)!),
+                'time': int.parse(timeMatch.group(1)!)
+              };
             }
           }
 
@@ -387,7 +420,10 @@ class FeatureDisplayHelpers {
             final dayMatch = RegExp(r'day:\s*(\d+)').firstMatch(openStr);
             final timeMatch = RegExp(r'time:\s*(\d+)').firstMatch(openStr);
             if (dayMatch != null && timeMatch != null) {
-              period['open'] = {'day': int.parse(dayMatch.group(1)!), 'time': int.parse(timeMatch.group(1)!)};
+              period['open'] = {
+                'day': int.parse(dayMatch.group(1)!),
+                'time': int.parse(timeMatch.group(1)!)
+              };
             }
           }
 
@@ -399,7 +435,8 @@ class FeatureDisplayHelpers {
       }
 
       // Extract weekday_text array
-      final weekdayMatch = RegExp(r'weekday_text:\s*\[(.*?)\]').firstMatch(cleaned);
+      final weekdayMatch =
+          RegExp(r'weekday_text:\s*\[(.*?)\]').firstMatch(cleaned);
       if (weekdayMatch != null) {
         final weekdayStr = weekdayMatch.group(1) ?? '';
         List<String> weekdayText = [];

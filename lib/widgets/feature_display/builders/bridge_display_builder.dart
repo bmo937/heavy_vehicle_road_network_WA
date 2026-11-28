@@ -8,7 +8,8 @@ import 'package:roads_map/widgets/feature_display/feature_display_helpers.dart';
 /// Bridge display builder
 class BridgeDisplayBuilder {
   /// Build bridge display
-  static Widget buildBridgeDisplay(BuildContext context, TappedFeature feature, String title) {
+  static Widget buildBridgeDisplay(
+      BuildContext context, TappedFeature feature, String title) {
     final Map<String, dynamic> properties = feature.properties;
     final TextTheme textTheme = Theme.of(context).textTheme;
     final colorScheme = Theme.of(context).colorScheme;
@@ -22,7 +23,9 @@ class BridgeDisplayBuilder {
           Container(
             padding: const EdgeInsets.all(16),
             child: Column(
-              children: [FeatureDisplayHelpers.buildSubTitle(context, "${properties['CROSSING_NAME']} $title"),
+              children: [
+                FeatureDisplayHelpers.buildSubTitle(
+                    context, "${properties['CROSSING_NAME']} $title"),
                 /*  Text(
                   "${properties['CROSSING_NAME']} $title",
                   style: textTheme.titleMedium?.copyWith(
@@ -47,7 +50,10 @@ class BridgeDisplayBuilder {
 
           // Location Information
           if (properties['ROAD_NAME'] != null || properties['ROAD'] != null) Text('Location Information', style: textTheme.bodyMedium), */
-          if (properties['STR_NO'] != null) FeatureDisplayHelpers.buildProperty(context, 'Structure Id', properties['STR_NO']),/* 
+          if (properties['STR_NO'] != null)
+            FeatureDisplayHelpers.buildProperty(
+                context, 'Structure Id', properties['STR_NO']),
+          /* 
           if (properties['ROAD'] != null) FeatureDisplayHelpers.buildProperty(context, 'Road Id', properties['ROAD']),
           if (properties['ROAD_NAME'] != null) FeatureDisplayHelpers.buildProperty(context, 'Road Name', properties['ROAD_NAME']),
           // if (properties['COMMON_USAGE_NAME'] != null) FeatureDisplayHelpers.buildProperty(context, 'Common Name', properties['COMMON_USAGE_NAME']),
@@ -74,7 +80,8 @@ class BridgeDisplayBuilder {
           if (properties['CONDITION'] != null) customDivider,
 
           // Condition Information
-          if (properties['CONDITION'] != null) Text('Condition', style: textTheme.bodyMedium),
+          if (properties['CONDITION'] != null)
+            Text('Condition', style: textTheme.bodyMedium),
           if (properties['CONDITION'] != null)
             Padding(
               padding: const EdgeInsets.all(8.0),
@@ -89,7 +96,8 @@ class BridgeDisplayBuilder {
                     child: Text(
                       properties['CONDITION'].toString(),
                       textAlign: TextAlign.center,
-                      style: textTheme.bodyMedium?.copyWith(color: colorScheme.onError),
+                      style: textTheme.bodyMedium
+                          ?.copyWith(color: colorScheme.onError),
                     ),
                   ),
                 ),

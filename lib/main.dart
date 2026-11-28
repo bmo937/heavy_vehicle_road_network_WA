@@ -18,7 +18,11 @@ void main() async {
     AppConfig.initialize(dotenv.env);
   } on ConfigurationException catch (e) {
     runApp(MaterialApp(
-      home: Scaffold(body: Center(child: Padding(padding: const EdgeInsets.all(24), child: Text(e.toString())))),
+      home: Scaffold(
+          body: Center(
+              child: Padding(
+                  padding: const EdgeInsets.all(24),
+                  child: Text(e.toString())))),
     ));
     return;
   }
@@ -38,7 +42,6 @@ void main() async {
   ]);
   await Hive.initFlutter();
 
-
   runApp(const ProviderScope(child: MyApp()));
 }
 
@@ -48,10 +51,15 @@ class MyApp extends ConsumerWidget {
   @override
   Widget build(BuildContext context, WidgetRef ref) {
     SystemChrome.setSystemUIOverlayStyle(SystemUiOverlayStyle(
-      systemNavigationBarColor: Theme.of(context).bottomSheetTheme.backgroundColor,
-      systemNavigationBarIconBrightness: MediaQuery.platformBrightnessOf(context),
+      systemNavigationBarColor:
+          Theme.of(context).bottomSheetTheme.backgroundColor,
+      systemNavigationBarIconBrightness:
+          MediaQuery.platformBrightnessOf(context),
       // statusBarColor: Colors.transparent,
-      statusBarIconBrightness: MediaQuery.platformBrightnessOf(context) == Brightness.light ? Brightness.dark : Brightness.light,
+      statusBarIconBrightness:
+          MediaQuery.platformBrightnessOf(context) == Brightness.light
+              ? Brightness.dark
+              : Brightness.light,
     ));
     final initialization = ref.watch(initializationProvider);
     final themeMode = ref.watch(settingsNotifierProvider);

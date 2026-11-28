@@ -19,14 +19,18 @@ Map<String, dynamic> analyzeSegments(
 }) {
   final index = CoordinateIndex.build(segments);
   return {
-    'geometryAndSharing': analyzeSharedVertices(index, detailLimit: detailLimit).toJson(),
+    'geometryAndSharing':
+        analyzeSharedVertices(index, detailLimit: detailLimit).toJson(),
     'endpointProximity': analyzeEndpointProximity(segments).toJson(),
     'endpointSegmentProximity': analyzeEndpointSegmentProximity(
       segments,
       detailLimit: detailLimit,
     ).toJson(),
-    'crossings': analyzeCrossings(index, cellSizeDegrees: cellSizeDegrees, detailLimit: detailLimit).toJson(),
-    'geometryQuality': analyzeGeometryQuality(segments, detailLimit: detailLimit).toJson(),
+    'crossings': analyzeCrossings(index,
+            cellSizeDegrees: cellSizeDegrees, detailLimit: detailLimit)
+        .toJson(),
+    'geometryQuality':
+        analyzeGeometryQuality(segments, detailLimit: detailLimit).toJson(),
   };
 }
 
@@ -43,8 +47,11 @@ Map<String, dynamic> buildTopologySummary(
   final reasons = [...fetch.incompleteReasons];
   List<MainRoadsNetworkSegment>? segments;
   try {
-    segments = const MainRoadsNetworkParser().parseFeatureCollection(fetch.collection);
-    if (segments.isEmpty && reasons.isEmpty) reasons.add('layer returned zero features');
+    segments =
+        const MainRoadsNetworkParser().parseFeatureCollection(fetch.collection);
+    if (segments.isEmpty && reasons.isEmpty) {
+      reasons.add('layer returned zero features');
+    }
   } on MainRoadsParseException catch (e) {
     reasons.add('parser rejected the data: $e');
   }
@@ -58,7 +65,8 @@ Map<String, dynamic> buildTopologySummary(
       'service': investigationBaseUrl,
       'layerId': topologyLayerId,
       'layerName': layerName,
-      'query': 'where=1=1&outFields=*&returnGeometry=true&outSR=4326&f=geojson (paginated, OBJECTID order)',
+      'query':
+          'where=1=1&outFields=*&returnGeometry=true&outSR=4326&f=geojson (paginated, OBJECTID order)',
     },
     'retrieval': {
       'pages': fetch.pages,
@@ -67,9 +75,12 @@ Map<String, dynamic> buildTopologySummary(
     },
     'recordCount': segments?.length,
     'partCount': segments?.fold<int>(0, (n, s) => n + s.parts.length),
-    'scope': 'Physical geometry topology only. MAX_NETWORK, network eligibility, restrictions and '
-        'Tandem Drive Network 1 semantics are deliberately not interpreted. No RoadGraph was built, '
-        'no coordinate was snapped and no feature was merged or removed.',
-    if (complete) 'analysis': analyzeSegments(segments, detailLimit: detailLimit, cellSizeDegrees: cellSizeDegrees),
+    'scope':
+        'Physical geometry topology only. MAX_NETWORK, network eligibility, restrictions and '
+            'Tandem Drive Network 1 semantics are deliberately not interpreted. No RoadGraph was built, '
+            'no coordinate was snapped and no feature was merged or removed.',
+    if (complete)
+      'analysis': analyzeSegments(segments,
+          detailLimit: detailLimit, cellSizeDegrees: cellSizeDegrees),
   };
 }

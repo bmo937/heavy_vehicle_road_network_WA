@@ -16,7 +16,8 @@ import 'package:roads_map/widgets/navigation_widget/sliding_box_widget.dart';
 final boxControllerProvider = Provider<BoxController>((ref) => BoxController());
 final selectedIndexProvider = StateProvider<int>((ref) => 0);
 final showAllLayersProvider = StateProvider<bool>((ref) => true);
-final textControllerProvider = StateProvider<TextEditingController>((ref) => TextEditingController());
+final textControllerProvider =
+    StateProvider<TextEditingController>((ref) => TextEditingController());
 final savedSelectionsLoadedProvider = StateProvider<bool>((ref) => false);
 
 /// Provider to track content height measurements
@@ -24,10 +25,13 @@ final contentHeightProvider = StateProvider<double>((ref) => 0.0);
 
 class NavigationWidget extends HookConsumerWidget {
   const NavigationWidget({super.key});
-  Widget buildBox(BoxController boxController, WidgetRef ref, BuildContext context) {
+  Widget buildBox(
+      BoxController boxController, WidgetRef ref, BuildContext context) {
     final screenHeight = MediaQuery.of(context).size.height;
-    final minHeight = screenHeight * 0.12; // Height for the header/collapsed state
-    final maxHeight = screenHeight * 0.65; // Stable maxHeight to prevent bounce during animation
+    final minHeight =
+        screenHeight * 0.12; // Height for the header/collapsed state
+    final maxHeight = screenHeight *
+        0.65; // Stable maxHeight to prevent bounce during animation
     final textController = ref.watch(textControllerProvider);
 
     return SlidingBox(
@@ -49,7 +53,8 @@ class NavigationWidget extends HookConsumerWidget {
       collapsedBody: buildSheetHeader(context, ref),
       body: SheetBodyWidget(),
       onBoxSlide: (value) {
-        final mapPageController = ref.read(mapPageNotifierProvider.notifier).mapController;
+        final mapPageController =
+            ref.read(mapPageNotifierProvider.notifier).mapController;
         if (mapPageController != null) {
           final availableHeight = maxHeight - minHeight;
           final pixelValue = (value * availableHeight + minHeight) / 2;
@@ -64,7 +69,8 @@ class NavigationWidget extends HookConsumerWidget {
         // Handle sliding position if needed
         debugPrint('onBoxClose called - clearing feature and resetting state');
         ref.read(featureTapStateProvider.notifier).clearTappedFeature();
-        ref.read(selectedIndexProvider.notifier).state = 1; // Default to Road Networks tab
+        ref.read(selectedIndexProvider.notifier).state =
+            1; // Default to Road Networks tab
         ref.read(activeTabIndexProvider.notifier).state = 0;
         ref.read(showFeatureDetailsProvider.notifier).state = false;
 
@@ -78,12 +84,15 @@ class NavigationWidget extends HookConsumerWidget {
           searchBox: SearchBox(
             controller: textController,
             color: Theme.of(context).colorScheme.surface,
-            style: TextStyle(color: Theme.of(context).colorScheme.onSurface, fontSize: 18),
+            style: TextStyle(
+                color: Theme.of(context).colorScheme.onSurface, fontSize: 18),
             // height: maxHeight,
             body: Center(
               child: Text(
                 "what?",
-                style: TextStyle(color: Theme.of(context).colorScheme.onSurface, fontSize: 20),
+                style: TextStyle(
+                    color: Theme.of(context).colorScheme.onSurface,
+                    fontSize: 20),
               ),
             ),
             draggableBody: true,
@@ -120,16 +129,20 @@ class NavigationWidget extends HookConsumerWidget {
                     onPressed: () {
                       ref.read(selectedIndexProvider.notifier).state = 5;
                       controller.openBox();
-                      debugPrint('Search button pressed - opening location search');
+                      debugPrint(
+                          'Search button pressed - opening location search');
                     },
                     icon: const Icon(Icons.search)),
                 GestureDetector(
                     onTap: () {
-                      ref.read(selectedIndexProvider.notifier).state = 1; // Default to Road Networks tab
-                      ref.read(activeTabIndexProvider.notifier).state = 0; // First tab
+                      ref.read(selectedIndexProvider.notifier).state =
+                          1; // Default to Road Networks tab
+                      ref.read(activeTabIndexProvider.notifier).state =
+                          0; // First tab
                       controller.openBox();
                     },
-                    child: Text(networkLayerSelection ?? 'Map Navigation', style: Theme.of(context).textTheme.titleLarge)),
+                    child: Text(networkLayerSelection ?? 'Map Navigation',
+                        style: Theme.of(context).textTheme.titleLarge)),
                 IconButton.filled(
                     onPressed: () {
                       ref.read(selectedIndexProvider.notifier).state = 4;
@@ -163,7 +176,8 @@ class NavigationWidget extends HookConsumerWidget {
         IconButton.filled(
           onPressed: () {
             // We would implement this functionality in MapPageNotifierProvider
-            debugPrint('Toggle incidents layer - functionality to be implemented');
+            debugPrint(
+                'Toggle incidents layer - functionality to be implemented');
           },
           icon: SvgIconWidget(
             iconName: 'emergency',
@@ -191,7 +205,8 @@ class NavigationWidget extends HookConsumerWidget {
         IconButton.filled(
           onPressed: () {
             // We would implement this functionality in MapPageNotifierProvider
-            debugPrint('Toggle satellite layer - functionality to be implemented');
+            debugPrint(
+                'Toggle satellite layer - functionality to be implemented');
           },
           icon: Icon(
             Icons.satellite_rounded,
@@ -221,7 +236,9 @@ class NavigationWidget extends HookConsumerWidget {
             color: isParkingLayerVisible == 2 ? Colors.blue : Colors.grey,
           ),
           style: TextButton.styleFrom(
-            backgroundColor: isParkingLayerVisible == 2 ? Colors.blue.withAlpha(51) : Colors.transparent,
+            backgroundColor: isParkingLayerVisible == 2
+                ? Colors.blue.withAlpha(51)
+                : Colors.transparent,
           ),
         ),
       ],

@@ -30,7 +30,8 @@ class LocationSearchService {
 
         try {
           // Get place details to calculate actual distance
-          final placeDetails = await placesService.getPlaceDetails(result.placeId);
+          final placeDetails =
+              await placesService.getPlaceDetails(result.placeId);
           final geometry = placeDetails['geometry'];
           final location = geometry?['location'];
 
@@ -92,7 +93,8 @@ class LocationSearchService {
   }
 
   /// Handles place selection and marker creation
-  Future<void> onPlaceSelected(PlaceSearchResult result, BuildContext context) async {
+  Future<void> onPlaceSelected(
+      PlaceSearchResult result, BuildContext context) async {
     try {
       LatLng? latLng = result.location;
       PlaceSearchResult updatedResult = result;
@@ -129,13 +131,18 @@ class LocationSearchService {
         formattedPhoneNumber: placeDetails['formatted_phone_number'],
         internationalPhoneNumber: placeDetails['international_phone_number'],
         website: placeDetails['website'],
-        types: (placeDetails['types'] as List<dynamic>?)?.map((e) => e as String).toList(),
+        types: (placeDetails['types'] as List<dynamic>?)
+            ?.map((e) => e as String)
+            .toList(),
         rating: placeDetails['rating']?.toDouble(),
         priceLevel: placeDetails['price_level'],
-        addressComponents:
-            placeDetails['address_components'] is List ? {'components': placeDetails['address_components']} : placeDetails['address_components'] as Map<String, dynamic>?,
+        addressComponents: placeDetails['address_components'] is List
+            ? {'components': placeDetails['address_components']}
+            : placeDetails['address_components'] as Map<String, dynamic>?,
         openingHours: placeDetails['opening_hours'] as Map<String, dynamic>?,
-        photos: (placeDetails['photos'] as List<dynamic>?)?.map((e) => e as Map<String, dynamic>).toList(),
+        photos: (placeDetails['photos'] as List<dynamic>?)
+            ?.map((e) => e as Map<String, dynamic>)
+            .toList(),
       );
 
       // Update selected place
@@ -145,7 +152,8 @@ class LocationSearchService {
       if (latLng != null) {
         final mapController = ref.read(mapControllerProvider);
         if (mapController != null) {
-          await _addLocationMarker(mapController, latLng, updatedResult); // Move camera to the location
+          await _addLocationMarker(mapController, latLng,
+              updatedResult); // Move camera to the location
           await mapController.animateCamera(
             CameraUpdate.newCameraPosition(
               CameraPosition(
@@ -158,7 +166,8 @@ class LocationSearchService {
           if (context.mounted) {
             ScaffoldMessenger.of(context).showSnackBar(
               SnackBar(
-                content: Text('Location found: ${result.mainText ?? result.description}'),
+                content: Text(
+                    'Location found: ${result.mainText ?? result.description}'),
                 backgroundColor: Colors.green,
               ),
             );
@@ -179,12 +188,13 @@ class LocationSearchService {
   }
 
   /// Adds a location marker to the map
-  Future<void> _addLocationMarker(MapLibreMapController controller, LatLng location, PlaceSearchResult placeResult) async {
+  Future<void> _addLocationMarker(MapLibreMapController controller,
+      LatLng location, PlaceSearchResult placeResult) async {
     try {
       // Get the selected marker color from settings
       final markerColor = ref.read(markerColorNotifierProvider);
-      // ignore: deprecated_member_use
-      final colorHex = '#${markerColor.value.toRadixString(16).substring(2).padLeft(6, '0')}';
+      final colorHex =
+          '#${markerColor.toARGB32().toRadixString(16).substring(2).padLeft(6, '0')}';
 
       // Remove any existing search markers
       try {
@@ -230,38 +240,58 @@ class LocationSearchService {
 
                 // Contact information
                 'phone': placeResult.internationalPhoneNumber ?? '',
-                'formatted_phone_number': placeResult.internationalPhoneNumber ?? '',
-                'international_phone_number': placeResult.internationalPhoneNumber ?? '',
+                'formatted_phone_number':
+                    placeResult.internationalPhoneNumber ?? '',
+                'international_phone_number':
+                    placeResult.internationalPhoneNumber ?? '',
                 'website': placeResult.website ?? '',
 
                 // Business information
-                'business_status': 'OPERATIONAL', // Default, could be extracted from place details if available
+                'business_status':
+                    'OPERATIONAL', // Default, could be extracted from place details if available
                 'rating': placeResult.rating ?? 0,
-                'user_ratings_total': 0, // Could be extracted from place details if available
+                'user_ratings_total':
+                    0, // Could be extracted from place details if available
                 'price_level': placeResult.priceLevel ?? 0,
 
                 // Place types
                 'types': placeResult.types?.join(', ') ?? '',
-                'establishment_type': placeResult.types?.first ?? 'establishment',
+                'establishment_type':
+                    placeResult.types?.first ?? 'establishment',
 
                 // Address components - extract key components for easy access
-                'street_number': _extractAddressComponent(placeResult.addressComponents, 'street_number'),
-                'route': _extractAddressComponent(placeResult.addressComponents, 'route'),
-                'locality': _extractAddressComponent(placeResult.addressComponents, 'locality'),
-                'administrative_area_level_1': _extractAddressComponent(placeResult.addressComponents, 'administrative_area_level_1'),
-                'administrative_area_level_2': _extractAddressComponent(placeResult.addressComponents, 'administrative_area_level_2'),
-                'country': _extractAddressComponent(placeResult.addressComponents, 'country'),
-                'postal_code': _extractAddressComponent(placeResult.addressComponents, 'postal_code'),
+                'street_number': _extractAddressComponent(
+                    placeResult.addressComponents, 'street_number'),
+                'route': _extractAddressComponent(
+                    placeResult.addressComponents, 'route'),
+                'locality': _extractAddressComponent(
+                    placeResult.addressComponents, 'locality'),
+                'administrative_area_level_1': _extractAddressComponent(
+                    placeResult.addressComponents,
+                    'administrative_area_level_1'),
+                'administrative_area_level_2': _extractAddressComponent(
+                    placeResult.addressComponents,
+                    'administrative_area_level_2'),
+                'country': _extractAddressComponent(
+                    placeResult.addressComponents, 'country'),
+                'postal_code': _extractAddressComponent(
+                    placeResult.addressComponents, 'postal_code'),
 
                 // Address components (as JSON string for full access)
-                'address_components': placeResult.addressComponents != null ? placeResult.addressComponents.toString() : '',
+                'address_components': placeResult.addressComponents != null
+                    ? placeResult.addressComponents.toString()
+                    : '',
 
                 // Opening hours information
-                'opening_hours': placeResult.openingHours != null ? placeResult.openingHours.toString() : '',
+                'opening_hours': placeResult.openingHours != null
+                    ? placeResult.openingHours.toString()
+                    : '',
                 'is_open_now': placeResult.openingHours?['open_now'] ?? false,
 
                 // Photos and media
-                'photo_reference': placeResult.photos?.isNotEmpty == true ? placeResult.photos![0]['photo_reference'] ?? '' : '',
+                'photo_reference': placeResult.photos?.isNotEmpty == true
+                    ? placeResult.photos![0]['photo_reference'] ?? ''
+                    : '',
                 'icon': '', // Could be set from place details if available
                 'icon_background_color': '#7B9EB0', // Default color
 
@@ -308,7 +338,8 @@ class LocationSearchService {
   }
 
   /// Helper method to extract specific address component types
-  String _extractAddressComponent(Map<String, dynamic>? addressComponents, String type) {
+  String _extractAddressComponent(
+      Map<String, dynamic>? addressComponents, String type) {
     if (addressComponents == null) return '';
 
     try {
@@ -326,7 +357,9 @@ class LocationSearchService {
         if (component is Map<String, dynamic>) {
           final types = component['types'] as List<dynamic>?;
           if (types != null && types.contains(type)) {
-            return component['long_name']?.toString() ?? component['short_name']?.toString() ?? '';
+            return component['long_name']?.toString() ??
+                component['short_name']?.toString() ??
+                '';
           }
         }
       }

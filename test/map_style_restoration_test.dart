@@ -17,10 +17,15 @@ class _FakePoiSelection extends PoiLayerSelection {
   Map<String, bool> build() => {'Stopping Places': true};
 }
 
-MapPageNotifier _notifier() => MapPageNotifier(
-    () async => const MapInitialSettings(styleUrl: 'light', isTravelLayerVisible: false, isSatelliteLayerVisible: false));
+MapPageNotifier _notifier() =>
+    MapPageNotifier(() async => const MapInitialSettings(
+        styleUrl: 'light',
+        isTravelLayerVisible: false,
+        isSatelliteLayerVisible: false));
 
-StyleRestorationStep _step(Future<bool> Function() action, {bool required = true}) => StyleRestorationStep('s', (run) => action(), required: required);
+StyleRestorationStep _step(Future<bool> Function() action,
+        {bool required = true}) =>
+    StyleRestorationStep('s', (run) => action(), required: required);
 
 void main() {
   late MapPageNotifier n;
@@ -65,7 +70,8 @@ void main() {
     expect(n.isMapFullyLoaded, isTrue);
   });
 
-  test('style change during restoration prevents it from marking ready', () async {
+  test('style change during restoration prevents it from marking ready',
+      () async {
     final gate = Completer<bool>();
     final r = n.restoreApplicationMapState([_step(() => gate.future)]);
     n.onStyleChangeBegan();
@@ -91,11 +97,15 @@ void main() {
   });
 
   test('required failure or throw is not ready; optional failure is', () async {
-    expect(await n.restoreApplicationMapState([_step(() async => false)]), StyleRestorationOutcome.failed);
+    expect(await n.restoreApplicationMapState([_step(() async => false)]),
+        StyleRestorationOutcome.failed);
     expect(n.isMapFullyLoaded, isFalse);
     expect(n.state.isMapRestorationFailed, isTrue);
 
-    expect(await n.restoreApplicationMapState([_step(() async => throw StateError('x'))]), StyleRestorationOutcome.failed);
+    expect(
+        await n.restoreApplicationMapState(
+            [_step(() async => throw StateError('x'))]),
+        StyleRestorationOutcome.failed);
     expect(n.isMapFullyLoaded, isFalse);
     expect(n.state.isMapRestorationFailed, isTrue);
 
@@ -124,7 +134,8 @@ void main() {
     expect(ticket.isCurrent, isFalse);
   });
 
-  test('network and POI selections survive style change and restoration', () async {
+  test('network and POI selections survive style change and restoration',
+      () async {
     final container = ProviderContainer(overrides: [
       networkLayerSelectionProvider.overrideWith(_FakeNetworkSelection.new),
       poiLayerSelectionProvider.overrideWith(_FakePoiSelection.new),
@@ -137,6 +148,7 @@ void main() {
     await n.restoreApplicationMapState([_step(() async => true)]);
 
     expect(container.read(networkLayerSelectionProvider), 'Network 1');
-    expect(container.read(poiLayerSelectionProvider), {'Stopping Places': true});
+    expect(
+        container.read(poiLayerSelectionProvider), {'Stopping Places': true});
   });
 }

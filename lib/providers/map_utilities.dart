@@ -2,7 +2,8 @@
 import 'package:maplibre_gl/maplibre_gl.dart';
 
 class MapUtilities {
-  static const int updateDelayMilliseconds = 500; // Minimum delay between updates
+  static const int updateDelayMilliseconds =
+      500; // Minimum delay between updates
 
   /// Get the initial camera position for the map
   static const CameraPosition initialCameraPosition = CameraPosition(
@@ -52,8 +53,12 @@ class MapUtilities {
     if (layerName.contains('Major Rest')) return 'major';
     if (layerName.contains('Minor Rest')) return 'minor';
     if (layerName.contains('Roadhouse')) return 'roadhouse';
-    if (layerName.contains('Drive Under')) return 'bridge'; // Use bridge icon for drive under structures
-    if (layerName.contains('Drive Over')) return 'bridge'; // Use bridge icon for drive over structures
+    if (layerName.contains('Drive Under')) {
+      return 'bridge'; // Use bridge icon for drive under structures
+    }
+    if (layerName.contains('Drive Over')) {
+      return 'bridge'; // Use bridge icon for drive over structures
+    }
     if (layerName.contains('Bridge')) return 'bridge';
     if (layerName.contains('Intersection')) return 'intersection';
     if (layerName.contains('Rav')) return 'trafficCone';

@@ -97,14 +97,24 @@ void main() {
   });
 
   test('missing GlobalID / ROAD', () {
-    rejects([feature(p: {'GlobalID': null})], 'properties.GlobalID');
-    rejects([feature(p: {'ROAD': ' '})], 'properties.ROAD');
+    rejects([
+      feature(p: {'GlobalID': null})
+    ], 'properties.GlobalID');
+    rejects([
+      feature(p: {'ROAD': ' '})
+    ], 'properties.ROAD');
   });
 
   test('malformed ROUTE_NE_ID and MAX_NETWORK', () {
-    rejects([feature(p: {'ROUTE_NE_ID': 'abc'})], 'properties.ROUTE_NE_ID');
-    rejects([feature(p: {'MAX_NETWORK': 'x'})], 'properties.MAX_NETWORK');
-    rejects([feature(p: {'MAX_NETWORK': null})], 'properties.MAX_NETWORK');
+    rejects([
+      feature(p: {'ROUTE_NE_ID': 'abc'})
+    ], 'properties.ROUTE_NE_ID');
+    rejects([
+      feature(p: {'MAX_NETWORK': 'x'})
+    ], 'properties.MAX_NETWORK');
+    rejects([
+      feature(p: {'MAX_NETWORK': null})
+    ], 'properties.MAX_NETWORK');
   });
 
   test('integer fields reject out-of-range integral doubles', () {
@@ -118,7 +128,9 @@ void main() {
         double.infinity,
         double.nan,
       ]) {
-        rejects([feature(p: {field: value})], 'properties.$field');
+        rejects([
+          feature(p: {field: value})
+        ], 'properties.$field');
       }
     }
   });
@@ -137,10 +149,12 @@ void main() {
   });
 
   test('reversed ranges', () {
-    rejects([feature(p: {'START_SLK': 5.0, 'END_SLK': 1.0})],
-        'properties.END_SLK');
-    rejects([feature(p: {'START_TRUE_DIST': 5.0, 'END_TRUE_DIST': 1.0})],
-        'properties.END_TRUE_DIST');
+    rejects([
+      feature(p: {'START_SLK': 5.0, 'END_SLK': 1.0})
+    ], 'properties.END_SLK');
+    rejects([
+      feature(p: {'START_TRUE_DIST': 5.0, 'END_TRUE_DIST': 1.0})
+    ], 'properties.END_TRUE_DIST');
   });
 
   group('MultiLineString', () {
@@ -155,7 +169,9 @@ void main() {
     ];
 
     test('keeps every part separate and in source order', () {
-      final s = parse([feature(geometry: multi([partA, partB]))]).single;
+      final s = parse([
+        feature(geometry: multi([partA, partB]))
+      ]).single;
       expect(s.parts.length, 2);
       expect(s.parts[0].length, 2);
       expect(s.parts[1].length, 3);
@@ -166,7 +182,9 @@ void main() {
     });
 
     test('does not invent a connection between parts', () {
-      final s = parse([feature(geometry: multi([partA, partB]))]).single;
+      final s = parse([
+        feature(geometry: multi([partA, partB]))
+      ]).single;
       final all = [for (final p in s.parts) ...p];
       expect(all.length, partA.length + partB.length);
       expect(s.parts[0].last, isNot(s.parts[1].first));
@@ -185,7 +203,9 @@ void main() {
     });
 
     test('single-line MultiLineString has one part', () {
-      final s = parse([feature(geometry: multi([partA]))]).single;
+      final s = parse([
+        feature(geometry: multi([partA]))
+      ]).single;
       expect(s.parts.length, 1);
       expect(s.geometry.length, 2);
     });
@@ -210,12 +230,19 @@ void main() {
 
   test('geometry problems', () {
     rejects([feature(geometry: null)], 'geometry');
-    rejects([feature(geometry: {'type': 'Point', 'coordinates': [1, 2]})],
-        'geometry.type');
-    rejects([feature(geometry: multi([]))], 'geometry.coordinates');
-    rejects([feature(geometry: multi([5]))], 'geometry.coordinates[0]');
     rejects([
-      feature(geometry: multi([
+      feature(geometry: {
+        'type': 'Point',
+        'coordinates': [1, 2]
+      })
+    ], 'geometry.type');
+    rejects([feature(geometry: multi([]))], 'geometry.coordinates');
+    rejects([
+      feature(geometry: multi([5]))
+    ], 'geometry.coordinates[0]');
+    rejects([
+      feature(
+          geometry: multi([
         [
           [115.8, -31.9],
           [115.9, -32.0]
@@ -226,7 +253,8 @@ void main() {
       ]))
     ], 'geometry.coordinates[1]');
     rejects([
-      feature(geometry: multi([
+      feature(
+          geometry: multi([
         [
           [115.8, -31.9],
           [115.9, -32.0]
@@ -238,36 +266,42 @@ void main() {
       ]))
     ], 'geometry.coordinates[1][1]');
     rejects([
-      feature(geometry: line([
+      feature(
+          geometry: line([
         [115.8, -31.9]
       ]))
     ], 'geometry.coordinates');
     rejects([
-      feature(geometry: line([
+      feature(
+          geometry: line([
         [115.8, -31.9],
         [115.9]
       ]))
     ], 'geometry.coordinates[1]');
     rejects([
-      feature(geometry: line([
+      feature(
+          geometry: line([
         [115.8, -31.9],
         ['x', -32.0]
       ]))
     ], 'geometry.coordinates[1]');
     rejects([
-      feature(geometry: line([
+      feature(
+          geometry: line([
         [115.8, -31.9],
         [double.nan, -32.0]
       ]))
     ], 'geometry.coordinates[1]');
     rejects([
-      feature(geometry: line([
+      feature(
+          geometry: line([
         [115.8, -91.0],
         [115.9, -32.0]
       ]))
     ], 'geometry.coordinates[0]');
     rejects([
-      feature(geometry: line([
+      feature(
+          geometry: line([
         [115.8, -31.9],
         [181.0, -32.0]
       ]))

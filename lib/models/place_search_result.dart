@@ -35,7 +35,7 @@ class PlaceSearchResult {
   final double? distanceFromPerth;
   // Additional properties from place details
   final String? formattedAddress;
-final String? formattedPhoneNumber;
+  final String? formattedPhoneNumber;
   final String? internationalPhoneNumber;
   final LatLng? location;
   final String? mainText;
@@ -70,7 +70,8 @@ final String? formattedPhoneNumber;
       location: location ?? this.location,
       distanceFromPerth: distanceFromPerth ?? this.distanceFromPerth,
       formattedAddress: formattedAddress ?? this.formattedAddress,
-      internationalPhoneNumber: internationalPhoneNumber ?? this.internationalPhoneNumber,
+      internationalPhoneNumber:
+          internationalPhoneNumber ?? this.internationalPhoneNumber,
       formattedPhoneNumber: formattedPhoneNumber ?? this.formattedPhoneNumber,
       website: website ?? this.website,
       types: types ?? this.types,

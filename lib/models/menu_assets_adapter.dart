@@ -10,7 +10,9 @@ final poiLayersProvider = Provider<List<Layer>>((ref) {
   return menuAssetsAsync.when(
     data: (menuAssets) {
       // Filter layers that are Points of Interest
-      return menuAssets.layers.where((layer) => layer.listMenu == ListMenu.pointsOfInterest).toList();
+      return menuAssets.layers
+          .where((layer) => layer.listMenu == ListMenu.pointsOfInterest)
+          .toList();
     },
     loading: () => [],
     error: (_, __) => [],
@@ -24,7 +26,9 @@ final roadNetworkLayersProvider = Provider<List<Layer>>((ref) {
   return menuAssetsAsync.when(
     data: (menuAssets) {
       // Filter layers that are Road Networks
-      return menuAssets.layers.where((layer) => layer.listMenu == ListMenu.roadNetworks).toList();
+      return menuAssets.layers
+          .where((layer) => layer.listMenu == ListMenu.roadNetworks)
+          .toList();
     },
     loading: () => [],
     error: (_, __) => [],
@@ -40,7 +44,8 @@ extension LayerHelpers on Layer {
   String get childLayer => groupLabel ?? '';
 
   // Check if the layer has any downloaded content (compatibility with old structure)
-  bool get hasDownloadedContent => false; // Default implementation, customize as needed
+  bool get hasDownloadedContent =>
+      false; // Default implementation, customize as needed
 
   // Check if the layer is available online
   bool get isOnlineAvailable => url != null && url!.isNotEmpty;

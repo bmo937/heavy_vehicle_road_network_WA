@@ -46,7 +46,8 @@ class MainRoadsNetworkParser {
   ) {
     if (json['type'] != 'FeatureCollection') {
       throw MainRoadsParseException(
-        problem: 'expected type FeatureCollection, got ${_describe(json['type'])}',
+        problem:
+            'expected type FeatureCollection, got ${_describe(json['type'])}',
         field: 'type',
       );
     }
@@ -88,7 +89,8 @@ class MainRoadsNetworkParser {
 
     if (raw is! Map) throw fail('feature must be an object');
     if (raw['type'] != 'Feature') {
-      throw fail('expected type Feature, got ${_describe(raw['type'])}', 'type');
+      throw fail(
+          'expected type Feature, got ${_describe(raw['type'])}', 'type');
     }
     final props = raw['properties'];
     if (props is! Map) throw fail('properties must be an object', 'properties');
@@ -105,12 +107,14 @@ class MainRoadsNetworkParser {
 
     final routeNeId = _int(props['ROUTE_NE_ID']);
     if (routeNeId == null) {
-      throw f('missing or non-integer ROUTE_NE_ID: ${_describe(props['ROUTE_NE_ID'])}',
+      throw f(
+          'missing or non-integer ROUTE_NE_ID: ${_describe(props['ROUTE_NE_ID'])}',
           'properties.ROUTE_NE_ID');
     }
     final maxNetwork = _int(props['MAX_NETWORK']);
     if (maxNetwork == null) {
-      throw f('missing or non-integer MAX_NETWORK: ${_describe(props['MAX_NETWORK'])}',
+      throw f(
+          'missing or non-integer MAX_NETWORK: ${_describe(props['MAX_NETWORK'])}',
           'properties.MAX_NETWORK');
     }
 
@@ -179,7 +183,8 @@ class MainRoadsNetworkParser {
         throw f('coordinates must be a list', 'geometry.coordinates');
       }
       if (coords.isEmpty) {
-        throw f('MultiLineString needs at least 1 line', 'geometry.coordinates');
+        throw f(
+            'MultiLineString needs at least 1 line', 'geometry.coordinates');
       }
       final parts = <List<SourceCoordinate>>[];
       for (var p = 0; p < coords.length; p++) {
@@ -240,7 +245,9 @@ class MainRoadsNetworkParser {
   }
 
   static double? _double(Object? v) {
-    final d = v is num ? v.toDouble() : (v is String ? double.tryParse(v.trim()) : null);
+    final d = v is num
+        ? v.toDouble()
+        : (v is String ? double.tryParse(v.trim()) : null);
     return d != null && d.isFinite ? d : null;
   }
 

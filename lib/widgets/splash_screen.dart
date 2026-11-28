@@ -15,7 +15,8 @@ class SplashScreen extends ConsumerStatefulWidget {
   ConsumerState<SplashScreen> createState() => _SplashScreenState();
 }
 
-class _SplashScreenState extends ConsumerState<SplashScreen> with TickerProviderStateMixin {
+class _SplashScreenState extends ConsumerState<SplashScreen>
+    with TickerProviderStateMixin {
   late AnimationController _fadeController;
   late AnimationController _scaleController;
   late AnimationController _progressController;
@@ -255,11 +256,14 @@ class _SplashScreenState extends ConsumerState<SplashScreen> with TickerProvider
                         builder: (context, child) {
                           return Transform.translate(
                             offset: Offset(
-                              math.sin(_truckAnimation.value * math.pi * 2) * 20,
+                              math.sin(_truckAnimation.value * math.pi * 2) *
+                                  20,
                               0,
                             ),
                             child: Transform.rotate(
-                              angle: math.sin(_truckAnimation.value * math.pi * 2) * 0.1,
+                              angle: math.sin(
+                                      _truckAnimation.value * math.pi * 2) *
+                                  0.1,
                               child: Icon(
                                 Icons.local_shipping,
                                 size: 80,
@@ -288,7 +292,9 @@ class _SplashScreenState extends ConsumerState<SplashScreen> with TickerProvider
                       if (mapState.isMapRestorationFailed) ...[
                         const SizedBox(height: 16),
                         ElevatedButton(
-                          onPressed: () => ref.read(mapPageNotifierProvider.notifier).retryStyleRestoration(ref),
+                          onPressed: () => ref
+                              .read(mapPageNotifierProvider.notifier)
+                              .retryStyleRestoration(ref),
                           child: const Text('Retry map loading'),
                         ),
                       ],
@@ -306,7 +312,8 @@ class _SplashScreenState extends ConsumerState<SplashScreen> with TickerProvider
                         child: AnimatedBuilder(
                           animation: _progressAnimation,
                           builder: (context, child) {
-                            final progress = _getProgress(currentState) * _progressAnimation.value;
+                            final progress = _getProgress(currentState) *
+                                _progressAnimation.value;
                             return FractionallySizedBox(
                               alignment: Alignment.centerLeft,
                               widthFactor: progress,
@@ -321,7 +328,8 @@ class _SplashScreenState extends ConsumerState<SplashScreen> with TickerProvider
                                   borderRadius: BorderRadius.circular(2),
                                   boxShadow: [
                                     BoxShadow(
-                                      color: const Color(0xFFffd700).withValues(alpha: 0.5),
+                                      color: const Color(0xFFffd700)
+                                          .withValues(alpha: 0.5),
                                       blurRadius: 8,
                                       spreadRadius: 1,
                                     ),

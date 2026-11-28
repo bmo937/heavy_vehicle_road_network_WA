@@ -26,7 +26,8 @@ class MenuAssets {
     required this.layers,
   });
 
-  factory MenuAssets.fromJson(Map<String, dynamic> json) => _$MenuAssetsFromJson(json);
+  factory MenuAssets.fromJson(Map<String, dynamic> json) =>
+      _$MenuAssetsFromJson(json);
 
   Map<String, dynamic> toJson() => _$MenuAssetsToJson(this);
 }
@@ -189,7 +190,8 @@ class GroupMember {
     this.lineColor,
   });
 
-  factory GroupMember.fromJson(Map<String, dynamic> json) => _$GroupMemberFromJson(json);
+  factory GroupMember.fromJson(Map<String, dynamic> json) =>
+      _$GroupMemberFromJson(json);
 
   Map<String, dynamic> toJson() => _$GroupMemberToJson(this);
 }
@@ -205,8 +207,12 @@ enum GroupMemberFeatureType {
   single
 }
 
-final groupMemberFeatureTypeValues =
-    EnumValues({"incident": GroupMemberFeatureType.incident, "osom": GroupMemberFeatureType.osom, "rav": GroupMemberFeatureType.rav, "single": GroupMemberFeatureType.single});
+final groupMemberFeatureTypeValues = EnumValues({
+  "incident": GroupMemberFeatureType.incident,
+  "osom": GroupMemberFeatureType.osom,
+  "rav": GroupMemberFeatureType.rav,
+  "single": GroupMemberFeatureType.single
+});
 
 enum GeometryType {
   @JsonValue("point")
@@ -215,7 +221,8 @@ enum GeometryType {
   polyline
 }
 
-final geometryTypeValues = EnumValues({"point": GeometryType.point, "polyline": GeometryType.polyline});
+final geometryTypeValues = EnumValues(
+    {"point": GeometryType.point, "polyline": GeometryType.polyline});
 
 enum GroupMemberListTiletype {
   @JsonValue("radioListTile")
@@ -224,7 +231,10 @@ enum GroupMemberListTiletype {
   switchListTile
 }
 
-final groupMemberListTiletypeValues = EnumValues({"radioListTile": GroupMemberListTiletype.radioListTile, "switchListTile": GroupMemberListTiletype.switchListTile});
+final groupMemberListTiletypeValues = EnumValues({
+  "radioListTile": GroupMemberListTiletype.radioListTile,
+  "switchListTile": GroupMemberListTiletype.switchListTile
+});
 
 @HiveType(typeId: 4)
 @JsonSerializable()
@@ -277,7 +287,8 @@ class SubLayer {
     required this.lineColor,
   });
 
-  factory SubLayer.fromJson(Map<String, dynamic> json) => _$SubLayerFromJson(json);
+  factory SubLayer.fromJson(Map<String, dynamic> json) =>
+      _$SubLayerFromJson(json);
 
   Map<String, dynamic> toJson() => _$SubLayerToJson(this);
 }
@@ -309,7 +320,11 @@ enum LineColor {
   the2aa198
 }
 
-final lineColorValues = EnumValues({"#be121e": LineColor.be121e, "#d55e67": LineColor.d55e67, "#2aa198": LineColor.the2aa198});
+final lineColorValues = EnumValues({
+  "#be121e": LineColor.be121e,
+  "#d55e67": LineColor.d55e67,
+  "#2aa198": LineColor.the2aa198
+});
 
 enum MapIcon {
   @JsonValue("bridge")
@@ -318,7 +333,8 @@ enum MapIcon {
   intersection
 }
 
-final mapIconValues = EnumValues({"bridge": MapIcon.bridge, "intersection": MapIcon.intersection});
+final mapIconValues = EnumValues(
+    {"bridge": MapIcon.bridge, "intersection": MapIcon.intersection});
 
 enum SubLayerType {
   @JsonValue("Feature Layer")
@@ -327,7 +343,10 @@ enum SubLayerType {
   layerGroup
 }
 
-final subLayerTypeValues = EnumValues({"Feature Layer": SubLayerType.featureLayer, "Layer Group": SubLayerType.layerGroup});
+final subLayerTypeValues = EnumValues({
+  "Feature Layer": SubLayerType.featureLayer,
+  "Layer Group": SubLayerType.layerGroup
+});
 
 enum ListMenu {
   @JsonValue("Points of Interest")
@@ -336,7 +355,10 @@ enum ListMenu {
   roadNetworks
 }
 
-final listMenuValues = EnumValues({"Points of Interest": ListMenu.pointsOfInterest, "Road Networks": ListMenu.roadNetworks});
+final listMenuValues = EnumValues({
+  "Points of Interest": ListMenu.pointsOfInterest,
+  "Road Networks": ListMenu.roadNetworks
+});
 
 enum LayerListTiletype {
   @JsonValue("header")
@@ -345,7 +367,10 @@ enum LayerListTiletype {
   radioListTile
 }
 
-final layerListTiletypeValues = EnumValues({"header": LayerListTiletype.header, "radioListTile": LayerListTiletype.radioListTile});
+final layerListTiletypeValues = EnumValues({
+  "header": LayerListTiletype.header,
+  "radioListTile": LayerListTiletype.radioListTile
+});
 
 enum LayerType {
   @JsonValue("Layer Group")
@@ -354,7 +379,8 @@ enum LayerType {
   menuGroup
 }
 
-final layerTypeValues = EnumValues({"Layer Group": LayerType.layerGroup, "Menu Group": LayerType.menuGroup});
+final layerTypeValues = EnumValues(
+    {"Layer Group": LayerType.layerGroup, "Menu Group": LayerType.menuGroup});
 
 class EnumValues<T> {
   Map<String, T> map;

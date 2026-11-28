@@ -10,6 +10,8 @@
 .history
 .svn/
 migrate_working_dir/
+.githooks/
+local_pr_workflow_chat.md
 
 # IntelliJ related
 *.iml

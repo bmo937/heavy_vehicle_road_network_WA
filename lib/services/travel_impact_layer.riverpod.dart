@@ -12,9 +12,16 @@ final String apiUrlPROD =
     'https://services2.arcgis.com/cHGEnmsJ165IBJRM/arcgis/rest/services/HVS_Travel_Impacts_PROD_-_Active_and_Approved/FeatureServer/0/query?where=1%3D1&geometry=110%2C-40%2C130%2C-10&geometryType=esriGeometryEnvelope&inSR=4326&spatialRel=esriSpatialRelContains&resultType=none&returnGeodetic=true&outFields=*&returnGeometry=true&f=pgeojson&outSR=4326';
 
 // Source and CustomLayer IDs using our naming utility
-final String travelImpactSourceId = LayerNamingUtility.getSourceId(LayerNamingUtility.CATEGORY_TRAVEL, 'travel_impact');
-final String travelImpactLineLayerId = LayerNamingUtility.getLayerId(LayerNamingUtility.CATEGORY_TRAVEL, 'travel_impact', LayerNamingUtility.TYPE_LINE);
-final String travelImpactSymbolLayerId = LayerNamingUtility.getLayerId(LayerNamingUtility.CATEGORY_TRAVEL, 'travel_impact', LayerNamingUtility.TYPE_SYMBOL);
+final String travelImpactSourceId = LayerNamingUtility.getSourceId(
+    LayerNamingUtility.CATEGORY_TRAVEL, 'travel_impact');
+final String travelImpactLineLayerId = LayerNamingUtility.getLayerId(
+    LayerNamingUtility.CATEGORY_TRAVEL,
+    'travel_impact',
+    LayerNamingUtility.TYPE_LINE);
+final String travelImpactSymbolLayerId = LayerNamingUtility.getLayerId(
+    LayerNamingUtility.CATEGORY_TRAVEL,
+    'travel_impact',
+    LayerNamingUtility.TYPE_SYMBOL);
 
 @riverpod
 Future<Map<String, dynamic>> fetchGeoJsonData(Ref ref) async {
@@ -40,7 +47,10 @@ Map<String, dynamic> processGeoJsonData(Map<String, dynamic> params) {
 
   if (data['features'] == null || data['features'].isEmpty) {
     debugPrint("No features in the response");
-    return {'lineFeatures': createGeoJsonFeatureCollection(lineFeatures), 'symbolFeatures': createGeoJsonFeatureCollection(symbolFeatures)};
+    return {
+      'lineFeatures': createGeoJsonFeatureCollection(lineFeatures),
+      'symbolFeatures': createGeoJsonFeatureCollection(symbolFeatures)
+    };
   }
 
   for (var feature in data['features']) {
@@ -90,13 +100,17 @@ Map<String, dynamic> processGeoJsonData(Map<String, dynamic> params) {
     lineFeatures.add(lineFeature);
 
     // Create point feature for symbol
-    Map<String, dynamic> symbolFeature = createSymbolFeature(feature, geometry, geometryType);
+    Map<String, dynamic> symbolFeature =
+        createSymbolFeature(feature, geometry, geometryType);
     if (symbolFeature.isNotEmpty) {
       symbolFeatures.add(symbolFeature);
     }
   }
 
-  return {'lineFeatures': createGeoJsonFeatureCollection(lineFeatures), 'symbolFeatures': createGeoJsonFeatureCollection(symbolFeatures)};
+  return {
+    'lineFeatures': createGeoJsonFeatureCollection(lineFeatures),
+    'symbolFeatures': createGeoJsonFeatureCollection(symbolFeatures)
+  };
 }
 
 List<dynamic> _getLineWidth() {
@@ -178,7 +192,8 @@ List<dynamic> _getLineWidth() {
 }
 
 // Create a symbol feature from a line feature, placing the symbol at the start of the line
-Map<String, dynamic> createSymbolFeature(Map<String, dynamic> feature, Map<String, dynamic> geometry, String geometryType) {
+Map<String, dynamic> createSymbolFeature(Map<String, dynamic> feature,
+    Map<String, dynamic> geometry, String geometryType) {
   // Get coordinates for the first point
   List<dynamic>? firstPoint;
 
@@ -205,7 +220,8 @@ Map<String, dynamic> createSymbolFeature(Map<String, dynamic> feature, Map<Strin
   if (roadConditions == 'No Access') {
     iconImage = 'noEntry';
   } else if (restrictionType.contains('OSOM')) {
-    iconImage = 'noEntry'; // Use the OSOM icon for OSOM restrictions  } else if (restrictionType.contains('RAV')) {
+    iconImage =
+        'noEntry'; // Use the OSOM icon for OSOM restrictions  } else if (restrictionType.contains('RAV')) {
     iconImage = 'trafficCone'; // Use the RAV icon for RAV restrictions
   } else {
     iconImage = 'trafficCone'; // Default fallback to trafficCone
@@ -227,7 +243,8 @@ Map<String, dynamic> createSymbolFeature(Map<String, dynamic> feature, Map<Strin
 }
 
 // Helper to create GeoJSON feature collection
-Map<String, dynamic> createGeoJsonFeatureCollection(List<Map<String, dynamic>> features) {
+Map<String, dynamic> createGeoJsonFeatureCollection(
+    List<Map<String, dynamic>> features) {
   return {"type": "FeatureCollection", "features": features};
 }
 
@@ -247,7 +264,8 @@ Map<String, dynamic> createGeoJsonFeatureCollection(List<Map<String, dynamic>> f
 } */
 
 // Refactored to add GeoJSON sources and layers with separated symbols
-Future<void> displayTravelImpactLayer(MapLibreMapController mapController, Map<String, dynamic> data) async {
+Future<void> displayTravelImpactLayer(
+    MapLibreMapController mapController, Map<String, dynamic> data) async {
   final lineFeatures = data['lineFeatures'];
   final symbolFeatures = data['symbolFeatures'];
   // Check if sources already exist and remove them if they do
@@ -303,11 +321,20 @@ Future<void> displayTravelImpactLayer(MapLibreMapController mapController, Map<S
   );
 
   // Split symbol features by type
-  final noEntrySymbols = {"type": "FeatureCollection", "features": symbolFeatures['features'].where((feature) => feature['properties']['RoadConditions'] == 'No Access').toList()};
+  final noEntrySymbols = {
+    "type": "FeatureCollection",
+    "features": symbolFeatures['features']
+        .where(
+            (feature) => feature['properties']['RoadConditions'] == 'No Access')
+        .toList()
+  };
 
   final restrictedSymbols = {
     "type": "FeatureCollection",
-    "features": symbolFeatures['features'].where((feature) => feature['properties']['RoadConditions'] != 'No Access').toList()
+    "features": symbolFeatures['features']
+        .where(
+            (feature) => feature['properties']['RoadConditions'] != 'No Access')
+        .toList()
   };
   // Add separate symbol sources for each type using safe source management
   await SourceManagementUtility.safeAddGeoJsonSource(
@@ -377,7 +404,8 @@ Future<void> displayTravelImpactLayer(MapLibreMapController mapController, Map<S
 }
 
 // Update the remove function to handle the split sources
-Future<void> removeTravelImpactLayers(MapLibreMapController mapController) async {
+Future<void> removeTravelImpactLayers(
+    MapLibreMapController mapController) async {
   final layerIds = await mapController.getLayerIds();
 
   // Remove line layers
@@ -410,29 +438,35 @@ Future<void> removeTravelImpactLayers(MapLibreMapController mapController) async
   }
 
   if (sourceIds.contains("${travelImpactSourceId}_symbols_restricted")) {
-    await mapController.removeSource("${travelImpactSourceId}_symbols_restricted");
+    await mapController
+        .removeSource("${travelImpactSourceId}_symbols_restricted");
   }
 }
 
 // Update the visibility function to handle the split layers
-Future<void> setTravelImpactLayerVisibility(MapLibreMapController mapController, bool isVisible) async {
+Future<void> setTravelImpactLayerVisibility(
+    MapLibreMapController mapController, bool isVisible) async {
   final layerIds = await mapController.getLayerIds();
 
   // Update line layers visibility
   if (layerIds.contains("${travelImpactLineLayerId}_solid")) {
-    await mapController.setLayerVisibility("${travelImpactLineLayerId}_solid", isVisible);
+    await mapController.setLayerVisibility(
+        "${travelImpactLineLayerId}_solid", isVisible);
   }
 
   if (layerIds.contains("${travelImpactLineLayerId}_dashed")) {
-    await mapController.setLayerVisibility("${travelImpactLineLayerId}_dashed", isVisible);
+    await mapController.setLayerVisibility(
+        "${travelImpactLineLayerId}_dashed", isVisible);
   }
 
   // Update symbol layers visibility
   if (layerIds.contains("${travelImpactSymbolLayerId}_noEntry")) {
-    await mapController.setLayerVisibility("${travelImpactSymbolLayerId}_noEntry", isVisible);
+    await mapController.setLayerVisibility(
+        "${travelImpactSymbolLayerId}_noEntry", isVisible);
   }
 
   if (layerIds.contains("${travelImpactSymbolLayerId}_restricted")) {
-    await mapController.setLayerVisibility("${travelImpactSymbolLayerId}_restricted", isVisible);
+    await mapController.setLayerVisibility(
+        "${travelImpactSymbolLayerId}_restricted", isVisible);
   }
 }

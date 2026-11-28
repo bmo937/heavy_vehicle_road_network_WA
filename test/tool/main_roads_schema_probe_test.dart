@@ -14,7 +14,8 @@ class _Adapter implements HttpClientAdapter {
   _Adapter(this.handler);
 
   @override
-  Future<ResponseBody> fetch(RequestOptions o, Stream<Uint8List>? s, Future<void>? c) async {
+  Future<ResponseBody> fetch(
+      RequestOptions o, Stream<Uint8List>? s, Future<void>? c) async {
     requests.add(o.uri);
     return handler(o);
   }
@@ -25,13 +26,24 @@ class _Adapter implements HttpClientAdapter {
 
 ResponseBody _body(Object json, [int status = 200]) =>
     ResponseBody.fromString(json is String ? json : jsonEncode(json), status,
-        headers: {Headers.contentTypeHeader: ['application/json']});
+        headers: {
+          Headers.contentTypeHeader: ['application/json']
+        });
 
-Dio _dio(_Adapter a) => Dio(BaseOptions(responseType: ResponseType.plain))..httpClientAdapter = a;
+Dio _dio(_Adapter a) =>
+    Dio(BaseOptions(responseType: ResponseType.plain))..httpClientAdapter = a;
 
-Map<String, dynamic> _feat(int id) => {'attributes': {'OBJECTID': id}};
+Map<String, dynamic> _feat(int id) => {
+      'attributes': {'OBJECTID': id}
+    };
 
-Segment _seg(int i, {String? road = 'H001', String? route, double? td0, double? td1, double? slk0, double? slk1}) =>
+Segment _seg(int i,
+        {String? road = 'H001',
+        String? route,
+        double? td0,
+        double? td1,
+        double? slk0,
+        double? slk1}) =>
     Segment.fromAttrs(i, {
       'ROAD': road,
       'ROUTE_NE_ID': route,
@@ -44,14 +56,19 @@ Segment _seg(int i, {String? road = 'H001', String? route, double? td0, double? 
 void main() {
   group('intervalsOverlap', () {
     test('overlapping, disjoint and touching ranges', () {
-      expect(intervalsOverlap(const Interval(0, 5), const Interval(4, 9)), isTrue);
-      expect(intervalsOverlap(const Interval(0, 5), const Interval(6, 9)), isFalse);
-      expect(intervalsOverlap(const Interval(0, 5), const Interval(5, 9)), isFalse);
+      expect(
+          intervalsOverlap(const Interval(0, 5), const Interval(4, 9)), isTrue);
+      expect(intervalsOverlap(const Interval(0, 5), const Interval(6, 9)),
+          isFalse);
+      expect(intervalsOverlap(const Interval(0, 5), const Interval(5, 9)),
+          isFalse);
     });
 
     test('zero-length point inside is overlap', () {
-      expect(intervalsOverlap(const Interval(3, 3), const Interval(0, 5)), isTrue);
-      expect(intervalsOverlap(const Interval(7, 7), const Interval(0, 5)), isFalse);
+      expect(
+          intervalsOverlap(const Interval(3, 3), const Interval(0, 5)), isTrue);
+      expect(intervalsOverlap(const Interval(7, 7), const Interval(0, 5)),
+          isFalse);
     });
 
     test('reversed or null ranges are rejected', () {
@@ -69,7 +86,12 @@ void main() {
     ];
 
     test('route id plus true distance confirms one segment', () {
-      final r = matchBridge({'ROUTE_NE_ID': 'R1', 'ROAD': 'H001', 'START_TRUE_DIST': 7, 'START_SLK': 7}, segs);
+      final r = matchBridge({
+        'ROUTE_NE_ID': 'R1',
+        'ROAD': 'H001',
+        'START_TRUE_DIST': 7,
+        'START_SLK': 7
+      }, segs);
       expect(r.status, MatchStatus.confirmed);
       expect(r.candidates, [1]);
       expect(r.roadAgrees, isTrue);
@@ -83,11 +105,14 @@ void main() {
     });
 
     test('route id without position over multiple segments is ambiguous', () {
-      expect(matchBridge({'ROUTE_NE_ID': 'R1'}, segs).status, MatchStatus.ambiguous);
+      expect(matchBridge({'ROUTE_NE_ID': 'R1'}, segs).status,
+          MatchStatus.ambiguous);
     });
 
     test('unknown route id is unmatched', () {
-      expect(matchBridge({'ROUTE_NE_ID': 'X', 'START_TRUE_DIST': 1}, segs).status, MatchStatus.unmatched);
+      expect(
+          matchBridge({'ROUTE_NE_ID': 'X', 'START_TRUE_DIST': 1}, segs).status,
+          MatchStatus.unmatched);
     });
 
     test('route matched but position outside range is unmatched', () {
@@ -103,14 +128,17 @@ void main() {
     });
 
     test('ROAD disagreement is reported', () {
-      final r = matchBridge({'ROUTE_NE_ID': 'R2', 'ROAD': 'H999', 'START_TRUE_DIST': 3}, segs);
+      final r = matchBridge(
+          {'ROUTE_NE_ID': 'R2', 'ROAD': 'H999', 'START_TRUE_DIST': 3}, segs);
       expect(r.status, MatchStatus.confirmed);
       expect(r.roadAgrees, isFalse);
     });
 
     test('segments with reversed ranges never match by position', () {
       final bad = [_seg(0, route: 'R1', td0: 9, td1: 1)];
-      expect(matchBridge({'ROUTE_NE_ID': 'R1', 'START_TRUE_DIST': 5}, bad).status, MatchStatus.unmatched);
+      expect(
+          matchBridge({'ROUTE_NE_ID': 'R1', 'START_TRUE_DIST': 5}, bad).status,
+          MatchStatus.unmatched);
     });
   });
 
@@ -122,37 +150,62 @@ void main() {
     ];
 
     test('single overlap is confirmed', () {
-      final m = matchConditionRecord(
-          {'ROAD': 'H001', 'START_TRUE_DIST': 1, 'END_TRUE_DIST': 4, 'START_SLK': 1, 'END_SLK': 4}, segs);
+      final m = matchConditionRecord({
+        'ROAD': 'H001',
+        'START_TRUE_DIST': 1,
+        'END_TRUE_DIST': 4,
+        'START_SLK': 1,
+        'END_SLK': 4
+      }, segs);
       expect(m.result.status, MatchStatus.confirmed);
       expect(m.evidenceDisagrees, isFalse);
     });
 
     test('spanning record is ambiguous', () {
-      final m = matchConditionRecord({'ROAD': 'H001', 'START_TRUE_DIST': 1, 'END_TRUE_DIST': 9}, segs);
+      final m = matchConditionRecord(
+          {'ROAD': 'H001', 'START_TRUE_DIST': 1, 'END_TRUE_DIST': 9}, segs);
       expect(m.result.status, MatchStatus.ambiguous);
       expect(m.result.candidates, [0, 1]);
     });
 
     test('unknown road, null road and reversed range are unmatched', () {
-      expect(matchConditionRecord({'ROAD': 'ZZ', 'START_TRUE_DIST': 1, 'END_TRUE_DIST': 2}, segs).result.status,
+      expect(
+          matchConditionRecord(
+                  {'ROAD': 'ZZ', 'START_TRUE_DIST': 1, 'END_TRUE_DIST': 2},
+                  segs)
+              .result
+              .status,
           MatchStatus.unmatched);
-      expect(matchConditionRecord({'ROAD': null}, segs).result.basis, 'missingRoad');
-      final rev = matchConditionRecord({'ROAD': 'H001', 'START_TRUE_DIST': 9, 'END_TRUE_DIST': 1}, segs);
+      expect(matchConditionRecord({'ROAD': null}, segs).result.basis,
+          'missingRoad');
+      final rev = matchConditionRecord(
+          {'ROAD': 'H001', 'START_TRUE_DIST': 9, 'END_TRUE_DIST': 1}, segs);
       expect(rev.result.status, MatchStatus.unmatched);
     });
 
     test('true-distance and SLK disagreement is flagged', () {
-      final m = matchConditionRecord(
-          {'ROAD': 'H001', 'START_TRUE_DIST': 1, 'END_TRUE_DIST': 4, 'START_SLK': 6, 'END_SLK': 9}, segs);
+      final m = matchConditionRecord({
+        'ROAD': 'H001',
+        'START_TRUE_DIST': 1,
+        'END_TRUE_DIST': 4,
+        'START_SLK': 6,
+        'END_SLK': 9
+      }, segs);
       expect(m.result.candidates, [0]);
       expect(m.slkCandidates, [1]);
       expect(m.evidenceDisagrees, isTrue);
     });
 
-    test('segments missing either range are excluded from evidence comparisons', () {
+    test('segments missing either range are excluded from evidence comparisons',
+        () {
       final m = matchConditionRecord(
-        {'ROAD': 'H001', 'START_TRUE_DIST': 1, 'END_TRUE_DIST': 4, 'START_SLK': 1, 'END_SLK': 4},
+        {
+          'ROAD': 'H001',
+          'START_TRUE_DIST': 1,
+          'END_TRUE_DIST': 4,
+          'START_SLK': 1,
+          'END_SLK': 4
+        },
         [_seg(0, td0: 0, td1: 5)],
       );
       expect(m.result.candidates, [0]);
@@ -180,17 +233,42 @@ void main() {
       final prefix = 'x' * 81;
       final first = '${prefix}a';
       final second = '${prefix}b';
-      expect(valueCounts([{'V': first}, {'V': second}], 'V'), {first: 1, second: 1});
+      expect(
+          valueCounts([
+            {'V': first},
+            {'V': second}
+          ], 'V'),
+          {first: 1, second: 1});
     });
 
     test('MAX_NETWORK evidence never reports an established rule', () {
       final e = MaxNetworkEvidence(2)
-        ..add({'ROAD': 'H001', 'START_TRUE_DIST': 0, 'END_TRUE_DIST': 4},
-            [Segment.fromAttrs(0, {'ROAD': 'H001', 'START_TRUE_DIST': 0, 'END_TRUE_DIST': 5, 'MAX_NETWORK': 3})]);
+        ..add({
+          'ROAD': 'H001',
+          'START_TRUE_DIST': 0,
+          'END_TRUE_DIST': 4
+        }, [
+          Segment.fromAttrs(0, {
+            'ROAD': 'H001',
+            'START_TRUE_DIST': 0,
+            'END_TRUE_DIST': 5,
+            'MAX_NETWORK': 3
+          })
+        ]);
       expect(e.verdict, startsWith('insufficient'));
       final c = MaxNetworkEvidence(2)
-        ..add({'ROAD': 'H001', 'START_TRUE_DIST': 0, 'END_TRUE_DIST': 4},
-            [Segment.fromAttrs(0, {'ROAD': 'H001', 'START_TRUE_DIST': 0, 'END_TRUE_DIST': 5, 'MAX_NETWORK': 1})]);
+        ..add({
+          'ROAD': 'H001',
+          'START_TRUE_DIST': 0,
+          'END_TRUE_DIST': 4
+        }, [
+          Segment.fromAttrs(0, {
+            'ROAD': 'H001',
+            'START_TRUE_DIST': 0,
+            'END_TRUE_DIST': 5,
+            'MAX_NETWORK': 1
+          })
+        ]);
       expect(c.verdict, startsWith('contradicts'));
     });
   });
@@ -198,16 +276,26 @@ void main() {
   group('fetchAllAttributes', () {
     test('paginates with resultOffset until transfer limit clears', () async {
       final a = _Adapter((o) {
-        if (!o.uri.path.endsWith('/query')) return _body({'name': 'L', 'maxRecordCount': 2});
+        if (!o.uri.path.endsWith('/query')) {
+          return _body({'name': 'L', 'maxRecordCount': 2});
+        }
         final off = int.parse(o.uri.queryParameters['resultOffset']!);
-        final feats = [for (var i = off; i < (off + 2).clamp(0, 5); i++) _feat(i)];
-        return _body({'features': feats, if (off + 2 < 5) 'exceededTransferLimit': true});
+        final feats = [
+          for (var i = off; i < (off + 2).clamp(0, 5); i++) _feat(i)
+        ];
+        return _body({
+          'features': feats,
+          if (off + 2 < 5) 'exceededTransferLimit': true
+        });
       });
       final d = await fetchAllAttributes(_dio(a), 7, delay: Duration.zero);
       expect(d.rows.length, 5);
       expect(d.complete, isTrue);
       expect(d.pages, 3);
-      final q = a.requests.where((u) => u.path.endsWith('/query')).first.queryParameters;
+      final q = a.requests
+          .where((u) => u.path.endsWith('/query'))
+          .first
+          .queryParameters;
       expect(q['where'], '1=1');
       expect(q['outFields'], '*');
       expect(q['returnGeometry'], 'false');
@@ -216,7 +304,9 @@ void main() {
     });
 
     test('successful empty result is valid and complete', () async {
-      final a = _Adapter((o) => o.uri.path.endsWith('/query') ? _body({'features': []}) : _body({'name': 'L'}));
+      final a = _Adapter((o) => o.uri.path.endsWith('/query')
+          ? _body({'features': []})
+          : _body({'name': 'L'}));
       final d = await fetchAllAttributes(_dio(a), 7, delay: Duration.zero);
       expect(d.rows, isEmpty);
       expect(d.complete, isTrue);
@@ -232,7 +322,8 @@ void main() {
       expect(d.incompleteReason, isNotNull);
     });
 
-    test('successful empty page with false transfer-limit flag is complete', () async {
+    test('successful empty page with false transfer-limit flag is complete',
+        () async {
       final a = _Adapter((o) => o.uri.path.endsWith('/query')
           ? _body({'features': [], 'exceededTransferLimit': false})
           : _body({'name': 'L'}));
@@ -243,28 +334,43 @@ void main() {
 
     test('hitting maxPages marks result incomplete', () async {
       final a = _Adapter((o) => o.uri.path.endsWith('/query')
-          ? _body({'features': [_feat(1)], 'exceededTransferLimit': true})
+          ? _body({
+              'features': [_feat(1)],
+              'exceededTransferLimit': true
+            })
           : _body({'name': 'L'}));
-      final d = await fetchAllAttributes(_dio(a), 7, maxPages: 2, delay: Duration.zero);
+      final d = await fetchAllAttributes(_dio(a), 7,
+          maxPages: 2, delay: Duration.zero);
       expect(d.complete, isFalse);
       expect(d.incompleteReason, isNotNull);
     });
 
     test('malformed, ArcGIS error and HTTP failures throw', () async {
-      Future<void> expectFails(ResponseBody Function(RequestOptions) h) => expectLater(
-          fetchAllAttributes(_dio(_Adapter(h)), 7, delay: Duration.zero), throwsA(isA<ProbeException>()));
+      Future<void> expectFails(ResponseBody Function(RequestOptions) h) =>
+          expectLater(
+              fetchAllAttributes(_dio(_Adapter(h)), 7, delay: Duration.zero),
+              throwsA(isA<ProbeException>()));
 
       await expectFails((o) => _body('not json'));
-      await expectFails((o) => _body({'error': {'code': 400, 'message': 'bad'}}));
-      await expectFails((o) => o.uri.path.endsWith('/query') ? _body({'nofeatures': 1}) : _body({'name': 'L'}));
-      await expectFails((o) => o.uri.path.endsWith('/query') ? _body({'features': [1]}) : _body({'name': 'L'}));
+      await expectFails((o) => _body({
+            'error': {'code': 400, 'message': 'bad'}
+          }));
+      await expectFails((o) => o.uri.path.endsWith('/query')
+          ? _body({'nofeatures': 1})
+          : _body({'name': 'L'}));
+      await expectFails((o) => o.uri.path.endsWith('/query')
+          ? _body({
+              'features': [1]
+            })
+          : _body({'name': 'L'}));
       await expectFails((o) => _body({}, 500));
     });
   });
 
   group('buildSummary', () {
     test('failed layer yields no stats and marks run unsuccessful', () {
-      final s = buildSummary(layers: {}, failures: {78: 'boom'}, sampleLimit: 2, generatedAt: 't');
+      final s = buildSummary(
+          layers: {}, failures: {78: 'boom'}, sampleLimit: 2, generatedAt: 't');
       expect(s['allLayersCompleteAndSuccessful'], isFalse);
       expect(s['layer78'], isNull);
       expect((s['failedLayers'] as Map)['78'], 'boom');
@@ -299,7 +405,8 @@ void main() {
       );
       final layer = summary['layer78'] as Map;
       expect((layer['maxNetworkValues'] as Map).keys.toSet(), {first, second});
-      expect((layer['maxNetworkExamples'] as Map).keys.toSet(), {first, second});
+      expect(
+          (layer['maxNetworkExamples'] as Map).keys.toSet(), {first, second});
     });
   });
 }

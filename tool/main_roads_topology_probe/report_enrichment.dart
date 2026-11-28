@@ -5,7 +5,8 @@ String enrichTopologyReportWithEndpointSegmentProximity(
   Map<String, dynamic> summary,
 ) {
   final analysis = summary['analysis'] as Map<String, dynamic>?;
-  final proximity = analysis?['endpointSegmentProximity'] as Map<String, dynamic>?;
+  final proximity =
+      analysis?['endpointSegmentProximity'] as Map<String, dynamic>?;
   if (proximity == null) return report;
 
   final segmentBuckets = proximity['nearestSegmentDistanceBuckets'] as Map;
@@ -17,29 +18,36 @@ String enrichTopologyReportWithEndpointSegmentProximity(
   final b = StringBuffer()
     ..writeln('## I.1 Endpoint-to-segment proximity')
     ..writeln()
-    ..writeln('For endpoints without an exact different-feature endpoint partner, this diagnostic searches for the nearest finite segment belonging to another source feature within ${proximity['searchRadiusMetres']} m. Candidates are diagnostic only: no coordinate was snapped, no feature was split and no junction was created.')
+    ..writeln(
+        'For endpoints without an exact different-feature endpoint partner, this diagnostic searches for the nearest finite segment belonging to another source feature within ${proximity['searchRadiusMetres']} m. Candidates are diagnostic only: no coordinate was snapped, no feature was split and no junction was created.')
     ..writeln()
     ..writeln('| Measure | Count |')
     ..writeln('|---|---:|')
-    ..writeln('| Eligible endpoints without an exact different-feature endpoint partner | ${proximity['eligibleEndpointCount']} |')
-    ..writeln('| Endpoints with a foreign-segment candidate within radius | ${proximity['endpointsWithCandidateWithinRadius']} |')
-    ..writeln('| Endpoints without a foreign-segment candidate within radius | ${proximity['endpointsWithoutCandidateWithinRadius']} |')
+    ..writeln(
+        '| Eligible endpoints without an exact different-feature endpoint partner | ${proximity['eligibleEndpointCount']} |')
+    ..writeln(
+        '| Endpoints with a foreign-segment candidate within radius | ${proximity['endpointsWithCandidateWithinRadius']} |')
+    ..writeln(
+        '| Endpoints without a foreign-segment candidate within radius | ${proximity['endpointsWithoutCandidateWithinRadius']} |')
     ..writeln()
     ..writeln('Nearest finite-segment distance: ${_inlineMap(segmentBuckets)}')
     ..writeln()
-    ..writeln('Nearest segment-interior distance: ${_inlineMap(interiorBuckets)}')
+    ..writeln(
+        'Nearest segment-interior distance: ${_inlineMap(interiorBuckets)}')
     ..writeln()
     ..writeln('Nearest target location: ${_inlineMap(locations)}')
     ..writeln()
     ..writeln('By ROAD / ROUTE_NE_ID relation: ${_inlineMap(roadRelation)}')
     ..writeln()
-    ..writeln('Detail records: ${details.length}${proximity['detailsTruncated'] == true ? ' (TRUNCATED)' : ''} in the JSON.')
+    ..writeln(
+        'Detail records: ${details.length}${proximity['detailsTruncated'] == true ? ' (TRUNCATED)' : ''} in the JSON.')
     ..writeln();
 
   var enriched = report;
   const insertionPoint = '## J. Topology implications';
   if (enriched.contains(insertionPoint)) {
-    enriched = enriched.replaceFirst(insertionPoint, '${b.toString()}## J. Topology implications');
+    enriched = enriched.replaceFirst(
+        insertionPoint, '${b.toString()}## J. Topology implications');
   } else {
     enriched = '$enriched\n${b.toString()}';
   }
@@ -53,5 +61,6 @@ String enrichTopologyReportWithEndpointSegmentProximity(
   return enriched;
 }
 
-String _inlineMap(Map values) =>
-    values.isEmpty ? 'none' : values.entries.map((e) => '${e.key}: ${e.value}').join('; ');
+String _inlineMap(Map values) => values.isEmpty
+    ? 'none'
+    : values.entries.map((e) => '${e.key}: ${e.value}').join('; ');

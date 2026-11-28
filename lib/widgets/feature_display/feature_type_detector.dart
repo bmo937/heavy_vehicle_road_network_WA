@@ -8,7 +8,8 @@ class FeatureTypeDetector {
     final properties = feature.properties;
     String layerId = feature.layerId;
 
-    debugPrint('Determining feature type for layer ID: $layerId with properties: $properties');
+    debugPrint(
+        'Determining feature type for layer ID: $layerId with properties: $properties');
 
     // Handle SubLayerFeatureType enum values
     if (layerId.contains('SubLayerFeatureType')) {
@@ -43,7 +44,8 @@ class FeatureTypeDetector {
       return 'rest_area'; // HVS inspection bays are a type of rest area
     }
 
-    if (layerId == 'layer-poi-road_train_assembly_area-symbol' || layerId.contains('road_train_assembly_area')) {
+    if (layerId == 'layer-poi-road_train_assembly_area-symbol' ||
+        layerId.contains('road_train_assembly_area')) {
       return 'road_train_assembly';
     }
 
@@ -56,25 +58,32 @@ class FeatureTypeDetector {
       return 'rest_area';
     }
 
-    if (layerId == 'layer-poi-roadhouse-symbol' || layerId.contains('roadhouse')) {
+    if (layerId == 'layer-poi-roadhouse-symbol' ||
+        layerId.contains('roadhouse')) {
       return 'roadhouse';
     }
 
     // Travel impact layers (using standardized naming)
-    if (layerId == 'layer-travel-rav_impacts-line' || layerId.contains('ravLayer')) {
+    if (layerId == 'layer-travel-rav_impacts-line' ||
+        layerId.contains('ravLayer')) {
       return 'travel_impact';
     }
 
-    if (layerId == 'layer-travel-osom_impacts-line' || layerId.contains('osomLayer')) {
+    if (layerId == 'layer-travel-osom_impacts-line' ||
+        layerId.contains('osomLayer')) {
       return 'travel_impact';
     }
 
-    if (layerId == 'layer-travel-road_incidents-symbol' || layerId.contains('incidentLayer')) {
+    if (layerId == 'layer-travel-road_incidents-symbol' ||
+        layerId.contains('incidentLayer')) {
       return 'traffic_incident';
     }
 
     // Legacy layer names for backward compatibility
-    if (layerId.contains('road-incidents-symbol-layer') || layerId.contains('incidentLayer') || (properties.containsKey('ClosureTyp') && properties.containsKey('IncidentTy'))) {
+    if (layerId.contains('road-incidents-symbol-layer') ||
+        layerId.contains('incidentLayer') ||
+        (properties.containsKey('ClosureTyp') &&
+            properties.containsKey('IncidentTy'))) {
       return 'traffic_incident';
     }
 
@@ -88,12 +97,14 @@ class FeatureTypeDetector {
 
     // Check for traffic services - specifically for road surface damage incidents
     if (properties.containsKey('IncidentTy') &&
-        (properties['IncidentTy']?.toString().contains('Pothole') == true || properties['IncidentTy']?.toString().contains('Surface') == true)) {
+        (properties['IncidentTy']?.toString().contains('Pothole') == true ||
+            properties['IncidentTy']?.toString().contains('Surface') == true)) {
       return 'traffic_service';
     }
 
     // Check for search results from Google Places
-    if (properties.containsKey('marker_type') && properties['marker_type'] == 'search_result') {
+    if (properties.containsKey('marker_type') &&
+        properties['marker_type'] == 'search_result') {
       return 'search_result';
     }
 

@@ -37,7 +37,8 @@ class MapLayerManager {
     Future<bool> Function(BuildContext?, LatLngBounds) updateVisibleLayers,
   ) async {
     if (mapController == null || !styleIsLoaded) {
-      debugPrint('❌ Cannot force layer update - map controller or style not ready');
+      debugPrint(
+          '❌ Cannot force layer update - map controller or style not ready');
       debugPrint('   Map controller: ${mapController != null ? "✅" : "❌"}');
       debugPrint('   Style loaded: ${styleIsLoaded ? "✅" : "❌"}');
       return false;
@@ -52,7 +53,8 @@ class MapLayerManager {
 
       // Get current visible bounds
       final visibleBounds = await mapController.getVisibleRegion();
-      debugPrint('📍 Forcing layer update for bounds: ${visibleBounds.southwest} to ${visibleBounds.northeast}');
+      debugPrint(
+          '📍 Forcing layer update for bounds: ${visibleBounds.southwest} to ${visibleBounds.northeast}');
 
       // Update visible layers immediately
       debugPrint('🔄 Calling updateVisibleLayers...');
@@ -90,7 +92,9 @@ class MapLayerManager {
       if (networkLayerSelection != null && networkLayerSelection.isNotEmpty) {
         debugPrint('✅ Selected network layer: $networkLayerSelection');
         debugPrint('🔄 Calling _updateNetworkLayer...');
-        if (!await _updateNetworkLayer(networkLayerSelection, visibleBounds, ref, mapController, isCurrent: isCurrent)) {
+        if (!await _updateNetworkLayer(
+            networkLayerSelection, visibleBounds, ref, mapController,
+            isCurrent: isCurrent)) {
           succeeded = false;
         }
       } else {
@@ -143,14 +147,16 @@ class MapLayerManager {
 
       // Search in group members of each top-level layer
       for (final parentLayer in menuAssets.layers) {
-        if (parentLayer.groupMembers == null || parentLayer.groupMembers!.isEmpty) {
+        if (parentLayer.groupMembers == null ||
+            parentLayer.groupMembers!.isEmpty) {
           continue;
         }
 
         // Check if this layer's group members contain our target
         for (final member in parentLayer.groupMembers!) {
           if (member.name == layerName) {
-            debugPrint('Found layer in group members: ${parentLayer.name} > ${member.name}');
+            debugPrint(
+                'Found layer in group members: ${parentLayer.name} > ${member.name}');
             // Use the online_layers.dart helper to load the layer
             final loaded = await loadNetworkLayerData(
               mapController: mapController,
@@ -204,10 +210,12 @@ class MapLayerManager {
           if (isCurrent != null && !isCurrent()) return false;
           isVisible = ref.read(poiLayerSelectionProvider)[layerName] ?? false;
           if (layerIds.contains(layerId)) {
-            debugPrint('🏪 Set POI layer visibility: $layerName ($layerId) = $isVisible');
+            debugPrint(
+                '🏪 Set POI layer visibility: $layerName ($layerId) = $isVisible');
             await mapController.setLayerVisibility(layerId, isVisible);
           } else if (isVisible) {
-            debugPrint('❌ Selected POI layer is missing: $layerName ($layerId)');
+            debugPrint(
+                '❌ Selected POI layer is missing: $layerName ($layerId)');
             succeeded = false;
           } else {
             debugPrint('⚠️ POI layer not found: $layerName ($layerId)');
@@ -252,7 +260,9 @@ class MapLayerManager {
   /// Returns true only if every POI member with a URL was added. Stops (and
   /// returns false) as soon as [isCurrent] reports the style/controller changed,
   /// so a stale restoration never adds sources to a newer style.
-  Future<bool> preloadPoiLayers(WidgetRef ref, MapLibreMapController? mapController, {bool Function()? isCurrent}) async {
+  Future<bool> preloadPoiLayers(
+      WidgetRef ref, MapLibreMapController? mapController,
+      {bool Function()? isCurrent}) async {
     if (mapController == null) return false;
     bool stale() => isCurrent != null && !isCurrent();
     debugPrint('\n🏪 === PRELOADING POI LAYERS ===');
@@ -266,7 +276,11 @@ class MapLayerManager {
       debugPrint('✅ Menu assets loaded, processing POI layers');
 
       // Find POI layers (stopping places)
-      final poiLayers = menuAssets.layers.where((layer) => layer.listMenu == ListMenu.pointsOfInterest && layer.groupMembers != null).toList();
+      final poiLayers = menuAssets.layers
+          .where((layer) =>
+              layer.listMenu == ListMenu.pointsOfInterest &&
+              layer.groupMembers != null)
+          .toList();
 
       for (final layer in poiLayers) {
         if (layer.groupMembers == null) continue;
@@ -275,7 +289,10 @@ class MapLayerManager {
         for (final member in layer.groupMembers!) {
           if (stale()) return false;
           if (_isSpecialOverlay(member.name)) continue;
-          if (!await _preloadPoiMember(member, mapController, isCurrent: isCurrent)) allLoaded = false;
+          if (!await _preloadPoiMember(member, mapController,
+              isCurrent: isCurrent)) {
+            allLoaded = false;
+          }
         }
       }
 
@@ -290,14 +307,19 @@ class MapLayerManager {
   /// Restores selected travel-impact and road-incident overlays, which are
   /// driven by POI selections but are not part of [preloadPoiLayers].
   /// Returns true if every selected overlay was restored.
-  Future<bool> restoreSelectedOverlays(WidgetRef ref, MapLibreMapController mapController, {bool Function()? isCurrent}) async {
+  Future<bool> restoreSelectedOverlays(
+      WidgetRef ref, MapLibreMapController mapController,
+      {bool Function()? isCurrent}) async {
     final generation = ++_overlayUpdateGeneration;
-    bool stale() => (isCurrent != null && !isCurrent()) || generation != _overlayUpdateGeneration;
+    bool stale() =>
+        (isCurrent != null && !isCurrent()) ||
+        generation != _overlayUpdateGeneration;
     Map<String, bool> selections = ref.read(poiLayerSelectionProvider);
     var ok = true;
 
     Map<String, dynamic>? travelImpactData;
-    if ((selections['Rav Impacts'] ?? false) || (selections['OSOM Impacts'] ?? false)) {
+    if ((selections['Rav Impacts'] ?? false) ||
+        (selections['OSOM Impacts'] ?? false)) {
       try {
         travelImpactData = await ref.read(fetchGeoJsonDataProvider.future);
         if (stale()) return false;
@@ -333,7 +355,11 @@ class MapLayerManager {
         if (travelImpactData == null) {
           ok = false;
         } else {
-          final processed = processGeoJsonData({'data': travelImpactData, 'toggleRAV': ravActive, 'toggleOSOM': osomActive});
+          final processed = processGeoJsonData({
+            'data': travelImpactData,
+            'toggleRAV': ravActive,
+            'toggleOSOM': osomActive
+          });
           await displayTravelImpactLayer(mapController, processed);
           if (stale()) return false;
           await setTravelImpactLayerVisibility(mapController, true);
@@ -364,10 +390,15 @@ class MapLayerManager {
     }
   }
 
-  bool _isSpecialOverlay(String name) => name == 'Rav Impacts' || name == 'OSOM Impacts' || name == 'Road Incidents';
+  bool _isSpecialOverlay(String name) =>
+      name == 'Rav Impacts' ||
+      name == 'OSOM Impacts' ||
+      name == 'Road Incidents';
 
   /// Pre-load a specific POI member layer. Returns true if it was added (or has nothing to add).
-  Future<bool> _preloadPoiMember(GroupMember member, MapLibreMapController mapController, {bool Function()? isCurrent}) async {
+  Future<bool> _preloadPoiMember(
+      GroupMember member, MapLibreMapController mapController,
+      {bool Function()? isCurrent}) async {
     if (member.url == null || member.url!.isEmpty) return true;
 
     try {
@@ -428,7 +459,9 @@ class MapLayerManager {
 
       // SourceManagementUtility swallows add failures, so confirm the layer exists.
       final added = (await mapController.getLayerIds()).contains(layerId);
-      debugPrint(added ? '   ✅ Preloaded POI layer: ${member.name}' : '   ❌ POI layer missing after add: ${member.name}');
+      debugPrint(added
+          ? '   ✅ Preloaded POI layer: ${member.name}'
+          : '   ❌ POI layer missing after add: ${member.name}');
       return added;
     } catch (e) {
       debugPrint('   ❌ Error preloading POI member ${member.name}: $e');

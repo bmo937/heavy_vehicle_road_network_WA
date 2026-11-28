@@ -158,7 +158,9 @@ class LayerNamingUtility {
     }
 
     // Handle travel impacts
-    if (originalLayerId.contains('travel-impact') || originalLayerId.contains('osomLayer') || originalLayerId.contains('ravLayer')) {
+    if (originalLayerId.contains('travel-impact') ||
+        originalLayerId.contains('osomLayer') ||
+        originalLayerId.contains('ravLayer')) {
       if (originalLayerId.contains('symbol')) {
         return getLayerId(CATEGORY_TRAVEL, 'travel_impact', TYPE_SYMBOL);
       } else {
@@ -167,7 +169,8 @@ class LayerNamingUtility {
     }
 
     // Handle incidents
-    if (originalLayerId.contains('incident') || originalLayerId.contains('road-incidents')) {
+    if (originalLayerId.contains('incident') ||
+        originalLayerId.contains('road-incidents')) {
       return getLayerId(CATEGORY_INCIDENT, 'road_incidents', TYPE_SYMBOL);
     }
 
@@ -243,7 +246,12 @@ class LayerNamingUtility {
 
   /// Helper method to normalize a name for use in IDs
   static String _normalizedName(String name) {
-    return name.toLowerCase().trim().replaceAll(' ', '_').replaceAll('-', '_').replaceAll('/', '_');
+    return name
+        .toLowerCase()
+        .trim()
+        .replaceAll(' ', '_')
+        .replaceAll('-', '_')
+        .replaceAll('/', '_');
   }
 
   /// Determine the category from a layer object
@@ -317,7 +325,8 @@ class LayerNamingUtility {
   /// Get standardized layer ID for travel impact member
   static String getTravelImpactLayerId(String memberName) {
     final normalizedName = _getTravelImpactNormalizedName(memberName);
-    final layerType = memberName.toLowerCase().contains('incident') ? TYPE_SYMBOL : TYPE_LINE;
+    final layerType =
+        memberName.toLowerCase().contains('incident') ? TYPE_SYMBOL : TYPE_LINE;
     return getLayerId(CATEGORY_TRAVEL, normalizedName, layerType);
   }
 

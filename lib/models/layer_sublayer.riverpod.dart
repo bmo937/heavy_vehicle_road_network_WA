@@ -71,8 +71,11 @@ class LayerSubLayer {
         url: json['url'] as String?,
         type: json['type'] as String?,
         featureType: json['featureType'] as String?,
-        geometryType:
-            json['geometryType'] != null ? GeometryType.values.firstWhere((e) => e.toString() == 'GeometryType.${json['geometryType']}', orElse: () => GeometryType.point) : null,
+        geometryType: json['geometryType'] != null
+            ? GeometryType.values.firstWhere(
+                (e) => e.toString() == 'GeometryType.${json['geometryType']}',
+                orElse: () => GeometryType.point)
+            : null,
         mapIcon: json['mapIcon'] as String?,
         lineColor: json['lineColor'] as String?,
       );

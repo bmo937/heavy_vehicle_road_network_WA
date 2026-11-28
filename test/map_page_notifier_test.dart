@@ -8,14 +8,18 @@ import 'package:maplibre_gl/maplibre_gl.dart';
 import 'package:roads_map/providers/map_page_notifier.riverpod.dart';
 import 'package:roads_map/providers/map_provider_state.dart';
 
-MapPageNotifier _notifier(MapInitialSettingsLoader loader) => MapPageNotifier(loader);
+MapPageNotifier _notifier(MapInitialSettingsLoader loader) =>
+    MapPageNotifier(loader);
 
 void main() {
   test('starts initialising and does no work until initialize()', () {
     var calls = 0;
     final n = _notifier(() async {
       calls++;
-      return const MapInitialSettings(styleUrl: 's', isTravelLayerVisible: false, isSatelliteLayerVisible: false);
+      return const MapInitialSettings(
+          styleUrl: 's',
+          isTravelLayerVisible: false,
+          isSatelliteLayerVisible: false);
     });
     expect(n.state.initStatus, MapInitStatus.initialising);
     expect(n.state.currentStyleUrl, isEmpty);
@@ -23,8 +27,13 @@ void main() {
     n.dispose();
   });
 
-  test('successful init becomes ready with persisted settings; map not fully loaded', () async {
-    final n = _notifier(() async => const MapInitialSettings(styleUrl: 'style', isTravelLayerVisible: true, isSatelliteLayerVisible: true));
+  test(
+      'successful init becomes ready with persisted settings; map not fully loaded',
+      () async {
+    final n = _notifier(() async => const MapInitialSettings(
+        styleUrl: 'style',
+        isTravelLayerVisible: true,
+        isSatelliteLayerVisible: true));
     await n.initialize();
     expect(n.state.initStatus, MapInitStatus.ready);
     expect(n.state.currentStyleUrl, 'style');
@@ -51,7 +60,10 @@ void main() {
     final n = _notifier(() => c.future);
     final init = n.initialize();
     n.dispose();
-    c.complete(const MapInitialSettings(styleUrl: 'late', isTravelLayerVisible: true, isSatelliteLayerVisible: true));
+    c.complete(const MapInitialSettings(
+        styleUrl: 'late',
+        isTravelLayerVisible: true,
+        isSatelliteLayerVisible: true));
     await init;
     expect(n.mounted, isFalse);
 
@@ -63,8 +75,13 @@ void main() {
     await init2;
   });
 
-  testWidgets('controller-dependent calls before controller creation do not crash', (tester) async {
-    final n = _notifier(() async => const MapInitialSettings(styleUrl: 's', isTravelLayerVisible: false, isSatelliteLayerVisible: false));
+  testWidgets(
+      'controller-dependent calls before controller creation do not crash',
+      (tester) async {
+    final n = _notifier(() async => const MapInitialSettings(
+        styleUrl: 's',
+        isTravelLayerVisible: false,
+        isSatelliteLayerVisible: false));
     late WidgetRef ref;
     late BuildContext context;
     await tester.pumpWidget(ProviderScope(
@@ -75,7 +92,8 @@ void main() {
       }),
     ));
     expect(n.mapController, isNull);
-    await n.handleFeatureTap(context, 'id', const Point(0.0, 0.0), const LatLng(0, 0), 'layer', ref);
+    await n.handleFeatureTap(
+        context, 'id', const Point(0.0, 0.0), const LatLng(0, 0), 'layer', ref);
     await n.onStyleLoaded(context, ref);
     n.dispose();
   });

@@ -30,7 +30,12 @@ Future<void> main(List<String> args) async {
     }
   }
 
-  final ids = <int>[layer78, ...bridgeLayers.keys, ...intersectionLayers.keys, ...conditionLayers.keys]..sort();
+  final ids = <int>[
+    layer78,
+    ...bridgeLayers.keys,
+    ...intersectionLayers.keys,
+    ...conditionLayers.keys
+  ]..sort();
   final dio = buildProbeDio();
   final layers = <int, LayerData>{};
   final failures = <int, String>{};
@@ -39,7 +44,8 @@ Future<void> main(List<String> args) async {
     try {
       final d = await fetchAllAttributes(dio, id);
       layers[id] = d;
-      stdout.writeln('  ${d.rows.length} records, ${d.pages} page(s), complete=${d.complete}');
+      stdout.writeln(
+          '  ${d.rows.length} records, ${d.pages} page(s), complete=${d.complete}');
     } on ProbeException catch (e) {
       failures[id] = e.message;
       stderr.writeln('  FAILED: ${e.message}');
@@ -57,14 +63,16 @@ Future<void> main(List<String> args) async {
   );
   File(jsonPath)
     ..parent.createSync(recursive: true)
-    ..writeAsStringSync('${const JsonEncoder.withIndent('  ').convert(summary)}\n');
+    ..writeAsStringSync(
+        '${const JsonEncoder.withIndent('  ').convert(summary)}\n');
   File(reportPath)
     ..parent.createSync(recursive: true)
     ..writeAsStringSync(renderReport(summary));
   stdout.writeln('Wrote $reportPath and $jsonPath');
 
   if (summary['allLayersCompleteAndSuccessful'] != true) {
-    stderr.writeln('Run INCOMPLETE: see failedLayers/incompleteLayers in the report.');
+    stderr.writeln(
+        'Run INCOMPLETE: see failedLayers/incompleteLayers in the report.');
     exit(2);
   }
 }

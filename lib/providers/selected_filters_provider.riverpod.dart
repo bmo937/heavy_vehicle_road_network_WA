@@ -2,7 +2,8 @@ import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:roads_map/models/menu_assets.riverpod.dart';
 
 /// Provider for managing selected filters in the layer menu
-final selectedFiltersNotifierProvider = StateNotifierProvider<SelectedFiltersNotifier, Set<Filter>>((ref) {
+final selectedFiltersNotifierProvider =
+    StateNotifierProvider<SelectedFiltersNotifier, Set<Filter>>((ref) {
   return SelectedFiltersNotifier();
 });
 

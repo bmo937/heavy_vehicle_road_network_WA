@@ -8,7 +8,8 @@ import '../feature_display_helpers.dart';
 /// Traffic service display builder
 class TrafficServiceDisplayBuilder {
   /// Build traffic service display
-  static Widget buildTrafficServiceDisplay(BuildContext context, TappedFeature feature, String title) {
+  static Widget buildTrafficServiceDisplay(
+      BuildContext context, TappedFeature feature, String title) {
     final Map<String, dynamic> properties = feature.properties;
     final TextTheme textTheme = Theme.of(context).textTheme;
     final colorScheme = Theme.of(context).colorScheme;
@@ -60,30 +61,47 @@ class TrafficServiceDisplayBuilder {
 
           // Incident Details
           Text('Road Condition Details', style: textTheme.bodyMedium),
-          if (incidentType.isNotEmpty) FeatureDisplayHelpers.buildProperty(context, 'Issue Type', incidentType),
-          if (closureType.isNotEmpty) FeatureDisplayHelpers.buildProperty(context, 'Road Status', closureType),
-          if (trafficImpact.isNotEmpty) FeatureDisplayHelpers.buildProperty(context, 'Traffic Impact', trafficImpact),
+          if (incidentType.isNotEmpty)
+            FeatureDisplayHelpers.buildProperty(
+                context, 'Issue Type', incidentType),
+          if (closureType.isNotEmpty)
+            FeatureDisplayHelpers.buildProperty(
+                context, 'Road Status', closureType),
+          if (trafficImpact.isNotEmpty)
+            FeatureDisplayHelpers.buildProperty(
+                context, 'Traffic Impact', trafficImpact),
 
           customDivider,
 
           // Location Information
           Text('Location Information', style: textTheme.bodyMedium),
-          if (location.isNotEmpty) FeatureDisplayHelpers.buildProperty(context, 'Location', location),
-          if (road.isNotEmpty) FeatureDisplayHelpers.buildProperty(context, 'Road', road),
-          if (suburb.isNotEmpty) FeatureDisplayHelpers.buildProperty(context, 'Suburb/Town', suburb),
-          if (region.isNotEmpty) FeatureDisplayHelpers.buildProperty(context, 'Region', region),
+          if (location.isNotEmpty)
+            FeatureDisplayHelpers.buildProperty(context, 'Location', location),
+          if (road.isNotEmpty)
+            FeatureDisplayHelpers.buildProperty(context, 'Road', road),
+          if (suburb.isNotEmpty)
+            FeatureDisplayHelpers.buildProperty(context, 'Suburb/Town', suburb),
+          if (region.isNotEmpty)
+            FeatureDisplayHelpers.buildProperty(context, 'Region', region),
 
           if (entryDate.isNotEmpty || updateDate.isNotEmpty) customDivider,
 
           // Time Information
-          if (entryDate.isNotEmpty || updateDate.isNotEmpty) Text('Time Information', style: textTheme.bodyMedium),
-          if (entryDate.isNotEmpty) FeatureDisplayHelpers.buildProperty(context, 'Reported', entryDate),
-          if (updateDate.isNotEmpty) FeatureDisplayHelpers.buildProperty(context, 'Last Updated', updateDate),
+          if (entryDate.isNotEmpty || updateDate.isNotEmpty)
+            Text('Time Information', style: textTheme.bodyMedium),
+          if (entryDate.isNotEmpty)
+            FeatureDisplayHelpers.buildProperty(context, 'Reported', entryDate),
+          if (updateDate.isNotEmpty)
+            FeatureDisplayHelpers.buildProperty(
+                context, 'Last Updated', updateDate),
 
-          if (closureType.isNotEmpty && closureType.toLowerCase().contains("caution")) customDivider,
+          if (closureType.isNotEmpty &&
+              closureType.toLowerCase().contains("caution"))
+            customDivider,
 
           // Warning box for road caution
-          if (closureType.isNotEmpty && closureType.toLowerCase().contains("caution"))
+          if (closureType.isNotEmpty &&
+              closureType.toLowerCase().contains("caution"))
             Center(
               child: Padding(
                 padding: const EdgeInsets.only(top: 16),

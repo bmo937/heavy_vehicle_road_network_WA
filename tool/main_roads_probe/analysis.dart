@@ -15,7 +15,8 @@ bool isPopulated(Object? v) => v != null && !(v is String && v.trim().isEmpty);
 
 String? asText(Object? v) => isPopulated(v) ? v.toString().trim() : null;
 
-String truncate(String s, [int max = 120]) => s.length <= max ? s : '${s.substring(0, max)}…';
+String truncate(String s, [int max = 120]) =>
+    s.length <= max ? s : '${s.substring(0, max)}…';
 
 /// A validated numeric range. [tryCreate] returns null when either end is
 /// missing or the range is reversed, so invalid ranges are never used as evidence.
@@ -47,13 +48,16 @@ enum MatchStatus { confirmed, ambiguous, unmatched }
 
 class MatchResult {
   final MatchStatus status;
+
   /// Indices into the layer-78 record list.
   final List<int> candidates;
   final String basis;
+
   /// null = not evaluable.
   final bool? roadAgrees;
   final bool? slkAgrees;
-  const MatchResult(this.status, this.candidates, this.basis, {this.roadAgrees, this.slkAgrees});
+  const MatchResult(this.status, this.candidates, this.basis,
+      {this.roadAgrees, this.slkAgrees});
 }
 
 /// Layer 78 segment, parsed once.
@@ -64,7 +68,8 @@ class Segment {
   final Interval? slk;
   final Interval? trueDist;
   final String? maxNetwork;
-  const Segment(this.index, this.road, this.routeNeId, this.slk, this.trueDist, this.maxNetwork);
+  const Segment(this.index, this.road, this.routeNeId, this.slk, this.trueDist,
+      this.maxNetwork);
 
   factory Segment.fromAttrs(int index, Attrs a) => Segment(
         index,
@@ -76,7 +81,8 @@ class Segment {
       );
 }
 
-List<Segment> parseSegments(List<Attrs> rows) => [for (var i = 0; i < rows.length; i++) Segment.fromAttrs(i, rows[i])];
+List<Segment> parseSegments(List<Attrs> rows) =>
+    [for (var i = 0; i < rows.length; i++) Segment.fromAttrs(i, rows[i])];
 
 /// Bridge → layer 78. Order of evidence: ROUTE_NE_ID, then true-distance
 /// position, with SLK and ROAD as validation only. Multiple candidates are
@@ -91,11 +97,15 @@ MatchResult matchBridge(Attrs bridge, List<Segment> segments) {
   String basis;
   if (routeId != null) {
     pool = segments.where((s) => s.routeNeId == routeId).toList();
-    if (pool.isEmpty) return const MatchResult(MatchStatus.unmatched, [], 'routeIdNotFound');
+    if (pool.isEmpty) {
+      return const MatchResult(MatchStatus.unmatched, [], 'routeIdNotFound');
+    }
     basis = 'routeId';
   } else if (road != null && td != null) {
     pool = segments.where((s) => s.road == road).toList();
-    if (pool.isEmpty) return const MatchResult(MatchStatus.unmatched, [], 'roadNotFound');
+    if (pool.isEmpty) {
+      return const MatchResult(MatchStatus.unmatched, [], 'roadNotFound');
+    }
     basis = 'roadFallback';
   } else {
     return const MatchResult(MatchStatus.unmatched, [], 'missingJoinFields');
@@ -106,7 +116,8 @@ MatchResult matchBridge(Attrs bridge, List<Segment> segments) {
     found = pool.where((s) => s.trueDist?.containsPoint(td) ?? false).toList();
     if (found.isEmpty) {
       // Route/road matched but position did not: a disagreement, not a match.
-      return MatchResult(MatchStatus.unmatched, const [], '${basis}PositionOutsideRange');
+      return MatchResult(
+          MatchStatus.unmatched, const [], '${basis}PositionOutsideRange');
     }
     basis = '${basis}AndTrueDist';
   } else if (basis == 'routeId') {
@@ -114,14 +125,19 @@ MatchResult matchBridge(Attrs bridge, List<Segment> segments) {
   }
 
   final idx = [for (final s in found) s.index];
-  final status = found.length == 1 ? MatchStatus.confirmed : MatchStatus.ambiguous;
+  final status =
+      found.length == 1 ? MatchStatus.confirmed : MatchStatus.ambiguous;
   final only = found.length == 1 ? found.first : null;
   return MatchResult(
     status,
     idx,
     basis,
-    roadAgrees: only == null || only.road == null || road == null ? null : only.road == road,
-    slkAgrees: only == null || only.slk == null || slk == null ? null : only.slk!.containsPoint(slk),
+    roadAgrees: only == null || only.road == null || road == null
+        ? null
+        : only.road == road,
+    slkAgrees: only == null || only.slk == null || slk == null
+        ? null
+        : only.slk!.containsPoint(slk),
   );
 }
 
@@ -130,6 +146,7 @@ MatchResult matchBridge(Attrs bridge, List<Segment> segments) {
 class ConditionMatch {
   final MatchResult result;
   final List<int> slkCandidates;
+
   /// True when both evidence sets were evaluable and differ.
   final bool evidenceDisagrees;
   const ConditionMatch(this.result, this.slkCandidates, this.evidenceDisagrees);
@@ -138,25 +155,32 @@ class ConditionMatch {
 ConditionMatch matchConditionRecord(Attrs rec, List<Segment> segments) {
   final road = asText(rec['ROAD']);
   if (road == null) {
-    return const ConditionMatch(MatchResult(MatchStatus.unmatched, [], 'missingRoad'), [], false);
+    return const ConditionMatch(
+        MatchResult(MatchStatus.unmatched, [], 'missingRoad'), [], false);
   }
   final sameRoad = segments.where((s) => s.road == road).toList();
   if (sameRoad.isEmpty) {
-    return const ConditionMatch(MatchResult(MatchStatus.unmatched, [], 'roadNotFound'), [], false);
+    return const ConditionMatch(
+        MatchResult(MatchStatus.unmatched, [], 'roadNotFound'), [], false);
   }
   final td = Interval.tryCreate(rec['START_TRUE_DIST'], rec['END_TRUE_DIST']);
   final slk = Interval.tryCreate(rec['START_SLK'], rec['END_SLK']);
 
   final tdHits = td == null
       ? <Segment>[]
-      : sameRoad.where((s) => s.trueDist != null && intervalsOverlap(td, s.trueDist!)).toList();
+      : sameRoad
+          .where((s) => s.trueDist != null && intervalsOverlap(td, s.trueDist!))
+          .toList();
   final slkHits = slk == null
       ? <Segment>[]
-      : sameRoad.where((s) => s.slk != null && intervalsOverlap(slk, s.slk!)).toList();
+      : sameRoad
+          .where((s) => s.slk != null && intervalsOverlap(slk, s.slk!))
+          .toList();
 
   final tdIdx = [for (final s in tdHits) s.index];
   final slkIdx = [for (final s in slkHits) s.index];
-  final comparableSegments = sameRoad.where((s) => s.trueDist != null && s.slk != null);
+  final comparableSegments =
+      sameRoad.where((s) => s.trueDist != null && s.slk != null);
   final comparableTdIdx = [
     for (final s in comparableSegments)
       if (td != null && intervalsOverlap(td, s.trueDist!)) s.index
@@ -168,9 +192,13 @@ ConditionMatch matchConditionRecord(Attrs rec, List<Segment> segments) {
 
   final MatchResult result;
   if (td == null) {
-    result = const MatchResult(MatchStatus.unmatched, [], 'roadMatchedInvalidOrMissingTrueDist', roadAgrees: true);
+    result = const MatchResult(
+        MatchStatus.unmatched, [], 'roadMatchedInvalidOrMissingTrueDist',
+        roadAgrees: true);
   } else if (tdHits.isEmpty) {
-    result = const MatchResult(MatchStatus.unmatched, [], 'roadMatchedNoTrueDistOverlap', roadAgrees: true);
+    result = const MatchResult(
+        MatchStatus.unmatched, [], 'roadMatchedNoTrueDistOverlap',
+        roadAgrees: true);
   } else {
     result = MatchResult(
       tdHits.length == 1 ? MatchStatus.confirmed : MatchStatus.ambiguous,
@@ -190,7 +218,8 @@ class FieldStat {
   final int populated;
   final int unpopulated;
   const FieldStat(this.populated, this.unpopulated);
-  Map<String, int> toJson() => {'populated': populated, 'unpopulated': unpopulated};
+  Map<String, int> toJson() =>
+      {'populated': populated, 'unpopulated': unpopulated};
 }
 
 Map<String, FieldStat> fieldStats(List<Attrs> rows, List<String> fields) => {
@@ -202,22 +231,27 @@ Map<String, FieldStat> fieldStats(List<Attrs> rows, List<String> fields) => {
     };
 
 /// Counts of each populated value (as text), sorted by descending count.
-Map<String, int> valueCounts(List<Attrs> rows, String field, {int maxDistinct = 100}) {
+Map<String, int> valueCounts(List<Attrs> rows, String field,
+    {int maxDistinct = 100}) {
   final m = <String, int>{};
   for (final r in rows) {
     final v = asText(r[field]);
     if (v != null) m[v] = (m[v] ?? 0) + 1;
   }
-  final entries = m.entries.toList()..sort((a, b) => b.value.compareTo(a.value));
+  final entries = m.entries.toList()
+    ..sort((a, b) => b.value.compareTo(a.value));
   return {for (final e in entries.take(maxDistinct)) e.key: e.value};
 }
 
 class DuplicateStat {
   final int distinctValuesDuplicated;
   final int recordsInDuplicateGroups;
-  const DuplicateStat(this.distinctValuesDuplicated, this.recordsInDuplicateGroups);
-  Map<String, int> toJson() =>
-      {'distinctValuesDuplicated': distinctValuesDuplicated, 'recordsInDuplicateGroups': recordsInDuplicateGroups};
+  const DuplicateStat(
+      this.distinctValuesDuplicated, this.recordsInDuplicateGroups);
+  Map<String, int> toJson() => {
+        'distinctValuesDuplicated': distinctValuesDuplicated,
+        'recordsInDuplicateGroups': recordsInDuplicateGroups
+      };
 }
 
 /// Populated values only; nulls are never counted as duplicates.
@@ -237,7 +271,12 @@ class RangeStats {
   final int reversed;
   final int zeroLength;
   const RangeStats(this.valid, this.missing, this.reversed, this.zeroLength);
-  Map<String, int> toJson() => {'valid': valid, 'missing': missing, 'reversed': reversed, 'zeroLength': zeroLength};
+  Map<String, int> toJson() => {
+        'valid': valid,
+        'missing': missing,
+        'reversed': reversed,
+        'zeroLength': zeroLength
+      };
 }
 
 RangeStats rangeStats(List<Attrs> rows, String startField, String endField) {
@@ -258,14 +297,17 @@ RangeStats rangeStats(List<Attrs> rows, String startField, String endField) {
 
 /// Tallies of match outcomes, with a few row-index samples per status.
 class MatchTally {
-  final Map<String, int> byStatus = {for (final s in MatchStatus.values) s.name: 0};
+  final Map<String, int> byStatus = {
+    for (final s in MatchStatus.values) s.name: 0
+  };
   final Map<String, int> byBasis = {};
   int roadDisagreements = 0;
   int slkDisagreements = 0;
   int evidenceDisagreements = 0;
   final Map<String, List<int>> sampleRows = {};
 
-  void add(int rowIndex, MatchResult r, {bool evidenceDisagrees = false, int sampleLimit = 3}) {
+  void add(int rowIndex, MatchResult r,
+      {bool evidenceDisagrees = false, int sampleLimit = 3}) {
     byStatus[r.status.name] = byStatus[r.status.name]! + 1;
     byBasis[r.basis] = (byBasis[r.basis] ?? 0) + 1;
     if (r.roadAgrees == false) roadDisagreements++;
@@ -287,11 +329,15 @@ class MatchTally {
 /// Keyword evidence only. NOT a parser; each flag needs later semantic review.
 Map<String, int> conditionTextMentions(List<Attrs> rows, String field) {
   final patterns = {
-    'road': RegExp(r'\b(road|rd|street|st|highway|hwy|drive|dr|avenue|ave)\b', caseSensitive: false),
-    'approach': RegExp(r'\bapproach(es)?\b', caseSensitive: false),
-    'direction': RegExp(r'\b(north|south|east|west|northbound|southbound|eastbound|westbound|[nsew]b)\b',
+    'road': RegExp(r'\b(road|rd|street|st|highway|hwy|drive|dr|avenue|ave)\b',
         caseSensitive: false),
-    'movement': RegExp(r'\b(turn|turning|left|right|u-turn|movement|straight)\b', caseSensitive: false),
+    'approach': RegExp(r'\bapproach(es)?\b', caseSensitive: false),
+    'direction': RegExp(
+        r'\b(north|south|east|west|northbound|southbound|eastbound|westbound|[nsew]b)\b',
+        caseSensitive: false),
+    'movement': RegExp(
+        r'\b(turn|turning|left|right|u-turn|movement|straight)\b',
+        caseSensitive: false),
   };
   final out = {for (final k in patterns.keys) k: 0};
   for (final r in rows) {
@@ -325,7 +371,8 @@ class MaxNetworkEvidence {
     for (final i in m.result.candidates) {
       final mx = segments[i].maxNetwork;
       final key = mx ?? '(null)';
-      overlappedMaxNetworkValues[key] = (overlappedMaxNetworkValues[key] ?? 0) + 1;
+      overlappedMaxNetworkValues[key] =
+          (overlappedMaxNetworkValues[key] ?? 0) + 1;
       final n = toDouble(mx);
       if (n == null) {
         pairsUnparsableMax++;
@@ -338,7 +385,9 @@ class MaxNetworkEvidence {
   }
 
   String get verdict {
-    if (recordsWithOverlap == 0) return 'insufficient (no overlapping layer-78 records)';
+    if (recordsWithOverlap == 0) {
+      return 'insufficient (no overlapping layer-78 records)';
+    }
     if (pairsMaxLtNetwork > 0) {
       return 'contradicts a simple cumulative rule in $pairsMaxLtNetwork overlapping pair(s)';
     }

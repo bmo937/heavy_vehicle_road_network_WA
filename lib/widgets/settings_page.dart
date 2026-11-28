@@ -38,10 +38,13 @@ class SettingsContent extends ConsumerWidget {
               items: [
                 DropdownMenuItem(value: ThemeMode.light, child: Text('Light')),
                 DropdownMenuItem(value: ThemeMode.dark, child: Text('Dark')),
-                DropdownMenuItem(value: ThemeMode.system, child: Text('System')),
+                DropdownMenuItem(
+                    value: ThemeMode.system, child: Text('System')),
               ],
               onChanged: (value) {
-                ref.read(settingsNotifierProvider.notifier).setThemeMode(value!);
+                ref
+                    .read(settingsNotifierProvider.notifier)
+                    .setThemeMode(value!);
               },
             ),
           ),
@@ -94,7 +97,8 @@ class SettingsContent extends ConsumerWidget {
     }
   }
 
-  void _showColorPicker(BuildContext context, WidgetRef ref, Color currentColor) {
+  void _showColorPicker(
+      BuildContext context, WidgetRef ref, Color currentColor) {
     showDialog(
       context: context,
       builder: (BuildContext context) {
@@ -128,7 +132,9 @@ class SettingsContent extends ConsumerWidget {
                   ].map((color) {
                     return GestureDetector(
                       onTap: () {
-                        ref.read(markerColorNotifierProvider.notifier).setMarkerColor(color);
+                        ref
+                            .read(markerColorNotifierProvider.notifier)
+                            .setMarkerColor(color);
                         Navigator.of(context).pop();
                       },
                       child: Container(
@@ -138,11 +144,15 @@ class SettingsContent extends ConsumerWidget {
                           color: color,
                           shape: BoxShape.circle,
                           border: Border.all(
-                            color: currentColor == color ? Colors.white : Colors.grey,
+                            color: currentColor == color
+                                ? Colors.white
+                                : Colors.grey,
                             width: currentColor == color ? 3 : 1,
                           ),
                         ),
-                        child: currentColor == color ? Icon(Icons.check, color: Colors.white, size: 20) : null,
+                        child: currentColor == color
+                            ? Icon(Icons.check, color: Colors.white, size: 20)
+                            : null,
                       ),
                     );
                   }).toList(),
@@ -168,7 +178,8 @@ class SettingsContent extends ConsumerWidget {
       applicationVersion: '4.0.0',
       applicationIcon: Icon(Icons.map, size: 48),
       children: [
-        Text('A comprehensive road mapping application for truck navigation and traffic information.'),
+        Text(
+            'A comprehensive road mapping application for truck navigation and traffic information.'),
       ],
     );
   }

@@ -16,10 +16,12 @@ class ContentMeasurementWidget extends ConsumerStatefulWidget {
   });
 
   @override
-  ConsumerState<ContentMeasurementWidget> createState() => _ContentMeasurementWidgetState();
+  ConsumerState<ContentMeasurementWidget> createState() =>
+      _ContentMeasurementWidgetState();
 }
 
-class _ContentMeasurementWidgetState extends ConsumerState<ContentMeasurementWidget> {
+class _ContentMeasurementWidgetState
+    extends ConsumerState<ContentMeasurementWidget> {
   final GlobalKey _measureKey = GlobalKey();
   double? _lastMeasuredHeight;
 
@@ -41,15 +43,19 @@ class _ContentMeasurementWidgetState extends ConsumerState<ContentMeasurementWid
   }
 
   void _measureContent() {
-    final renderBox = _measureKey.currentContext?.findRenderObject() as RenderBox?;
+    final renderBox =
+        _measureKey.currentContext?.findRenderObject() as RenderBox?;
     if (renderBox != null && renderBox.hasSize) {
       final size = renderBox.size;
-      final contentHeight = size.height; // Only update if the height has actually changed to avoid unnecessary rebuilds
+      final contentHeight = size
+          .height; // Only update if the height has actually changed to avoid unnecessary rebuilds
       if (_lastMeasuredHeight != contentHeight && contentHeight > 0) {
         _lastMeasuredHeight = contentHeight;
         // Reduced logging - only log significant height changes (> 5px difference)
-        if (_lastMeasuredHeight == null || (contentHeight - _lastMeasuredHeight!).abs() > 5) {
-          debugPrint('📏 ContentMeasurement for ${widget.debugName}: height=$contentHeight');
+        if (_lastMeasuredHeight == null ||
+            (contentHeight - _lastMeasuredHeight!).abs() > 5) {
+          debugPrint(
+              '📏 ContentMeasurement for ${widget.debugName}: height=$contentHeight');
         }
 
         // Update the provider with the measured height
@@ -77,7 +83,8 @@ class _ContentMeasurementWidgetState extends ConsumerState<ContentMeasurementWid
 
 /// Provider to calculate dynamic heights based on selected index and content size
 /// This provider can be used by both NavigationWidget and SheetBodyWidget
-final dynamicHeightProvider = Provider.family<double, double>((ref, screenHeight) {
+final dynamicHeightProvider =
+    Provider.family<double, double>((ref, screenHeight) {
   final selectedIndex = ref.watch(selectedIndexProvider);
   final tappedFeature = ref.watch(featureTapStateProvider);
   final showFeatureDetails = ref.watch(showFeatureDetailsProvider);
@@ -127,11 +134,14 @@ final dynamicHeightProvider = Provider.family<double, double>((ref, screenHeight
   }
   // Return the minimum of maxHeight or calculated height, but ensure minimum usable height
   final minUsableHeight = screenHeight * 0.25; // Minimum 25% of screen
-  final finalHeight = (calculatedHeight > 0 && calculatedHeight < maxHeight) ? calculatedHeight.clamp(minUsableHeight, maxHeight) : maxHeight;
+  final finalHeight = (calculatedHeight > 0 && calculatedHeight < maxHeight)
+      ? calculatedHeight.clamp(minUsableHeight, maxHeight)
+      : maxHeight;
 
   // Only log when there are significant changes or errors
   if (finalHeight != calculatedHeight || calculatedHeight <= 0) {
-    debugPrint('Final dynamic height: $finalHeight (max: $maxHeight, calculated: $calculatedHeight)');
+    debugPrint(
+        'Final dynamic height: $finalHeight (max: $maxHeight, calculated: $calculatedHeight)');
   }
   return finalHeight;
 });

@@ -32,11 +32,13 @@ class CoordinateIndex {
       for (var p = 0; p < parts.length; p++) {
         final g = parts[p];
         if (g.length < 2) {
-          throw ArgumentError('feature ${segments[f].globalId} part $p has fewer than 2 vertices');
+          throw ArgumentError(
+              'feature ${segments[f].globalId} part $p has fewer than 2 vertices');
         }
         for (var v = 0; v < g.length; v++) {
           final isEnd = v == 0 || v == g.length - 1;
-          (groups[(g[v].longitude, g[v].latitude)] ??= []).add(VertexAppearance(f, p, v, isEnd));
+          (groups[(g[v].longitude, g[v].latitude)] ??= [])
+              .add(VertexAppearance(f, p, v, isEnd));
         }
       }
     }
@@ -67,7 +69,8 @@ class CoordinateIndex {
 
 /// Route-continuity category of a pair of features meeting at a shared
 /// endpoint. Diagnostic only: it implies nothing about turns or merging.
-String continuityCategory(MainRoadsNetworkSegment a, MainRoadsNetworkSegment b) {
+String continuityCategory(
+    MainRoadsNetworkSegment a, MainRoadsNetworkSegment b) {
   final sameRoad = a.road == b.road;
   final sameRoute = a.routeNeId == b.routeNeId;
   if (sameRoad && sameRoute) return 'A: same ROAD + same ROUTE_NE_ID';
@@ -161,9 +164,10 @@ class SharedVertexAnalysis {
 
   int get endpointGroupsWithOneEndpoint => endpointGroupSizeHistogram[1] ?? 0;
   int get endpointGroupsWithTwoEndpoints => endpointGroupSizeHistogram[2] ?? 0;
-  int get endpointGroupsWithThreeOrMoreEndpoints => endpointGroupSizeHistogram.entries
-      .where((e) => e.key >= 3)
-      .fold(0, (s, e) => s + e.value);
+  int get endpointGroupsWithThreeOrMoreEndpoints =>
+      endpointGroupSizeHistogram.entries
+          .where((e) => e.key >= 3)
+          .fold(0, (s, e) => s + e.value);
 
   Map<String, dynamic> toJson() => {
         'features': features,
@@ -174,24 +178,29 @@ class SharedVertexAnalysis {
         'distinctEndpointCoordinates': distinctEndpointCoordinates,
         'closedLoopFeatures': closedLoopFeatures,
         'closedLoopParts': closedLoopParts,
-        'endpointsCoincidingWithOtherFeatureEndpoint': endpointsCoincidingWithOtherFeatureEndpoint,
+        'endpointsCoincidingWithOtherFeatureEndpoint':
+            endpointsCoincidingWithOtherFeatureEndpoint,
         'endpointGroupSizeDistribution': {
           'oneEndpoint': endpointGroupsWithOneEndpoint,
           'twoEndpoints': endpointGroupsWithTwoEndpoints,
           'threeOrMoreEndpoints': endpointGroupsWithThreeOrMoreEndpoints,
         },
         'endpointGroupSizeHistogram': _stringKeys(endpointGroupSizeHistogram),
-        'endpointGroupsSharedByMultipleFeatures': endpointGroupsSharedByMultipleFeatures,
-        'endpointsOnOtherFeatureInternalVertex': endpointsOnOtherFeatureInternalVertex,
+        'endpointGroupsSharedByMultipleFeatures':
+            endpointGroupsSharedByMultipleFeatures,
+        'endpointsOnOtherFeatureInternalVertex':
+            endpointsOnOtherFeatureInternalVertex,
         'endpointInternalVertexGroups': endpointInternalVertexGroups,
         'internalVertexAppearances': internalVertexAppearances,
-        'internalVertexAppearancesSharedWithOtherFeature': internalVertexAppearancesSharedWithOtherFeature,
+        'internalVertexAppearancesSharedWithOtherFeature':
+            internalVertexAppearancesSharedWithOtherFeature,
         'internalInternalGroups': internalInternalGroups,
         'selfRepeatedInternalVertexGroups': selfRepeatedInternalVertexGroups,
         'sharedGroupsByKind': sharedGroupsByKind,
         'sharedGroupsByFeatureCount': _stringKeys(sharedGroupsByFeatureCount),
         'sharedGroupsByDistinctRoads': _stringKeys(sharedGroupsByDistinctRoads),
-        'sharedGroupsByDistinctRoutes': _stringKeys(sharedGroupsByDistinctRoutes),
+        'sharedGroupsByDistinctRoutes':
+            _stringKeys(sharedGroupsByDistinctRoutes),
         'continuityPairs': continuityPairs,
         'continuityGroups': continuityGroups,
         'sharedGroupDetails': sharedGroupDetails,
@@ -264,10 +273,15 @@ SharedVertexAnalysis analyzeSharedVertices(
       _inc(sizeHist, endpointApps.length);
       if (endpointFeatures.length > 1) endpointGroupsMulti++;
       for (final e in endpointApps) {
-        if (endpointApps.any((o) => o.feature != e.feature)) endpointsCoincide++;
-        if (internalAppsHere.any((o) => o.feature != e.feature)) endpointsOnInternal++;
+        if (endpointApps.any((o) => o.feature != e.feature)) {
+          endpointsCoincide++;
+        }
+        if (internalAppsHere.any((o) => o.feature != e.feature)) {
+          endpointsOnInternal++;
+        }
       }
-      if (endpointApps.any((e) => internalAppsHere.any((o) => o.feature != e.feature))) {
+      if (endpointApps
+          .any((e) => internalAppsHere.any((o) => o.feature != e.feature))) {
         endpointInternalGroups++;
       }
     }
@@ -276,7 +290,8 @@ SharedVertexAnalysis analyzeSharedVertices(
     }
     if (internalFeatures.length > 1) internalInternalGroups++;
     // Same feature occupying the same coordinate more than once, at least once internally.
-    if (internalAppsHere.any((i) => apps.where((o) => o.feature == i.feature).length > 1)) {
+    if (internalAppsHere
+        .any((i) => apps.where((o) => o.feature == i.feature).length > 1)) {
       selfRepeated++;
     }
 

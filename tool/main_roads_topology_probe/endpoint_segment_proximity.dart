@@ -40,7 +40,8 @@ class EndpointSegmentProximity {
         'byRoadRelation': byRoadRelation,
         'details': details,
         'detailsTruncated': detailsTruncated,
-        'note': 'Diagnostic only. Candidates are not junctions; no coordinate was snapped and no feature was split.',
+        'note':
+            'Diagnostic only. Candidates are not junctions; no coordinate was snapped and no feature was split.',
       };
 }
 
@@ -147,7 +148,8 @@ EndpointSegmentProximity analyzeEndpointSegmentProximity(
     for (var p = 0; p < features[f].parts.length; p++) {
       final part = features[f].parts[p];
       if (part.length < 2) {
-        throw ArgumentError('feature ${features[f].globalId} part $p has fewer than 2 vertices');
+        throw ArgumentError(
+            'feature ${features[f].globalId} part $p has fewer than 2 vertices');
       }
       final ends = [part.first, part.last];
       for (var e = 0; e < ends.length; e++) {
@@ -160,7 +162,8 @@ EndpointSegmentProximity analyzeEndpointSegmentProximity(
         final a = part[i], b = part[i + 1];
         if (a.latitude == b.latitude && a.longitude == b.longitude) continue;
         segments.add(_Segment(f, p, i, a, b));
-        maxAbsLat = math.max(maxAbsLat, math.max(a.latitude.abs(), b.latitude.abs()));
+        maxAbsLat =
+            math.max(maxAbsLat, math.max(a.latitude.abs(), b.latitude.abs()));
       }
     }
   }
@@ -250,9 +253,12 @@ EndpointSegmentProximity analyzeEndpointSegmentProximity(
       final projection = _project(e, s);
       if (projection.distance > radiusMetres) continue;
       final match = _Match(s, projection);
-      if (best == null || projection.distance < best.projection.distance) best = match;
+      if (best == null || projection.distance < best.projection.distance) {
+        best = match;
+      }
       if (projection.location == 'segmentInterior' &&
-          (bestInterior == null || projection.distance < bestInterior.projection.distance)) {
+          (bestInterior == null ||
+              projection.distance < bestInterior.projection.distance)) {
         bestInterior = match;
       }
     }
@@ -262,7 +268,9 @@ EndpointSegmentProximity analyzeEndpointSegmentProximity(
       (v) => v + 1,
     );
     interiorBuckets.update(
-      bestInterior == null ? '>10 m' : _bucket(bestInterior.projection.distance, radiusMetres),
+      bestInterior == null
+          ? '>10 m'
+          : _bucket(bestInterior.projection.distance, radiusMetres),
       (v) => v + 1,
     );
 
@@ -274,7 +282,8 @@ EndpointSegmentProximity analyzeEndpointSegmentProximity(
     kinds[best.projection.location] = kinds[best.projection.location]! + 1;
     final source = features[e.feature];
     final target = features[best.segment.feature];
-    final relation = '${source.road == target.road ? 'same' : 'different'} ROAD, '
+    final relation =
+        '${source.road == target.road ? 'same' : 'different'} ROAD, '
         '${source.routeNeId == target.routeNeId ? 'same' : 'different'} ROUTE_NE_ID';
     relations[relation] = (relations[relation] ?? 0) + 1;
 

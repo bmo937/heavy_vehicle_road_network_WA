@@ -5,7 +5,8 @@ import 'package:roads_map/models/place_search_result.dart';
 final searchQueryProvider = StateProvider<String>((ref) => '');
 
 /// Provider for search results
-final searchResultsProvider = StateProvider<List<PlaceSearchResult>>((ref) => []);
+final searchResultsProvider =
+    StateProvider<List<PlaceSearchResult>>((ref) => []);
 
 /// Provider for loading state
 final searchLoadingProvider = StateProvider<bool>((ref) => false);

@@ -90,6 +90,31 @@ Regenerate code while developing:
 dart run build_runner watch --delete-conflicting-outputs
 ```
 
+## Local PR checks
+
+Enable the version-controlled hooks in each fresh clone:
+
+```powershell
+git config core.hooksPath .githooks
+git config --get core.hooksPath
+```
+
+The second command should print `.githooks`. Before a commit, the hooks check
+Dart formatting and run `flutter analyze`. Before a push, they also run
+`flutter test` and check the committed diff for whitespace errors against
+`origin/main`, or local `main` if the remote-tracking branch is unavailable.
+No fetch is required.
+
+Run a local PR-style review from the repository root with:
+
+```powershell
+powershell.exe -NoProfile -ExecutionPolicy Bypass -File tool/local_review.ps1
+```
+
+The review runs the full checks and shows branch commits and a diff summary.
+Hooks can be bypassed with Git's `--no-verify` in an emergency, but should not
+be bypassed routinely.
+
 ## Configuration Notes
 
 - App initialization registers Hive adapters and opens required boxes before UI startup.

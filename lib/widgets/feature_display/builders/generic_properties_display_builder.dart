@@ -6,7 +6,8 @@ import '../feature_display_helpers.dart';
 /// Generic properties display builder
 class GenericPropertiesDisplayBuilder {
   /// Build generic properties display for unknown feature types
-  static Widget buildGenericPropertiesDisplay(BuildContext context, TappedFeature feature, String title) {
+  static Widget buildGenericPropertiesDisplay(
+      BuildContext context, TappedFeature feature, String title) {
     return Column(
       crossAxisAlignment: CrossAxisAlignment.start,
       children: [
@@ -18,8 +19,10 @@ class GenericPropertiesDisplayBuilder {
         ),
         const SizedBox(height: 8),
         ...feature.properties.entries
-            .where((entry) => entry.value != null && entry.value.toString().isNotEmpty)
-            .map((entry) => FeatureDisplayHelpers.buildProperty(context, entry.key, entry.value)),
+            .where((entry) =>
+                entry.value != null && entry.value.toString().isNotEmpty)
+            .map((entry) => FeatureDisplayHelpers.buildProperty(
+                context, entry.key, entry.value)),
       ],
     );
   }

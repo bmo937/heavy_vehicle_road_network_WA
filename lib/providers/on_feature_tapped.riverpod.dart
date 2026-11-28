@@ -18,7 +18,8 @@ class TappedFeature {
   final Map<String, dynamic> properties;
 
   @override
-  String toString() => 'TappedFeature(layerId: $layerId, featureId: $featureId, '
+  String toString() =>
+      'TappedFeature(layerId: $layerId, featureId: $featureId, '
       'properties: $properties, position: $position)';
 }
 
@@ -38,4 +39,3 @@ class FeatureTapState extends _$FeatureTapState {
   @override
   TappedFeature? build() => null;
 }
-

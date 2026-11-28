@@ -52,5 +52,6 @@ class NetworkRefreshCoordinator {
   }
 
   /// True for a request we cancelled on purpose (not a network failure).
-  static bool isExpectedCancellation(Object error) => error is DioException && CancelToken.isCancel(error);
+  static bool isExpectedCancellation(Object error) =>
+      error is DioException && CancelToken.isCancel(error);
 }

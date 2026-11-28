@@ -14,7 +14,8 @@ void main() {
 
   group('AppConfig.fromEnvironment', () {
     test('accepts valid keys', () {
-      final config = AppConfig.fromEnvironment({'gApiKey': google, 'mApiKey': mapTiler});
+      final config =
+          AppConfig.fromEnvironment({'gApiKey': google, 'mApiKey': mapTiler});
       expect(config.googleApiKey, google);
       expect(config.mapTilerApiKey, mapTiler);
     });

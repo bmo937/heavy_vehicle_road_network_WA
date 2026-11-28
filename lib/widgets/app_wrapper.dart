@@ -12,7 +12,8 @@ class AppWrapper extends ConsumerStatefulWidget {
   ConsumerState<AppWrapper> createState() => _AppWrapperState();
 }
 
-class _AppWrapperState extends ConsumerState<AppWrapper> with SingleTickerProviderStateMixin {
+class _AppWrapperState extends ConsumerState<AppWrapper>
+    with SingleTickerProviderStateMixin {
   late AnimationController _splashFadeController;
   late Animation<double> _splashFadeAnimation;
   bool _splashRemoved = false;
@@ -79,7 +80,7 @@ class _AppWrapperState extends ConsumerState<AppWrapper> with SingleTickerProvid
           const NavigationWidget(),
 
           // Splash screen overlay - fades out when map is ready
-          if (!_splashRemoved)          
+          if (!_splashRemoved)
             AnimatedBuilder(
               animation: _splashFadeAnimation,
               builder: (context, child) {

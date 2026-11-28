@@ -31,7 +31,15 @@ class MapProviderState extends Equatable {
   /// Short, non-sensitive description of an initialisation failure.
   final String? initError;
   @override
-  List<Object?> get props => [currentStyleUrl, isSatelliteLayerVisible, isTravelLayerVisible, isMapFullyLoaded, isMapRestorationFailed, initStatus, initError];
+  List<Object?> get props => [
+        currentStyleUrl,
+        isSatelliteLayerVisible,
+        isTravelLayerVisible,
+        isMapFullyLoaded,
+        isMapRestorationFailed,
+        initStatus,
+        initError
+      ];
 
   MapProviderState copyWith({
     String? currentStyleUrl,
@@ -46,12 +54,16 @@ class MapProviderState extends Equatable {
   }) {
     return MapProviderState(
       currentStyleUrl: currentStyleUrl ?? this.currentStyleUrl,
-      isSatelliteLayerVisible: isSatelliteLayerVisible ?? this.isSatelliteLayerVisible,
+      isSatelliteLayerVisible:
+          isSatelliteLayerVisible ?? this.isSatelliteLayerVisible,
       isTravelLayerVisible: isTravelLayerVisible ?? this.isTravelLayerVisible,
-      isIncidentsLayerVisible: isIncidentsLayerVisible ?? this.isIncidentsLayerVisible,
-      isTrafficLayersVisible: isTrafficLayersVisible ?? this.isTrafficLayersVisible,
+      isIncidentsLayerVisible:
+          isIncidentsLayerVisible ?? this.isIncidentsLayerVisible,
+      isTrafficLayersVisible:
+          isTrafficLayersVisible ?? this.isTrafficLayersVisible,
       isMapFullyLoaded: isMapFullyLoaded ?? this.isMapFullyLoaded,
-      isMapRestorationFailed: isMapRestorationFailed ?? this.isMapRestorationFailed,
+      isMapRestorationFailed:
+          isMapRestorationFailed ?? this.isMapRestorationFailed,
       initStatus: initStatus ?? this.initStatus,
       initError: initError ?? this.initError,
     );

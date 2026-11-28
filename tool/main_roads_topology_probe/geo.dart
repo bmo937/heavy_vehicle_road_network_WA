@@ -43,7 +43,8 @@ enum DistanceBucket {
 DistanceBucket bucketForDistance(double metres, {required bool exact}) {
   if (exact) return DistanceBucket.exact;
   if (metres.isNaN || metres < 0) {
-    throw ArgumentError.value(metres, 'metres', 'must be a non-negative number');
+    throw ArgumentError.value(
+        metres, 'metres', 'must be a non-negative number');
   }
   for (final b in DistanceBucket.values) {
     if (b == DistanceBucket.exact) continue;

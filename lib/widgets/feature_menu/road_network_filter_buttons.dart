@@ -12,29 +12,39 @@ import '../../utils/network_filter_utils.dart';
 /// 4. Category headers that hide when no child items match the selected filters
 
 /// Provider to manage road network filter selection
-final roadNetworkFilterProvider = StateNotifierProvider<RoadNetworkFilterNotifier, Set<Filter>>((ref) {
+final roadNetworkFilterProvider =
+    StateNotifierProvider<RoadNetworkFilterNotifier, Set<Filter>>((ref) {
   return RoadNetworkFilterNotifier();
 });
 
 /// Notifier to manage road network filter state with support for multiple filters
 class RoadNetworkFilterNotifier extends StateNotifier<Set<Filter>> {
-  RoadNetworkFilterNotifier() : super({}); // Empty set means show all networks  /// Toggle a filter on/off
+  RoadNetworkFilterNotifier()
+      : super(
+            {}); // Empty set means show all networks  /// Toggle a filter on/off
   void toggleFilter(Filter filter) {
     if (state.contains(filter)) {
       // Create a new state without the toggled filter
       final newState = {...state}..remove(filter);
 
       // Check if we're removing a drive filter (Tandem or Tri Drive)
-      final isDriveFilter = filter == Filter.tandemDrive || filter == Filter.triDrive;
+      final isDriveFilter =
+          filter == Filter.tandemDrive || filter == Filter.triDrive;
 
       // Check if we're removing an AMMS filter
-      final isAmmsFilter = filter == Filter.ammsLevel1 || filter == Filter.ammsLevel2 || filter == Filter.ammsLevel3;
+      final isAmmsFilter = filter == Filter.ammsLevel1 ||
+          filter == Filter.ammsLevel2 ||
+          filter == Filter.ammsLevel3;
 
       // Check if there are AMMS filters in the state
-      final hasAmmsFilter = newState.any((f) => f == Filter.ammsLevel1 || f == Filter.ammsLevel2 || f == Filter.ammsLevel3);
+      final hasAmmsFilter = newState.any((f) =>
+          f == Filter.ammsLevel1 ||
+          f == Filter.ammsLevel2 ||
+          f == Filter.ammsLevel3);
 
       // Check if there are drive filters in the state
-      final hasDriveFilter = newState.any((f) => f == Filter.tandemDrive || f == Filter.triDrive);
+      final hasDriveFilter =
+          newState.any((f) => f == Filter.tandemDrive || f == Filter.triDrive);
 
       // If we're removing a drive filter and have AMMS filters, remove all filters
       if (isDriveFilter && hasAmmsFilter) {
@@ -56,20 +66,28 @@ class RoadNetworkFilterNotifier extends StateNotifier<Set<Filter>> {
       final newState = {...state, filter};
 
       // Check if it's an AMMS filter
-      final isAmmsFilter = filter == Filter.ammsLevel1 || filter == Filter.ammsLevel2 || filter == Filter.ammsLevel3;
+      final isAmmsFilter = filter == Filter.ammsLevel1 ||
+          filter == Filter.ammsLevel2 ||
+          filter == Filter.ammsLevel3;
 
       // If it's an AMMS filter, make sure we have a drive type
       if (isAmmsFilter) {
         // If no drive type is selected, add Tandem Drive by default
-        if (!newState.contains(Filter.tandemDrive) && !newState.contains(Filter.triDrive)) {
+        if (!newState.contains(Filter.tandemDrive) &&
+            !newState.contains(Filter.triDrive)) {
           newState.add(Filter.tandemDrive);
         }
       }
 
       // If selecting a drive type, and another drive type is already selected
       // replace it to avoid having both Tandem and Tri drive selected at once
-      if ((filter == Filter.tandemDrive && newState.contains(Filter.triDrive)) || (filter == Filter.triDrive && newState.contains(Filter.tandemDrive))) {
-        newState.remove(filter == Filter.tandemDrive ? Filter.triDrive : Filter.tandemDrive);
+      if ((filter == Filter.tandemDrive &&
+              newState.contains(Filter.triDrive)) ||
+          (filter == Filter.triDrive &&
+              newState.contains(Filter.tandemDrive))) {
+        newState.remove(filter == Filter.tandemDrive
+            ? Filter.triDrive
+            : Filter.tandemDrive);
       }
       state = newState;
     }
@@ -99,13 +117,16 @@ class RoadNetworkFilterButtons extends ConsumerWidget {
     final baseFilters = NetworkFilterUtils.getBaseFilters();
 
     // Check if we should show AMMS filters
-    final showAmmsFilters = selectedFilters.contains(Filter.tandemDrive) || selectedFilters.contains(Filter.triDrive);
+    final showAmmsFilters = selectedFilters.contains(Filter.tandemDrive) ||
+        selectedFilters.contains(Filter.triDrive);
 
     // Get AMMS filters if needed
-    final ammsFilters = showAmmsFilters ? NetworkFilterUtils.getAmmsFilters() : <Filter>[];
+    final ammsFilters =
+        showAmmsFilters ? NetworkFilterUtils.getAmmsFilters() : <Filter>[];
 
     // Check if we have any non-AMMS filters selected
-    final hasSelectedBaseFilter = baseFilters.any((filter) => selectedFilters.contains(filter));
+    final hasSelectedBaseFilter =
+        baseFilters.any((filter) => selectedFilters.contains(filter));
 
     return Column(
       mainAxisSize: MainAxisSize.min,
@@ -115,7 +136,10 @@ class RoadNetworkFilterButtons extends ConsumerWidget {
         Wrap(
           spacing: 4,
           alignment: WrapAlignment.center,
-          children: baseFilters.where((filter) => !hasSelectedBaseFilter || selectedFilters.contains(filter)).map((filter) {
+          children: baseFilters
+              .where((filter) =>
+                  !hasSelectedBaseFilter || selectedFilters.contains(filter))
+              .map((filter) {
             return _buildFilterChip(context, ref, filter, selectedFilters);
           }).toList(),
         ),
@@ -136,24 +160,35 @@ class RoadNetworkFilterButtons extends ConsumerWidget {
   }
 
   // Build individual filter chip
-  Widget _buildFilterChip(BuildContext context, WidgetRef ref, Filter filter, Set<Filter> selectedFilters) {
+  Widget _buildFilterChip(BuildContext context, WidgetRef ref, Filter filter,
+      Set<Filter> selectedFilters) {
     final isSelected = selectedFilters.contains(filter);
 
     // Check if this filter is an AMMS filter
-    final isAmmsFilter = filter == Filter.ammsLevel1 || filter == Filter.ammsLevel2 || filter == Filter.ammsLevel3;
+    final isAmmsFilter = filter == Filter.ammsLevel1 ||
+        filter == Filter.ammsLevel2 ||
+        filter == Filter.ammsLevel3;
 
     // Check if this filter is a drive type filter
-    final isDriveFilter = filter == Filter.tandemDrive || filter == Filter.triDrive;
+    final isDriveFilter =
+        filter == Filter.tandemDrive || filter == Filter.triDrive;
 
     // Style differently to highlight combinations
-    final hasAmmsSelected = selectedFilters.any((f) => f == Filter.ammsLevel1 || f == Filter.ammsLevel2 || f == Filter.ammsLevel3);
-    final hasDriveSelected = selectedFilters.any((f) => f == Filter.tandemDrive || f == Filter.triDrive);
+    final hasAmmsSelected = selectedFilters.any((f) =>
+        f == Filter.ammsLevel1 ||
+        f == Filter.ammsLevel2 ||
+        f == Filter.ammsLevel3);
+    final hasDriveSelected = selectedFilters
+        .any((f) => f == Filter.tandemDrive || f == Filter.triDrive);
 
     // Enhanced styling for combination filters
-    Color? chipColor = isSelected ? Theme.of(context).colorScheme.secondaryContainer : null;
+    Color? chipColor =
+        isSelected ? Theme.of(context).colorScheme.secondaryContainer : null;
 
     // Highlight drive filters when AMMS is selected and vice versa
-    if (isSelected && ((isDriveFilter && hasAmmsSelected) || (isAmmsFilter && hasDriveSelected))) {
+    if (isSelected &&
+        ((isDriveFilter && hasAmmsSelected) ||
+            (isAmmsFilter && hasDriveSelected))) {
       chipColor = Theme.of(context).colorScheme.secondaryContainer;
     }
 
@@ -168,11 +203,15 @@ class RoadNetworkFilterButtons extends ConsumerWidget {
       selectedColor: chipColor,
       checkmarkColor: Theme.of(context).colorScheme.primary,
       side: BorderSide(
-        color: isSelected ? Theme.of(context).colorScheme.secondary : Theme.of(context).colorScheme.onSurface,
+        color: isSelected
+            ? Theme.of(context).colorScheme.secondary
+            : Theme.of(context).colorScheme.onSurface,
         width: 1.0,
       ),
       // Add tooltip for AMMS filters explaining they require a drive type
-      tooltip: isAmmsFilter ? 'Requires selecting either Tandem Drive or Tri Drive' : null,
+      tooltip: isAmmsFilter
+          ? 'Requires selecting either Tandem Drive or Tri Drive'
+          : null,
     );
   }
 }

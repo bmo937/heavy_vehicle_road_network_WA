@@ -16,7 +16,8 @@ const String visibilityKey = 'layer_visibility';
 
 // Points of Interest layer selection provider
 @riverpod
-class PointsOfInterestSelectionNotifier extends _$PointsOfInterestSelectionNotifier {
+class PointsOfInterestSelectionNotifier
+    extends _$PointsOfInterestSelectionNotifier {
   @override
   Map<String, bool> build() {
     // Load the initial state from Hive on initialization
@@ -25,7 +26,9 @@ class PointsOfInterestSelectionNotifier extends _$PointsOfInterestSelectionNotif
 
   Map<String, bool> _loadInitialState() {
     try {
-      final box = Hive.isBoxOpen(pointsOfInterestBoxName) ? Hive.box(pointsOfInterestBoxName) : Hive.box(HiveBoxes.selectedPoiLayer);
+      final box = Hive.isBoxOpen(pointsOfInterestBoxName)
+          ? Hive.box(pointsOfInterestBoxName)
+          : Hive.box(HiveBoxes.selectedPoiLayer);
       final map = <String, bool>{};
 
       // Load from pointsOfInterestBoxName first
@@ -150,10 +153,14 @@ Future<void> loadSavedPointsOfInterest(WidgetRef ref) async {
   try {
     // Open both Hive boxes
     final box = await Hive.openBox(pointsOfInterestBoxName);
-    final selectedPoiBox = Hive.isBoxOpen(HiveBoxes.selectedPoiLayer) ? Hive.box(HiveBoxes.selectedPoiLayer) : await Hive.openBox(HiveBoxes.selectedPoiLayer);
+    final selectedPoiBox = Hive.isBoxOpen(HiveBoxes.selectedPoiLayer)
+        ? Hive.box(HiveBoxes.selectedPoiLayer)
+        : await Hive.openBox(HiveBoxes.selectedPoiLayer);
 
-    final poiSelectionNotifier = ref.read(pointsOfInterestSelectionNotifierProvider.notifier);
-    final poiLayerSelectionNotifier = ref.read(poiLayerSelectionProvider.notifier);
+    final poiSelectionNotifier =
+        ref.read(pointsOfInterestSelectionNotifierProvider.notifier);
+    final poiLayerSelectionNotifier =
+        ref.read(poiLayerSelectionProvider.notifier);
 
     // Track visibility for master toggle
     bool anyVisible = false;
@@ -217,8 +224,12 @@ Future<void> loadSavedRoadNetwork(WidgetRef ref) async {
 
     if (selectedNetwork != null) {
       // Update both providers for consistency
-      ref.read(roadNetworkSelectionNotifierProvider.notifier).selectNetwork(selectedNetwork);
-      ref.read(networkLayerSelectionProvider.notifier).selectLayer(selectedNetwork);
+      ref
+          .read(roadNetworkSelectionNotifierProvider.notifier)
+          .selectNetwork(selectedNetwork);
+      ref
+          .read(networkLayerSelectionProvider.notifier)
+          .selectLayer(selectedNetwork);
     }
   } catch (e) {
     debugPrint('Error loading saved road network: $e');
