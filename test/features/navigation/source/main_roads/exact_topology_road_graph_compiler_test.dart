@@ -134,6 +134,49 @@ void main() {
     );
   });
 
+  test('a different feature connects repeated coordinates across parts', () {
+    final graph = compiler.compile([
+      segment('multi', [
+        [c(115, -32), c(116, -32)],
+        [c(116, -32), c(117, -32)],
+      ]),
+      segment('branch', [
+        [c(116, -32), c(116, -31)],
+      ]),
+      segment('another', [
+        [c(116, -32), c(116, -33)],
+      ]),
+    ]);
+
+    final shared = exactCoordinateNodeId(longitude: 116, latitude: -32);
+    expect(graph.nodes.length, 5);
+    expect(graph.outgoingEdges(shared).length, 4);
+    expect(
+      hasPath(
+        graph,
+        partScopedNodeId(
+            globalId: 'multi', partIndex: 0, longitude: 115, latitude: -32),
+        partScopedNodeId(
+            globalId: 'multi', partIndex: 1, longitude: 117, latitude: -32),
+      ),
+      isTrue,
+    );
+  });
+
+  test('repeated internal coordinates within one feature do not split', () {
+    final graph = compiler.compile([
+      segment('multi', [
+        [c(115, -32), c(116, -32), c(117, -32)],
+        [c(118, -32), c(116, -32), c(119, -32)],
+      ]),
+    ]);
+
+    expect(graph.nodes.length, 4);
+    expect(graph.edges.length, 4);
+    expect(graph.edges.every((edge) => edge.mainRoadsSource!.geometry.length == 3),
+        isTrue);
+  });
+
   test('does not snap near endpoints or create a node at a geometric crossing',
       () {
     final graph = compiler.compile([

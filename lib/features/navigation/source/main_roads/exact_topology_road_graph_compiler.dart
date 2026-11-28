@@ -8,12 +8,6 @@ import 'main_roads_network_segment.dart';
 
 typedef _CoordinateKey = (double longitude, double latitude);
 
-class _Appearance {
-  const _Appearance(this.featureIndex);
-
-  final int featureIndex;
-}
-
 /// Compiles Main Roads source features using exact source-coordinate topology.
 ///
 /// Every part endpoint becomes a node. Coincident endpoints from separate parts
@@ -27,7 +21,8 @@ class ExactTopologyRoadGraphCompiler {
 
   RoadGraph compile(Iterable<MainRoadsNetworkSegment> source) {
     final segments = List<MainRoadsNetworkSegment>.unmodifiable(source);
-    final appearances = <_CoordinateKey, List<_Appearance>>{};
+    final firstFeatureByCoordinate = <_CoordinateKey, int>{};
+    final sharedAcrossFeatures = <_CoordinateKey>{};
 
     for (var featureIndex = 0;
         featureIndex < segments.length;
@@ -40,16 +35,14 @@ class ExactTopologyRoadGraphCompiler {
           );
         }
         for (final coordinate in part) {
-          (appearances[_key(coordinate)] ??= [])
-              .add(_Appearance(featureIndex));
+          final key = _key(coordinate);
+          final firstFeature = firstFeatureByCoordinate[key];
+          if (firstFeature == null) {
+            firstFeatureByCoordinate[key] = featureIndex;
+          } else if (firstFeature != featureIndex) {
+            sharedAcrossFeatures.add(key);
+          }
         }
-      }
-    }
-
-    final sharedAcrossFeatures = <_CoordinateKey>{};
-    for (final entry in appearances.entries) {
-      if (entry.value.map((a) => a.featureIndex).toSet().length > 1) {
-        sharedAcrossFeatures.add(entry.key);
       }
     }
 

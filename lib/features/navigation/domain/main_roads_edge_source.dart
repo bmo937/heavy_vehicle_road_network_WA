@@ -78,10 +78,16 @@ class MainRoadsEdgeSource {
   }) : geometry = List.unmodifiable(geometry) {
     if (partIndex < 0 || startVertexIndex < 0 ||
         endVertexIndex <= startVertexIndex) {
-      throw ArgumentError('Invalid source part or vertex range');
+      throw ArgumentError(
+        'Invalid source part $partIndex or vertex range '
+        '$startVertexIndex..$endVertexIndex',
+      );
     }
-    if (this.geometry.length < 2) {
-      throw ArgumentError('An edge geometry needs at least two coordinates');
+    if (this.geometry.length != endVertexIndex - startVertexIndex + 1) {
+      throw ArgumentError(
+        'Geometry length ${this.geometry.length} does not match part '
+        '$partIndex vertex range $startVertexIndex..$endVertexIndex',
+      );
     }
   }
 
