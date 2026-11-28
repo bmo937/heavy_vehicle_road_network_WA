@@ -9,18 +9,19 @@ import 'main_roads_network_segment.dart';
 typedef _CoordinateKey = (double longitude, double latitude);
 
 class _Appearance {
-  const _Appearance(this.featureIndex, this.isEndpoint);
+  const _Appearance(this.featureIndex);
 
   final int featureIndex;
-  final bool isEndpoint;
 }
 
 /// Compiles Main Roads source features using exact source-coordinate topology.
 ///
-/// Every part endpoint becomes a node. An internal source vertex becomes a node
-/// only when the exact same coordinate appears in a different source feature.
-/// Parts are never bridged, nearby coordinates are never snapped, and
-/// unrepresented geometric crossings are never converted into junctions.
+/// Every part endpoint becomes a node. Coincident endpoints from separate parts
+/// of one feature remain part-scoped unless another source feature establishes
+/// a junction at that coordinate. An internal source vertex becomes a node only
+/// when the exact same coordinate appears in a different source feature.
+/// Nearby coordinates are never snapped and unrepresented geometric crossings
+/// are never converted into junctions.
 class ExactTopologyRoadGraphCompiler {
   const ExactTopologyRoadGraphCompiler();
 
@@ -38,15 +39,9 @@ class ExactTopologyRoadGraphCompiler {
             'Feature ${segment.globalId} contains a part with fewer than two vertices',
           );
         }
-        for (var vertex = 0; vertex < part.length; vertex++) {
-          final coordinate = part[vertex];
-          final key = _key(coordinate);
-          (appearances[key] ??= []).add(
-            _Appearance(
-              featureIndex,
-              vertex == 0 || vertex == part.length - 1,
-            ),
-          );
+        for (final coordinate in part) {
+          (appearances[_key(coordinate)] ??= [])
+              .add(_Appearance(featureIndex));
         }
       }
     }
@@ -58,30 +53,34 @@ class ExactTopologyRoadGraphCompiler {
       }
     }
 
-    final nodeCoordinates = <_CoordinateKey>{};
-    for (final entry in appearances.entries) {
-      if (entry.value.any((a) => a.isEndpoint) ||
-          sharedAcrossFeatures.contains(entry.key)) {
-        nodeCoordinates.add(entry.key);
-      }
-    }
-
-    final sortedNodeCoordinates = nodeCoordinates.toList()
-      ..sort((a, b) {
-        final longitude = a.$1.compareTo(b.$1);
-        return longitude != 0 ? longitude : a.$2.compareTo(b.$2);
-      });
-    final nodes = [
-      for (final coordinate in sortedNodeCoordinates)
-        RoadNode(
-          id: exactCoordinateNodeId(
-            longitude: coordinate.$1,
-            latitude: coordinate.$2,
-          ),
-          longitude: coordinate.$1,
-          latitude: coordinate.$2,
+    final nodesById = <String, RoadNode>{};
+    String nodeIdFor(
+      MainRoadsNetworkSegment segment,
+      int partIndex,
+      SourceCoordinate coordinate,
+    ) {
+      final key = _key(coordinate);
+      final id = sharedAcrossFeatures.contains(key)
+          ? exactCoordinateNodeId(
+              longitude: key.$1,
+              latitude: key.$2,
+            )
+          : partScopedNodeId(
+              globalId: segment.globalId,
+              partIndex: partIndex,
+              longitude: key.$1,
+              latitude: key.$2,
+            );
+      nodesById.putIfAbsent(
+        id,
+        () => RoadNode(
+          id: id,
+          longitude: key.$1,
+          latitude: key.$2,
         ),
-    ];
+      );
+      return id;
+    }
 
     final edges = <RoadEdge>[];
     for (final segment in segments) {
@@ -100,14 +99,8 @@ class ExactTopologyRoadGraphCompiler {
         for (var split = 0; split < splitVertices.length - 1; split++) {
           final start = splitVertices[split];
           final end = splitVertices[split + 1];
-          final from = exactCoordinateNodeId(
-            longitude: part[start].longitude,
-            latitude: part[start].latitude,
-          );
-          final to = exactCoordinateNodeId(
-            longitude: part[end].longitude,
-            latitude: part[end].latitude,
-          );
+          final from = nodeIdFor(segment, partIndex, part[start]);
+          final to = nodeIdFor(segment, partIndex, part[end]);
           final baseId = '${segment.globalId}:p$partIndex:v$start-$end';
           final length = _polylineLengthMetres(part, start, end);
           edges.add(
@@ -139,18 +132,29 @@ class ExactTopologyRoadGraphCompiler {
       }
     }
 
+    final nodes = nodesById.values.toList()
+      ..sort((a, b) => a.id.compareTo(b.id));
     return RoadGraph(nodes: nodes, edges: edges);
   }
 }
 
-/// Stable node identity for exact WGS84 source-coordinate equality.
+/// Stable node identity for an exact coordinate shared across source features.
 String exactCoordinateNodeId({
   required double longitude,
   required double latitude,
-}) {
-  String canonical(double value) => value == 0 ? '0.0' : value.toString();
-  return 'coordinate:${canonical(longitude)},${canonical(latitude)}';
-}
+}) =>
+    'coordinate:${_canonical(longitude)},${_canonical(latitude)}';
+
+/// Stable endpoint identity confined to one source feature part.
+String partScopedNodeId({
+  required String globalId,
+  required int partIndex,
+  required double longitude,
+  required double latitude,
+}) =>
+    'part:$globalId:$partIndex:${_canonical(longitude)},${_canonical(latitude)}';
+
+String _canonical(double value) => value == 0 ? '0.0' : value.toString();
 
 _CoordinateKey _key(SourceCoordinate coordinate) =>
     (coordinate.longitude == 0 ? 0.0 : coordinate.longitude,
