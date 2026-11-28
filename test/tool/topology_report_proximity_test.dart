@@ -57,6 +57,6 @@ void main() {
     expect(report, contains('Nearest finite-segment distance'));
     expect(report, contains('Nearest segment-interior distance'));
     expect(report, contains('Nearest target location'));
-    expect(report, contains('endpoint-to-segment proximity (not measured)'), isFalse);
+    expect(report, isNot(contains('endpoint-to-segment proximity (not measured)')));
   });
 }
