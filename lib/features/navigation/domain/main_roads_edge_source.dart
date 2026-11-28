@@ -70,15 +70,31 @@ class MainRoadsEdgeProvenance {
 class MainRoadsEdgeSource {
   MainRoadsEdgeSource({
     required this.provenance,
+    required this.partIndex,
+    required this.startVertexIndex,
+    required this.endVertexIndex,
     required Iterable<SourceCoordinate> geometry,
     required this.isReversed,
   }) : geometry = List.unmodifiable(geometry) {
-    if (this.geometry.length < 2) {
-      throw ArgumentError('An edge geometry needs at least two coordinates');
+    if (partIndex < 0 || startVertexIndex < 0 ||
+        endVertexIndex <= startVertexIndex) {
+      throw ArgumentError(
+        'Invalid source part $partIndex or vertex range '
+        '$startVertexIndex..$endVertexIndex',
+      );
+    }
+    if (this.geometry.length != endVertexIndex - startVertexIndex + 1) {
+      throw ArgumentError(
+        'Geometry length ${this.geometry.length} does not match part '
+        '$partIndex vertex range $startVertexIndex..$endVertexIndex',
+      );
     }
   }
 
   final MainRoadsEdgeProvenance provenance;
+  final int partIndex;
+  final int startVertexIndex;
+  final int endVertexIndex;
 
   /// Coordinates ordered from the edge's from-node to its to-node.
   final List<SourceCoordinate> geometry;
@@ -88,6 +104,9 @@ class MainRoadsEdgeSource {
 
   MainRoadsEdgeSource reversed() => MainRoadsEdgeSource(
         provenance: provenance,
+        partIndex: partIndex,
+        startVertexIndex: startVertexIndex,
+        endVertexIndex: endVertexIndex,
         geometry: geometry.reversed,
         isReversed: !isReversed,
       );
@@ -96,6 +115,9 @@ class MainRoadsEdgeSource {
   bool operator ==(Object other) {
     if (other is! MainRoadsEdgeSource ||
         provenance != other.provenance ||
+        partIndex != other.partIndex ||
+        startVertexIndex != other.startVertexIndex ||
+        endVertexIndex != other.endVertexIndex ||
         isReversed != other.isReversed ||
         geometry.length != other.geometry.length) {
       return false;
@@ -107,6 +129,12 @@ class MainRoadsEdgeSource {
   }
 
   @override
-  int get hashCode =>
-      Object.hash(provenance, isReversed, Object.hashAll(geometry));
+  int get hashCode => Object.hash(
+        provenance,
+        partIndex,
+        startVertexIndex,
+        endVertexIndex,
+        isReversed,
+        Object.hashAll(geometry),
+      );
 }

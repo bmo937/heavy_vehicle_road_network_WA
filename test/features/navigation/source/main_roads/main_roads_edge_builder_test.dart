@@ -1,4 +1,5 @@
 import 'package:flutter_test/flutter_test.dart';
+import 'package:roads_map/features/navigation/domain/main_roads_edge_source.dart';
 import 'package:roads_map/features/navigation/domain/road_graph.dart';
 import 'package:roads_map/features/navigation/domain/road_node.dart';
 import 'package:roads_map/features/navigation/source/main_roads/main_roads_edge_builder.dart';
@@ -54,6 +55,56 @@ RoadNode node(String id, SourceCoordinate c) =>
     RoadNode(id: id, latitude: c.latitude, longitude: c.longitude);
 
 void main() {
+  test('validates geometry length and reports the source part and range', () {
+    final provenance = mainRoadsEdgeFromSegment(
+      segment: parseSegment(),
+      partIndex: 0,
+      startVertex: 0,
+      endVertex: 1,
+      id: 'edge',
+      fromNodeId: 'a',
+      toNodeId: 'b',
+      lengthMetres: 1,
+    ).mainRoadsSource!.provenance;
+
+    for (final (part, start, end, geometry) in [
+      (2, 0, 10, coordinates.sublist(0, 2)),
+      (3, 1, 2, coordinates.sublist(0, 3)),
+      (4, 1, 2, coordinates.sublist(0, 1)),
+      (-1, 0, 1, coordinates.sublist(0, 2)),
+      (5, -1, 1, coordinates.sublist(0, 3)),
+      (6, 2, 2, coordinates.sublist(0, 1)),
+    ]) {
+      expect(
+        () => MainRoadsEdgeSource(
+          provenance: provenance,
+          partIndex: part,
+          startVertexIndex: start,
+          endVertexIndex: end,
+          geometry: geometry,
+          isReversed: false,
+        ),
+        throwsA(
+          isA<ArgumentError>()
+              .having(
+                  (error) => error.message, 'message', contains('part $part'))
+              .having((error) => error.message, 'message',
+                  contains('$start..$end')),
+        ),
+      );
+    }
+
+    final source = MainRoadsEdgeSource(
+      provenance: provenance,
+      partIndex: 1,
+      startVertexIndex: 1,
+      endVertexIndex: 3,
+      geometry: coordinates.sublist(1, 4),
+      isReversed: false,
+    );
+    expect(source.reversed().reversed(), source);
+  });
+
   test('parsed source attributes and intermediate geometry survive in a graph',
       () {
     final segment = parseSegment();
