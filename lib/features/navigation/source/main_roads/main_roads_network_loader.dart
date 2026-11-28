@@ -17,16 +17,27 @@ class MainRoadsNetworkLoader {
     required this.client,
     this.parser = const MainRoadsNetworkParser(),
     Set<int> acceptedSourceWkids = const {4283, 7844},
+    Map<int, Set<int>> equivalentSourceWkidAliases = const {
+      102100: {3857},
+      3857: {102100},
+    },
     this.requestedOutputWkid = _defaultOutputWkid,
     this.pageSize = _defaultPageSize,
     this.maxPages = _defaultMaxPages,
     this.interPageDelay = const Duration(milliseconds: 250),
     this.datumTransformation,
-  }) : acceptedSourceWkids = Set.unmodifiable(acceptedSourceWkids);
+  })  : acceptedSourceWkids = Set.unmodifiable(acceptedSourceWkids),
+        equivalentSourceWkidAliases = Map.unmodifiable(
+          equivalentSourceWkidAliases.map(
+            (wkid, aliases) =>
+                MapEntry(wkid, Set<int>.unmodifiable(aliases)),
+          ),
+        );
 
   final MainRoadsNetworkClient client;
   final MainRoadsNetworkParser parser;
   final Set<int> acceptedSourceWkids;
+  final Map<int, Set<int>> equivalentSourceWkidAliases;
   final int requestedOutputWkid;
   final int pageSize;
   final int maxPages;
@@ -315,8 +326,19 @@ class MainRoadsNetworkLoader {
       );
     }
     if ((wkid != null && !acceptedSourceWkids.contains(wkid)) ||
-        (latestWkid != null && !acceptedSourceWkids.contains(latestWkid)) ||
-        (wkid != null && latestWkid != null && wkid != latestWkid)) {
+        (latestWkid != null && !acceptedSourceWkids.contains(latestWkid))) {
+      throw MainRoadsNetworkCrsException(
+        context,
+        'unsupported source WKIDs',
+        sourceWkid: wkid,
+        latestWkid: latestWkid,
+      );
+    }
+    if (wkid != null &&
+        latestWkid != null &&
+        wkid != latestWkid &&
+        !(equivalentSourceWkidAliases[wkid]?.contains(latestWkid) ?? false) &&
+        !(equivalentSourceWkidAliases[latestWkid]?.contains(wkid) ?? false)) {
       throw MainRoadsNetworkCrsException(
         context,
         'unsupported or contradictory source WKIDs',

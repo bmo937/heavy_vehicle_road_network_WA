@@ -121,6 +121,11 @@ MainRoadsNetworkLoader _loader(
   List<int>? objectIds,
   List<List<int>>? objectIdResponses,
   ResponseBody? Function(RequestOptions)? responseOverride,
+  Set<int> acceptedSourceWkids = const {4283, 7844},
+  Map<int, Set<int>> equivalentSourceWkidAliases = const {
+    102100: {3857},
+    3857: {102100},
+  },
 }) {
   final sourceMetadata = metadata ??
       _metadata(maxRecordCount: servicePageSize);
@@ -163,6 +168,8 @@ MainRoadsNetworkLoader _loader(
       serviceUrl: 'https://example.com/MapServer',
     ),
     parser: parser,
+    acceptedSourceWkids: acceptedSourceWkids,
+    equivalentSourceWkidAliases: equivalentSourceWkidAliases,
     maxPages: maxPages,
     pageSize: pageSize,
     datumTransformation: datumTransformation,
@@ -238,6 +245,75 @@ void main() {
 
       expect(result.sourceContract.sourceWkid, 4283);
       expect(result.sourceContract.sourceLatestWkid, 4283);
+    });
+
+    test('accepts configured equivalent WKID aliases and retains both IDs',
+        () async {
+      final adapter = _Adapter((_) => _json({}));
+      final loader = _loader(
+        adapter,
+        acceptedSourceWkids: {102100, 3857},
+        metadata: _metadata(
+          spatialReference: {'wkid': 102100, 'latestWkid': 3857},
+        ),
+        pages: [_page([_feature('g1')])],
+      );
+
+      final result = await loader.load();
+
+      expect(result.sourceContract.sourceWkid, 102100);
+      expect(result.sourceContract.sourceLatestWkid, 3857);
+    });
+
+    test('aliases do not bypass the accepted source WKID allowlist', () async {
+      final adapter = _Adapter((_) => _json({}));
+      final parser = _TrackingParser();
+      final loader = _loader(
+        adapter,
+        parser: parser,
+        acceptedSourceWkids: {102100},
+        metadata: _metadata(
+          spatialReference: {'wkid': 102100, 'latestWkid': 3857},
+        ),
+      );
+
+      await expectLater(
+        loader.load(),
+        throwsA(
+          isA<MainRoadsNetworkCrsException>()
+              .having((error) => error.context, 'context', 'layer metadata')
+              .having(
+                (error) => error.message,
+                'message',
+                'unsupported source WKIDs',
+              ),
+        ),
+      );
+      expect(parser.called, isFalse);
+      expect(
+        adapter.requests.any((uri) => uri.queryParameters['f'] == 'geojson'),
+        isFalse,
+      );
+    });
+
+    test('supports explicitly configured equivalent WKID aliases', () async {
+      final adapter = _Adapter((_) => _json({}));
+      final loader = _loader(
+        adapter,
+        acceptedSourceWkids: {900001, 900002},
+        equivalentSourceWkidAliases: const {
+          900001: {900002},
+        },
+        metadata: _metadata(
+          spatialReference: {'wkid': 900001, 'latestWkid': 900002},
+        ),
+        pages: [_page([_feature('g1')])],
+      );
+
+      final result = await loader.load();
+
+      expect(result.sourceContract.sourceWkid, 900001);
+      expect(result.sourceContract.sourceLatestWkid, 900002);
     });
 
     test('reads a latestWkid-only source reference', () async {
@@ -742,8 +818,16 @@ void main() {
         };
         final expectedStatusCode = switch (entry.key) {
           'non-200' => 503,
-          'malformed count' => null,
           _ => 200,
+        };
+        final expectedMessage = switch (entry.key) {
+          'non-200' => 'unexpected HTTP status',
+          'invalid JSON' => startsWith('malformed JSON response:'),
+          'non-object body' => 'response must be a JSON object',
+          'malformed count' =>
+            'ArcGIS did not return a non-negative integer count',
+          'page ArcGIS error' => 'ArcGIS returned an error: bad query',
+          _ => fail('Unexpected retrieval failure test case: ${entry.key}'),
         };
 
         await expectLater(
@@ -756,7 +840,11 @@ void main() {
                   'statusCode',
                   expectedStatusCode,
                 )
-                .having((error) => error.message, 'message', isNotEmpty),
+                .having(
+                  (error) => error.message,
+                  'message',
+                  expectedMessage,
+                ),
           ),
           reason: entry.key,
         );
@@ -786,6 +874,7 @@ void main() {
         throwsA(
           isA<MainRoadsNetworkRetrievalException>()
               .having((error) => error.context, 'context', 'feature count')
+              .having((error) => error.message, 'message', 'request failed')
               .having((error) => error.statusCode, 'statusCode', isNull)
               .having(
                 (error) => error.failureType,
