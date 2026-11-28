@@ -2,6 +2,7 @@ import 'package:flutter_test/flutter_test.dart';
 import 'package:roads_map/features/navigation/source/main_roads/main_roads_network_segment.dart';
 
 import '../../tool/main_roads_topology_probe/report.dart';
+import '../../tool/main_roads_topology_probe/report_enrichment.dart';
 import '../../tool/main_roads_topology_probe/summary.dart';
 
 MainRoadsNetworkSegment _segment(String id, List<SourceCoordinate> geometry) => MainRoadsNetworkSegment(
@@ -21,15 +22,14 @@ MainRoadsNetworkSegment _segment(String id, List<SourceCoordinate> geometry) => 
     );
 
 void main() {
-  test('Markdown report includes endpoint-to-segment proximity analysis', () {
-    const endpoint = SourceCoordinate(longitude: 115.0005, latitude: -32.0000001);
+  test('generated Markdown includes endpoint-to-segment proximity analysis', () {
     final analysis = analyzeSegments([
       _segment('target', const [
         SourceCoordinate(longitude: 115.0, latitude: -32.0),
         SourceCoordinate(longitude: 115.001, latitude: -32.0),
       ]),
       _segment('source', const [
-        endpoint,
+        SourceCoordinate(longitude: 115.0005, latitude: -32.0000001),
         SourceCoordinate(longitude: 115.0005, latitude: -31.999),
       ]),
     ]);
@@ -38,23 +38,17 @@ void main() {
       'generatedAt': 'now',
       'status': 'COMPLETE',
       'incompleteReasons': <String>[],
-      'source': {
-        'service': 'test',
-        'layerId': 78,
-        'layerName': 'test',
-        'query': 'test',
-      },
-      'retrieval': {
-        'pages': 1,
-        'retrievedFeatures': 2,
-        'serviceReportedCount': 2,
-      },
+      'source': {'service': 'test', 'layerId': 78, 'layerName': 'test', 'query': 'test'},
+      'retrieval': {'pages': 1, 'retrievedFeatures': 2, 'serviceReportedCount': 2},
       'recordCount': 2,
       'scope': 'test',
       'analysis': analysis,
     };
 
-    final report = renderTopologyReport(summary);
+    final report = enrichTopologyReportWithEndpointSegmentProximity(
+      renderTopologyReport(summary),
+      summary,
+    );
     final proximity = analysis['endpointSegmentProximity'] as Map<String, dynamic>;
 
     expect(report, contains('Endpoint-to-segment proximity'));
