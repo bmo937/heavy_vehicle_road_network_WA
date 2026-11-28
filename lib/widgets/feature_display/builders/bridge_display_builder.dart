@@ -53,7 +53,7 @@ class BridgeDisplayBuilder {
           if (properties['STR_NO'] != null)
             FeatureDisplayHelpers.buildProperty(
                 context, 'Structure Id', properties['STR_NO']),
-          /* 
+          /*
           if (properties['ROAD'] != null) FeatureDisplayHelpers.buildProperty(context, 'Road Id', properties['ROAD']),
           if (properties['ROAD_NAME'] != null) FeatureDisplayHelpers.buildProperty(context, 'Road Name', properties['ROAD_NAME']),
           // if (properties['COMMON_USAGE_NAME'] != null) FeatureDisplayHelpers.buildProperty(context, 'Common Name', properties['COMMON_USAGE_NAME']),
