@@ -227,7 +227,7 @@ void main() {
       final loader = _loader(
         adapter,
         metadata: _metadata(
-          spatialReference: {'wkid': 4283, 'latestWkid': 7844},
+          spatialReference: {'wkid': 4283, 'latestWkid': 4283},
         ),
         pages: [
           _page([_feature('g1')]),
@@ -237,7 +237,7 @@ void main() {
       final result = await loader.load();
 
       expect(result.sourceContract.sourceWkid, 4283);
-      expect(result.sourceContract.sourceLatestWkid, 7844);
+      expect(result.sourceContract.sourceLatestWkid, 4283);
     });
 
     test('reads a latestWkid-only source reference', () async {
@@ -263,6 +263,8 @@ void main() {
         {'wkid': 9999},
         {'wkid': 9999, 'latestWkid': 7844},
         {'wkid': 4283, 'latestWkid': 9999},
+        {'wkid': 4283, 'latestWkid': 7844},
+        {'wkid': 7844, 'latestWkid': 4283},
       ]) {
         final adapter = _Adapter((_) => _json({}));
         final loader = _loader(
@@ -336,7 +338,7 @@ void main() {
           _page([
             _feature('g1'),
             _feature('g2', objectId: 2),
-          ]),
+          ], exceededTransferLimit: true),
           _page([_feature('g3', objectId: 3)]),
         ],
       );
@@ -351,16 +353,15 @@ void main() {
           ['g1', 'g2', 'g3']);
       expect(result.pageCount, 2);
       expect(queries.map((query) => query['resultRecordCount']), ['2', '2']);
-      expect(queries.map((query) => query['objectIds']), ['1,2', '3']);
-      expect(queries.every((query) => !query.containsKey('resultOffset')),
-          isTrue);
+      expect(queries.map((query) => query['resultOffset']), ['0', '2']);
+      expect(queries.every((query) => !query.containsKey('objectIds')), isTrue);
       expect(queries.every((query) => query['orderByFields'] == 'OBJECTID'),
           isTrue);
       expect(queries.every((query) => query['outFields'] == '*'), isTrue);
       expect(queries.every((query) => query['returnGeometry'] == 'true'), isTrue);
     });
 
-    test('retrieves deterministic OBJECTID batches when limit flag is absent',
+    test('retrieves offset pages when limit flag is absent',
         () async {
       final adapter = _Adapter((_) => _json({}));
       final loader = _loader(
@@ -377,6 +378,105 @@ void main() {
 
       expect(result.segments.map((segment) => segment.globalId), ['g1', 'g2']);
       expect(result.pageCount, 2);
+    });
+
+    test('validates each page CRS before parsing', () async {
+      for (final name in [
+        'EPSG:4326',
+        'urn:ogc:def:crs:EPSG::4326',
+        'urn:ogc:def:crs:OGC:1.3:CRS84',
+        'OGC:CRS84',
+        'CRS84',
+      ]) {
+        final adapter = _Adapter((_) => _json({}));
+        final loader = _loader(adapter, pages: [
+          {
+            ..._page([_feature('g1')]),
+            'crs': {'type': 'name', 'properties': {'name': name}},
+          },
+        ]);
+        expect((await loader.load()).segments, hasLength(1), reason: name);
+      }
+
+      for (final crs in [
+        null,
+        'EPSG:4326',
+        {},
+        {'type': 'name', 'properties': {'name': 'EPSG:7844'}},
+        {'type': 'name', 'properties': {'name': 4326}},
+        {'type': 'link', 'properties': {'name': 'EPSG:4326'}},
+      ]) {
+        final adapter = _Adapter((_) => _json({}));
+        final parser = _TrackingParser();
+        final loader = _loader(
+          adapter,
+          count: 2,
+          pageSize: 1,
+          parser: parser,
+          pages: [
+            _page([_feature('g1')]),
+            {..._page([_feature('g2', objectId: 2)]), 'crs': crs},
+          ],
+        );
+        await expectLater(
+          loader.load(),
+          throwsA(isA<MainRoadsNetworkCrsException>()
+              .having((error) => error.context, 'context', 'feature page 2')),
+          reason: '$crs',
+        );
+        expect(parser.called, isFalse);
+      }
+    });
+
+    test('rejects unusable explicit source CRS instead of falling back',
+        () async {
+      for (final reference in [null, {}, {'wkt': 'WKT'}, 'invalid']) {
+        final adapter = _Adapter((_) => _json({}));
+        final parser = _TrackingParser();
+        final loader = _loader(
+          adapter,
+          parser: parser,
+          metadata: {..._metadata(), 'sourceSpatialReference': reference},
+        );
+        await expectLater(loader.load(), throwsA(isA<MainRoadsNetworkCrsException>()));
+        expect(parser.called, isFalse);
+        expect(adapter.requests, hasLength(1));
+      }
+    });
+
+    test('revalidates the source CRS after fetching geometry', () async {
+      for (final reference in [
+        {'wkid': 7844},
+        null,
+        {'wkid': 4283, 'latestWkid': 7844},
+        {'wkid': '4283'},
+        {'wkid': 9999},
+      ]) {
+        final adapter = _Adapter((_) => _json({}));
+        final parser = _TrackingParser();
+        var metadataRequests = 0;
+        final loader = _loader(
+          adapter,
+          parser: parser,
+          pages: [_page([_feature('g1')])],
+          responseOverride: (options) {
+            if (options.uri.path.endsWith('/78') && ++metadataRequests == 2) {
+              return _json(_metadata(spatialReference: reference));
+            }
+            return null;
+          },
+        );
+        await expectLater(
+          loader.load(),
+          throwsA(isA<MainRoadsNetworkCrsException>().having(
+            (error) => error.context,
+            'context',
+            'layer metadata verification',
+          )),
+          reason: '$reference',
+        );
+        expect(parser.called, isFalse);
+      }
     });
 
     test('count mismatch is a retrieval failure and parser is not called',

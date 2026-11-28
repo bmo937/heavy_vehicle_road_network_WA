@@ -48,30 +48,8 @@ class MainRoadsNetworkLoader {
       context: 'layer metadata',
     );
     _validateLayerMetadata(metadata);
-    final reference = _sourceReference(metadata);
+    final reference = _validatedSourceReference(metadata, 'layer metadata');
     final sourceWkid = reference.wkid ?? reference.latestWkid;
-    if (reference.hasInvalidWkid ||
-        reference.hasInvalidLatestWkid ||
-        sourceWkid == null) {
-      throw MainRoadsNetworkCrsException(
-        'layer metadata',
-        'source WKID is missing or malformed',
-        sourceWkid: reference.wkid,
-        latestWkid: reference.latestWkid,
-      );
-    }
-    if ((reference.wkid != null &&
-            !acceptedSourceWkids.contains(reference.wkid)) ||
-        (reference.latestWkid != null &&
-            !acceptedSourceWkids.contains(reference.latestWkid))) {
-      throw MainRoadsNetworkCrsException(
-        'layer metadata',
-        'unsupported source WKID ${reference.wkid}'
-            '${reference.latestWkid == null ? '' : ' (latestWkid ${reference.latestWkid})'}',
-        sourceWkid: reference.wkid,
-        latestWkid: reference.latestWkid,
-      );
-    }
 
     final maxRecordCount = metadata['maxRecordCount'];
     if (maxRecordCount is! int || maxRecordCount <= 0) {
@@ -100,21 +78,10 @@ class MainRoadsNetworkLoader {
     }
 
     final initialObjectIds = await _getObjectIds('feature IDs');
-    final objectIdBatches = <List<int>>[];
-    for (var start = 0;
-        start < initialObjectIds.length;
-        start += requestedPageSize) {
-      final end = start + requestedPageSize < initialObjectIds.length
-          ? start + requestedPageSize
-          : initialObjectIds.length;
-      objectIdBatches.add(initialObjectIds.sublist(start, end));
-    }
-    if (objectIdBatches.isEmpty) objectIdBatches.add(const []);
-
     final features = <dynamic>[];
     final retrievedObjectIds = <int>[];
     var pages = 0;
-    for (final objectIds in objectIdBatches) {
+    while (true) {
       if (pages >= maxPages) {
         throw MainRoadsNetworkRetrievalException(
           'feature pagination',
@@ -128,9 +95,9 @@ class MainRoadsNetworkLoader {
         'returnGeometry': 'true',
         'orderByFields': 'OBJECTID',
         'outSR': '$requestedOutputWkid',
+        'resultOffset': '${features.length}',
         'resultRecordCount': '$requestedPageSize',
         'f': 'geojson',
-        if (objectIds.isNotEmpty) 'objectIds': objectIds.join(','),
         if (datumTransformation != null &&
             datumTransformation!.trim().isNotEmpty) ...{
           'datumTransformation': datumTransformation!,
@@ -154,11 +121,12 @@ class MainRoadsNetworkLoader {
         );
       }
 
+      _validatePageCrs(page, pages + 1);
       final transferLimitExceeded = _isTransferLimitExceeded(page, pages + 1);
-      if (transferLimitExceeded) {
+      if (pageFeatures.length > requestedPageSize) {
         throw MainRoadsNetworkRetrievalException(
           'feature page ${pages + 1}',
-          'service reports exceededTransferLimit for an OBJECTID batch',
+          'page exceeds requested record count',
         );
       }
       pages++;
@@ -175,7 +143,26 @@ class MainRoadsNetworkLoader {
         }
         retrievedObjectIds.add(objectId);
       }
-      if (pages < objectIdBatches.length && interPageDelay > Duration.zero) {
+      if (pageFeatures.isEmpty) {
+        if (transferLimitExceeded) {
+          throw MainRoadsNetworkRetrievalException(
+            'feature page $pages',
+            'empty page reports exceededTransferLimit',
+          );
+        }
+        break;
+      }
+      if (features.length >= expectedCount &&
+          features.length >= initialObjectIds.length) {
+        if (transferLimitExceeded) {
+          throw MainRoadsNetworkRetrievalException(
+            'feature page $pages',
+            'service reports more features after expected count',
+          );
+        }
+        break;
+      }
+      if (interPageDelay > Duration.zero) {
         await Future<void>.delayed(interPageDelay);
       }
     }
@@ -202,6 +189,23 @@ class MainRoadsNetworkLoader {
       );
     }
 
+    final finalMetadata = await client.getJson(
+      client.layerUri(mainRoadsNetworkLayerId, query: const {'f': 'json'}),
+      context: 'layer metadata verification',
+    );
+    _validateLayerMetadata(finalMetadata);
+    final finalReference =
+        _validatedSourceReference(finalMetadata, 'layer metadata verification');
+    if (reference.wkid != finalReference.wkid ||
+        reference.latestWkid != finalReference.latestWkid) {
+      throw MainRoadsNetworkCrsException(
+        'layer metadata verification',
+        'source WKID contract changed during retrieval',
+        sourceWkid: finalReference.wkid,
+        latestWkid: finalReference.latestWkid,
+      );
+    }
+
     final Map<String, dynamic> collection = {
       'type': 'FeatureCollection',
       'features': features,
@@ -225,7 +229,7 @@ class MainRoadsNetworkLoader {
         serviceUrl: client.serviceUrl,
         layerId: mainRoadsNetworkLayerId,
         layerName: mainRoadsNetworkLayerName,
-        sourceWkid: sourceWkid,
+        sourceWkid: sourceWkid!,
         sourceLatestWkid: reference.latestWkid,
         requestedOutputWkid: requestedOutputWkid,
         retrievedAt: DateTime.now().toUtc(),
@@ -260,8 +264,10 @@ class MainRoadsNetworkLoader {
   }
 
   _SpatialReference _sourceReference(Map<String, dynamic> metadata) {
+    if (metadata.containsKey('sourceSpatialReference')) {
+      return _parseReference(metadata['sourceSpatialReference']);
+    }
     final candidates = <Object?>[
-      metadata['sourceSpatialReference'],
       (metadata['extent'] is Map)
           ? (metadata['extent'] as Map)['spatialReference']
           : null,
@@ -274,20 +280,74 @@ class MainRoadsNetworkLoader {
       if (candidate is! Map) continue;
       if (candidate.containsKey('wkid') ||
           candidate.containsKey('latestWkid')) {
-        final rawWkid = candidate['wkid'];
-        final rawLatestWkid = candidate['latestWkid'];
-        final wkid = _asWkid(rawWkid);
-        final latestWkid = _asWkid(rawLatestWkid);
-        return _SpatialReference(
-          wkid,
-          latestWkid,
-          hasInvalidWkid: candidate.containsKey('wkid') && wkid == null,
-          hasInvalidLatestWkid:
-              candidate.containsKey('latestWkid') && latestWkid == null,
-        );
+        return _parseReference(candidate);
       }
     }
     return const _SpatialReference(null, null);
+  }
+
+  _SpatialReference _parseReference(Object? candidate) {
+    if (candidate is! Map) return const _SpatialReference(null, null);
+    final wkid = _asWkid(candidate['wkid']);
+    final latestWkid = _asWkid(candidate['latestWkid']);
+    return _SpatialReference(
+      wkid,
+      latestWkid,
+      hasInvalidWkid: candidate.containsKey('wkid') && wkid == null,
+      hasInvalidLatestWkid:
+          candidate.containsKey('latestWkid') && latestWkid == null,
+    );
+  }
+
+  _SpatialReference _validatedSourceReference(
+      Map<String, dynamic> metadata, String context) {
+    final reference = _sourceReference(metadata);
+    final wkid = reference.wkid;
+    final latestWkid = reference.latestWkid;
+    if (reference.hasInvalidWkid ||
+        reference.hasInvalidLatestWkid ||
+        (wkid == null && latestWkid == null)) {
+      throw MainRoadsNetworkCrsException(
+        context,
+        'source WKID is missing or malformed',
+        sourceWkid: wkid,
+        latestWkid: latestWkid,
+      );
+    }
+    if ((wkid != null && !acceptedSourceWkids.contains(wkid)) ||
+        (latestWkid != null && !acceptedSourceWkids.contains(latestWkid)) ||
+        (wkid != null && latestWkid != null && wkid != latestWkid)) {
+      throw MainRoadsNetworkCrsException(
+        context,
+        'unsupported or contradictory source WKIDs',
+        sourceWkid: wkid,
+        latestWkid: latestWkid,
+      );
+    }
+    return reference;
+  }
+
+  void _validatePageCrs(Map<String, dynamic> page, int pageNumber) {
+    if (!page.containsKey('crs')) return;
+    final crs = page['crs'];
+    final properties = crs is Map ? crs['properties'] : null;
+    final name = properties is Map ? properties['name'] : null;
+    const acceptedNames = {
+      'EPSG:4326',
+      'urn:ogc:def:crs:EPSG::4326',
+      'urn:ogc:def:crs:OGC:1.3:CRS84',
+      'OGC:CRS84',
+      'CRS84',
+    };
+    if (crs is! Map ||
+        crs['type'] != 'name' ||
+        name is! String ||
+        !acceptedNames.contains(name)) {
+      throw MainRoadsNetworkCrsException(
+        'feature page $pageNumber',
+        'unsupported or malformed GeoJSON CRS declaration',
+      );
+    }
   }
 
   Future<List<int>> _getObjectIds(String context) async {
